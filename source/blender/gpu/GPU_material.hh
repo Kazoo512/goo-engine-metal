@@ -355,6 +355,7 @@ bool GPU_material_has_displacement_output(GPUMaterial *mat);
 
 void GPU_material_flag_set(GPUMaterial *mat, eGPUMaterialFlag flag);
 bool GPU_material_flag_get(const GPUMaterial *mat, eGPUMaterialFlag flag);
+bool GPU_material_gooengine_get(const GPUMaterial *mat);
 eGPUMaterialFlag GPU_material_flag(const GPUMaterial *mat);
 bool GPU_material_recalc_flag_get(GPUMaterial *mat);
 uint64_t GPU_material_uuid_get(GPUMaterial *mat);

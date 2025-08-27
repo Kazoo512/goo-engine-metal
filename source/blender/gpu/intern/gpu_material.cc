@@ -807,6 +807,11 @@ bool GPU_material_flag_get(const GPUMaterial *mat, eGPUMaterialFlag flag)
   return (mat->flag & flag) != 0;
 }
 
+bool GPU_material_gooengine_get(const GPUMaterial *mat)
+{
+  return mat->engine == GPU_MAT_EEVEE_LEGACY;
+}
+
 eGPUMaterialFlag GPU_material_flag(const GPUMaterial *mat)
 {
   return mat->flag;
