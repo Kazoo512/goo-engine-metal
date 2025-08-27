@@ -740,6 +740,8 @@ typedef struct UserDef_Experimental {
   char no_asset_indexing;
   char use_viewport_debug;
   char use_all_linked_data_direct;
+  char disable_material_icon;
+  char disable_search_on_keypress;
   char use_extensions_debug;
   char use_recompute_usercount_on_save_debug;
   char SANITIZE_AFTER_HERE;
@@ -756,7 +758,7 @@ typedef struct UserDef_Experimental {
   char use_shader_node_previews;
   char use_grease_pencil_version3_convert_on_load;
   char use_animation_baklava;
-  char _pad[2];
+  /* char _pad[0]; */
   /** `makesdna` does not allow empty structs. */
 } UserDef_Experimental;
 
@@ -878,6 +880,9 @@ typedef struct UserDef {
   float pixelsize;
   /** Deprecated, for forward compatibility. */
   int virtual_pixel;
+
+  float viewport_line_width;
+  char _pad16[4];
 
   /** Console scroll-back limit. */
   int scrollback;
@@ -1171,7 +1176,7 @@ typedef enum eUserPref_Flag {
   USER_AUTOSAVE = (1 << 0),
   USER_FLAG_NUMINPUT_ADVANCED = (1 << 1),
   USER_FLAG_RECENT_SEARCHES_DISABLE = (1 << 2),
-  USER_FLAG_UNUSED_3 = (1 << 3), /* cleared */
+  USER_FLAG_VERSION_SCRIPT  = (1 << 3),
   USER_FLAG_UNUSED_4 = (1 << 4), /* cleared */
   USER_TRACKBALL = (1 << 5),
   USER_FLAG_UNUSED_6 = (1 << 6), /* cleared */
@@ -1280,7 +1285,7 @@ typedef enum eUserpref_UI_Flag {
   USER_HIDE_DOT = (1 << 16),
   USER_SHOW_GIZMO_NAVIGATE = (1 << 17),
   USER_SHOW_VIEWPORTNAME = (1 << 18),
-  USER_UIFLAG_UNUSED_3 = (1 << 19), /* Cleared. */
+  USER_ACCUMULATE_TRACKBALL = (1 << 19),
   USER_ZOOM_TO_MOUSEPOS = (1 << 20),
   USER_SHOW_FPS = (1 << 21),
   USER_REGISTER_ALL_USERS = (1 << 22),

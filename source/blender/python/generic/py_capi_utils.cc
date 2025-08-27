@@ -39,6 +39,8 @@
 #  include "BLI_math_base.h" /* isfinite() */
 #endif
 
+#include "float.h" /* FLT_MAX */
+
 #if PY_VERSION_HEX < 0x030d0000 /* <3.13 */
 #  define PyLong_AsInt _PyLong_AsInt
 #  define PyUnicode_CompareWithASCIIString _PyUnicode_EqualToASCIIString
@@ -1569,7 +1571,11 @@ bool PyC_RunString_AsNumber(const char *imports[],
       ok = false;
     }
     else if (!isfinite(val)) {
-      *r_value = 0.0;
+      if (val > 0.0) {
+        *r_value = FLT_MAX;
+      } else {
+        *r_value = -FLT_MAX;
+      }
       ok = true;
     }
     else {
