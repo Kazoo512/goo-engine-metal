@@ -924,6 +924,8 @@ class VIEW3D_HT_header(Header):
                 row.prop(tool_settings, "use_gpencil_weight_data_add", text="", icon='WPAINT_HLT')
                 row.separator(factor=0.4)
                 row.prop(tool_settings, "use_gpencil_draw_additive", text="", icon='FREEZE')
+                sub.separator(factor=0.4)
+                sub.prop(tool_settings, "use_gpencil_autoclose_strokes", text="")
 
             # Select mode for Sculpt
             if object_mode == 'SCULPT_GPENCIL':
