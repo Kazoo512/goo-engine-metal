@@ -1006,7 +1006,7 @@ typedef struct UserDef {
   int gpu_preferred_index;
   uint32_t gpu_preferred_vendor_id;
   uint32_t gpu_preferred_device_id;
-  char _pad16[4];
+  char _pad17[4];
   /** #eGPUBackendType */
   short gpu_backend;
 

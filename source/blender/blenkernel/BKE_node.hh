@@ -999,6 +999,15 @@ void node_tree_remove_layer_n(bNodeTree *ntree, Scene *scene, int layer_index);
 #define SH_NODE_TEX_GABOR 715
 #define SH_NODE_BSDF_METALLIC 716
 
+#define SH_NODE_SHADER_INFO 800
+#define SH_NODE_SCREENSPACE_INFO 801
+#define SH_NODE_SDF_PRIMITIVE 802
+#define SH_NODE_SDF_OP 803
+#define SH_NODE_SDF_VECTOR_OP 804
+#define SH_NODE_SDF_NOISE 805
+#define SH_NODE_SET_DEPTH 806
+#define SH_NODE_CURVATURE 807
+
 /** \} */
 
 /* -------------------------------------------------------------------- */
