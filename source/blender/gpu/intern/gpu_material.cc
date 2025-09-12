@@ -835,7 +835,7 @@ uint64_t GPU_material_uuid_get(GPUMaterial *mat)
 void GPU_material_light_group_bits_get(GPUMaterial *mat, int* out)
 {
   Material* ma = mat->ma;
-  const int grps_all[4] = {MA_GROUPS_ALL, MA_GROUPS_ALL, MA_GROUPS_ALL, MA_GROUPS_ALL};
+  const int grps_all[4] = {static_cast<int>(MA_GROUPS_ALL), static_cast<int>(MA_GROUPS_ALL), static_cast<int>(MA_GROUPS_ALL), static_cast<int>(MA_GROUPS_ALL)};
   if (ma) {
     copy_v4_v4_int(out, ma->light_group_bits);
   } else {
@@ -846,7 +846,7 @@ void GPU_material_light_group_bits_get(GPUMaterial *mat, int* out)
 void GPU_material_light_group_shadow_bits_get(GPUMaterial *mat, int* out)
 {
   Material* ma = mat->ma;
-  const int grps_all[4] = {MA_GROUPS_ALL, MA_GROUPS_ALL, MA_GROUPS_ALL, MA_GROUPS_ALL};
+  const int grps_all[4] = {static_cast<int>(MA_GROUPS_ALL), static_cast<int>(MA_GROUPS_ALL), static_cast<int>(MA_GROUPS_ALL), static_cast<int>(MA_GROUPS_ALL)};
   if (ma) {
     copy_v4_v4_int(out, ma->light_group_shadow_bits);
   } else {
