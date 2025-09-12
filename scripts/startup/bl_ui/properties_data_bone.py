@@ -356,6 +356,9 @@ class BONE_PT_display(BoneButtonsPanel, Panel):
 
         col = layout.column()
         col.prop(bone, "hide", text="Hide", toggle=False)
+        if (pchan := context.object.pose.bones[bone.name]) and context.bone:
+            col.prop(pchan, "hide_outliner", text="Hide in Outliner", toggle=False)
+
         hide_select_sub = col.column()
         hide_select_sub.active = not bone.hide
         hide_select_sub.prop(bone, "hide_select", invert_checkbox=True)
