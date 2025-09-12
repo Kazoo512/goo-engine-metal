@@ -79,6 +79,10 @@ typedef struct Light {
   float shadow_maximum_resolution;
   float shadow_jitter_overblur;
 
+  /* Goo-engine */
+  int light_group_bits[4];
+  // char _pad4[4];
+
   /* Preview */
   struct PreviewImage *preview;
 
@@ -102,6 +106,8 @@ enum {
    */
   LA_DS_SHOW_TEXS = 1 << 2,
 };
+
+#define LA_GROUPS_ALL 0xFFFFFFFF
 
 /** #Light::type */
 enum {
