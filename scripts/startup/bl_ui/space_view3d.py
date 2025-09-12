@@ -4208,7 +4208,8 @@ class VIEW3D_MT_pose_constraints(Menu):
         layout.operator("pose.constraint_add_with_targets", text="Add (with Targets)...")
         layout.operator("pose.constraints_copy")
         layout.operator("pose.constraints_clear")
-
+        layout.operator("pose.constraints_merge")
+        
 
 class VIEW3D_MT_pose_names(Menu):
     bl_label = "Names"
