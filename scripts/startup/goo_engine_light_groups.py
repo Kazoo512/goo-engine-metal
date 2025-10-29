@@ -10,18 +10,18 @@ from bpy.props import StringProperty, CollectionProperty, IntProperty, PointerPr
 from bpy.utils import register_classes_factory
 from bpy.app.handlers import persistent
 from itertools import chain
+from ctypes import c_int32
 # from time import perf_counter
 
 SIZEOF_INT = 32
 MAX_LIGHT_GROUP_BIT = 127
 
-
 def set_bit(vec, bit):
     index = bit // SIZEOF_INT
-    mask = 1 << ((bit + 1) % SIZEOF_INT)
+    mask = 1 << (bit % SIZEOF_INT)
     if index > 3:
         return
-    vec[index] |= mask
+    vec[index] = int(c_int32(vec[index] | mask).value)
 
 
 def map_bits(data, mapping):
