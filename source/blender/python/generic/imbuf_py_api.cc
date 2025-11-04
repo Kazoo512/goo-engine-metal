@@ -10,14 +10,12 @@
 
 #include <Python.h>
 
-#include "BLI_rect.h"
 #include "BLI_string.h"
 #include "BLI_utildefines.h"
 
 #include "py_capi_utils.hh"
 
 #include "python_compat.hh"
-#include "python_utildefines.hh"
 
 #include "imbuf_py_api.hh" /* own include */
 
@@ -29,7 +27,7 @@
 #include <cerrno>
 #include <fcntl.h>
 
-static PyObject *BPyInit_imbuf_types(void);
+static PyObject *BPyInit_imbuf_types();
 
 static PyObject *Py_ImBuf_CreatePyObject(ImBuf *ibuf);
 
@@ -495,7 +493,7 @@ static PyObject *M_imbuf_new(PyObject * /*self*/, PyObject *args, PyObject *kw)
   }
 
   /* TODO: make options. */
-  const uchar planes = 4;
+  const uchar planes = 32;
   const uint flags = IB_rect;
 
   ImBuf *ibuf = IMB_allocImBuf(UNPACK2(size), planes, flags);

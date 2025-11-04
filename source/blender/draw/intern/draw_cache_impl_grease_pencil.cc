@@ -10,10 +10,10 @@
 
 #include "BKE_attribute.hh"
 #include "BKE_curves.hh"
-#include "BKE_deform.hh"
 #include "BKE_grease_pencil.h"
 #include "BKE_grease_pencil.hh"
 
+#include "BLI_array_utils.hh"
 #include "BLI_offset_indices.hh"
 #include "BLI_task.hh"
 
@@ -27,6 +27,7 @@
 
 #include "GPU_batch.hh"
 
+#include "draw_cache.hh"
 #include "draw_cache_impl.hh"
 
 #include "../engines/gpencil/gpencil_defines.h"
@@ -1198,7 +1199,7 @@ static void grease_pencil_geom_batch_ensure(Object &object,
     const VArray<float> fill_opacities = *attributes.lookup_or_default<float>(
         "fill_opacity", bke::AttrDomain::Curve, 1.0f);
 
-    const Span<uint3> triangles = info.drawing.triangles();
+    const Span<int3> triangles = info.drawing.triangles();
     const Span<float4x2> texture_matrices = info.drawing.texture_matrices();
     const Span<int> verts_start_offsets = verts_start_offsets_per_visible_drawing[drawing_i];
     const Span<int> tris_start_offsets = tris_start_offsets_per_visible_drawing[drawing_i];
@@ -1231,7 +1232,9 @@ static void grease_pencil_geom_batch_ensure(Object &object,
                        ((start_cap == GP_STROKE_CAP_TYPE_ROUND) ? 1.0f : -1.0f);
       s_vert.point_id = verts_range[idx];
       s_vert.stroke_id = verts_range.first();
-      s_vert.mat = materials[curve_i] % GPENCIL_MATERIAL_BUFFER_LEN;
+      /* The material index is allowed to be negative as it's stored as a generic attribute. To
+       * ensure the material used by the shader is valid this needs to be clamped to zero. */
+      s_vert.mat = std::max(materials[curve_i], 0) % GPENCIL_MATERIAL_BUFFER_LEN;
 
       s_vert.packed_asp_hard_rot = pack_rotation_aspect_hardness(
           rotations[point_i], stroke_point_aspect_ratios[curve_i], stroke_softness[curve_i]);
@@ -1265,8 +1268,8 @@ static void grease_pencil_geom_batch_ensure(Object &object,
 
       /* If the stroke has more than 2 points, add the triangle indices to the index buffer. */
       if (points.size() >= 3) {
-        const Span<uint3> tris_slice = triangles.slice(tris_start_offset, points.size() - 2);
-        for (const uint3 tri : tris_slice) {
+        const Span<int3> tris_slice = triangles.slice(tris_start_offset, points.size() - 2);
+        for (const int3 tri : tris_slice) {
           GPU_indexbuf_add_tri_verts(&ibo,
                                      (verts_range[1] + tri.x) << GP_VERTEX_ID_SHIFT,
                                      (verts_range[1] + tri.y) << GP_VERTEX_ID_SHIFT,
@@ -1471,6 +1474,7 @@ gpu::Batch *DRW_cache_grease_pencil_edit_points_get(const Scene *scene, Object *
   GreasePencilBatchCache *cache = grease_pencil_batch_cache_get(grease_pencil);
   grease_pencil_edit_batch_ensure(*ob, grease_pencil, *scene);
 
+  /* Can be `nullptr` when there's no grease pencil drawing visible. */
   return cache->edit_points;
 }
 
@@ -1480,6 +1484,7 @@ gpu::Batch *DRW_cache_grease_pencil_edit_lines_get(const Scene *scene, Object *o
   GreasePencilBatchCache *cache = grease_pencil_batch_cache_get(grease_pencil);
   grease_pencil_edit_batch_ensure(*ob, grease_pencil, *scene);
 
+  /* Can be `nullptr` when there's no grease pencil drawing visible. */
   return cache->edit_lines;
 }
 
@@ -1507,6 +1512,7 @@ gpu::Batch *DRW_cache_grease_pencil_weight_points_get(const Scene *scene, Object
   GreasePencilBatchCache *cache = grease_pencil_batch_cache_get(grease_pencil);
   grease_pencil_weight_batch_ensure(*ob, grease_pencil, *scene);
 
+  /* Can be `nullptr` when there's no grease pencil drawing visible. */
   return cache->edit_points;
 }
 
@@ -1516,6 +1522,7 @@ gpu::Batch *DRW_cache_grease_pencil_weight_lines_get(const Scene *scene, Object 
   GreasePencilBatchCache *cache = grease_pencil_batch_cache_get(grease_pencil);
   grease_pencil_weight_batch_ensure(*ob, grease_pencil, *scene);
 
+  /* Can be `nullptr` when there's no grease pencil drawing visible. */
   return cache->edit_lines;
 }
 

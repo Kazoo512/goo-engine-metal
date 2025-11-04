@@ -6,12 +6,17 @@
  * \ingroup gpu
  */
 
+#include <string>
+
 #include "BKE_global.hh"
 #if defined(WIN32)
 #  include "BLI_winstuff.h"
 #endif
+#include "BLI_string_ref.hh"
 #include "BLI_subprocess.hh"
 #include "BLI_threads.h"
+#include "BLI_vector.hh"
+
 #include "DNA_userdef_types.h"
 
 #include "gpu_capabilities_private.hh"
@@ -305,11 +310,12 @@ static void detect_workarounds()
     GCaps.depth_blitting_workaround = true;
     GCaps.mip_render_workaround = true;
     GCaps.stencil_clasify_buffer_workaround = true;
+    GCaps.node_link_instancing_workaround = true;
+    GCaps.line_directive_workaround = true;
     GLContext::debug_layer_workaround = true;
     /* Turn off Blender features. */
     GCaps.hdr_viewport_support = false;
     /* Turn off OpenGL 4.4 features. */
-    GLContext::clear_texture_support = false;
     GLContext::multi_bind_support = false;
     GLContext::multi_bind_image_support = false;
     /* Turn off OpenGL 4.5 features. */
@@ -396,6 +402,18 @@ static void detect_workarounds()
       GCaps.use_hq_normals_workaround = true;
     }
   }
+  /* See #132968: Legacy AMD drivers do not accept a hash after the line number and results into
+   * undefined behaviour. Users have reported that the issue can go away after doing a clean
+   * install of the driver.
+   */
+  if (GPU_type_matches(GPU_DEVICE_ATI, GPU_OS_ANY, GPU_DRIVER_OFFICIAL)) {
+    if (strstr(version, " 22.6.1 ") || strstr(version, " 21.Q1.2 ") ||
+        strstr(version, " 21.Q2.1 "))
+    {
+      GCaps.line_directive_workaround = true;
+    }
+  }
+
   /* Special fix for these specific GPUs.
    * Without this workaround, blender crashes on startup. (see #72098) */
   if (GPU_type_matches(GPU_DEVICE_INTEL, GPU_OS_WIN, GPU_DRIVER_OFFICIAL) &&
@@ -427,24 +445,6 @@ static void detect_workarounds()
        strstr(version, "Mesa 19.1") || strstr(version, "Mesa 19.2")))
   {
     GLContext::unused_fb_slot_workaround = true;
-  }
-  /* dFdx/dFdy calculation factors, those are dependent on driver. */
-  if (GPU_type_matches(GPU_DEVICE_ATI, GPU_OS_ANY, GPU_DRIVER_ANY) && strstr(version, "3.3.10750"))
-  {
-    GLContext::derivative_signs[0] = 1.0;
-    GLContext::derivative_signs[1] = -1.0;
-  }
-  else if (GPU_type_matches(GPU_DEVICE_INTEL, GPU_OS_WIN, GPU_DRIVER_ANY)) {
-    if (strstr(version, "4.0.0 - Build 10.18.10.3308") ||
-        strstr(version, "4.0.0 - Build 9.18.10.3186") ||
-        strstr(version, "4.0.0 - Build 9.18.10.3165") ||
-        strstr(version, "3.1.0 - Build 9.17.10.3347") ||
-        strstr(version, "3.1.0 - Build 9.17.10.4101") ||
-        strstr(version, "3.3.0 - Build 8.15.10.2618"))
-    {
-      GLContext::derivative_signs[0] = -1.0;
-      GLContext::derivative_signs[1] = 1.0;
-    }
   }
 
   /* Draw shader parameters are broken on Qualcomm Windows ARM64 devices
@@ -507,22 +507,10 @@ static void detect_workarounds()
     GLContext::multi_bind_image_support = false;
   }
 
-  /* Multi viewport creates small triangle discard on RDNA2 GPUs with official drivers.
-   * Using geometry shader workaround fixes the issue. */
-  if (GPU_type_matches(GPU_DEVICE_ATI, GPU_OS_ANY, GPU_DRIVER_OFFICIAL)) {
-    if (strstr(renderer, "RX 6300") || strstr(renderer, "RX 6400") ||
-        strstr(renderer, "RX 6450") || strstr(renderer, "RX 6500") ||
-        strstr(renderer, "RX 6550") || strstr(renderer, "RX 6600") ||
-        strstr(renderer, "RX 6650") || strstr(renderer, "RX 6700") ||
-        strstr(renderer, "RX 6750") || strstr(renderer, "RX 6800") ||
-        strstr(renderer, "RX 6850") || strstr(renderer, "RX 6900") ||
-        strstr(renderer, "RX 6950") || strstr(renderer, "W6300") || strstr(renderer, "W6400") ||
-        strstr(renderer, "W6500") || strstr(renderer, "W6600") ||
-        /* NOTE: `W6700` was never released, so it's not in this list. */
-        strstr(renderer, "W6800") || strstr(renderer, "W6900"))
-    {
-      GLContext::layered_rendering_support = false;
-    }
+  /* #134509 Intel ARC GPU have a driver bug that break the display of batched node-links.
+   * Disabling batching fixes the issue. */
+  if (GPU_type_matches(GPU_DEVICE_INTEL, GPU_OS_ANY, GPU_DRIVER_OFFICIAL)) {
+    GCaps.node_link_instancing_workaround = true;
   }
 
   /* Metal-related Workarounds. */
@@ -540,7 +528,6 @@ GLint GLContext::max_ssbo_binds = 0;
 
 /** Extensions. */
 
-bool GLContext::clear_texture_support = false;
 bool GLContext::debug_layer_support = false;
 bool GLContext::direct_state_access_support = false;
 bool GLContext::explicit_location_support = false;
@@ -560,7 +547,6 @@ bool GLContext::texture_filter_anisotropic_support = false;
 bool GLContext::debug_layer_workaround = false;
 bool GLContext::unused_fb_slot_workaround = false;
 bool GLContext::generate_mipmap_workaround = false;
-float GLContext::derivative_signs[2] = {1.0f, 1.0f};
 
 void GLBackend::capabilities_init()
 {
@@ -602,6 +588,9 @@ void GLBackend::capabilities_init()
   int64_t max_ssbo_size;
   glGetInteger64v(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &max_ssbo_size);
   GCaps.max_storage_buffer_size = size_t(max_ssbo_size);
+  GLint ssbo_alignment;
+  glGetIntegerv(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT, &ssbo_alignment);
+  GCaps.storage_buffer_alignment = size_t(ssbo_alignment);
 
   GCaps.transform_feedback_support = true;
   GCaps.texture_view_support = epoxy_gl_version() >= 43 ||
@@ -621,7 +610,6 @@ void GLBackend::capabilities_init()
   GLContext::max_ssbo_binds = min_ii(GLContext::max_ssbo_binds, max_ssbo_binds);
   glGetIntegerv(GL_MAX_COMPUTE_SHADER_STORAGE_BLOCKS, &max_ssbo_binds);
   GLContext::max_ssbo_binds = min_ii(GLContext::max_ssbo_binds, max_ssbo_binds);
-  GLContext::clear_texture_support = epoxy_has_gl_extension("GL_ARB_clear_texture");
   GLContext::debug_layer_support = epoxy_gl_version() >= 43 ||
                                    epoxy_has_gl_extension("GL_KHR_debug") ||
                                    epoxy_has_gl_extension("GL_ARB_debug_output");

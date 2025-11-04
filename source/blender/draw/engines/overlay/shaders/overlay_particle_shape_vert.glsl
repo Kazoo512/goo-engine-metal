@@ -6,10 +6,10 @@
  * Draw particles as shapes using primitive expansion.
  */
 
-#pragma BLENDER_REQUIRE(common_view_clipping_lib.glsl)
-#pragma BLENDER_REQUIRE(draw_view_lib.glsl)
-#pragma BLENDER_REQUIRE(gpu_shader_math_matrix_lib.glsl)
-#pragma BLENDER_REQUIRE(select_lib.glsl)
+#include "common_view_clipping_lib.glsl"
+#include "draw_view_lib.glsl"
+#include "gpu_shader_math_matrix_lib.glsl"
+#include "select_lib.glsl"
 
 vec3 rotate(vec3 vec, vec4 quat)
 {
@@ -86,7 +86,7 @@ void main()
   else {
     world_pos += rotate(shape_pos, part.rotation);
   }
-  gl_Position = point_world_to_ndc(world_pos);
+  gl_Position = drw_point_world_to_homogenous(world_pos);
   edgeStart = edgePos = ((gl_Position.xy / gl_Position.w) * 0.5 + 0.5) * sizeViewport.xy;
 
   view_clipping_distances(world_pos);

@@ -5,15 +5,12 @@
 #include "BLI_array.hh"
 #include "BLI_array_utils.hh"
 #include "BLI_math_matrix.hh"
-#include "BLI_math_rotation.h"
-#include "BLI_set.hh"
 #include "BLI_task.hh"
 
 #include "BKE_attribute_math.hh"
 #include "BKE_curves.hh"
 #include "BKE_customdata.hh"
 #include "BKE_geometry_set.hh"
-#include "BKE_material.h"
 #include "BKE_mesh.hh"
 
 #include "BKE_curve_to_mesh.hh"
@@ -26,6 +23,13 @@ static int segments_num_no_duplicate_edge(const int points_num, const bool cycli
     return curves::segments_num(points_num, false);
   }
   return curves::segments_num(points_num, cyclic);
+}
+
+static inline bool has_caps(const bool main_cyclic,
+                            const bool profile_cyclic,
+                            const int profile_segment_num)
+{
+  return !main_cyclic && profile_cyclic && profile_segment_num > 2;
 }
 
 static void fill_mesh_topology(const int vert_offset,
@@ -127,8 +131,7 @@ static void fill_mesh_topology(const int vert_offset,
     }
   }
 
-  const bool has_caps = fill_caps && !main_cyclic && profile_cyclic && profile_point_num > 2;
-  if (has_caps) {
+  if (fill_caps & has_caps(main_cyclic, profile_cyclic, profile_segment_num)) {
     const int face_num = main_segment_num * profile_segment_num;
     const int cap_loop_offset = loop_offset + face_num * 4;
     const int cap_face_offset = face_offset + face_num;
@@ -299,8 +302,8 @@ static ResultOffsets calculate_result_offsets(const CurvesInfo &info, const bool
             const int profile_segment_num = curves::segments_num(profile_point_num,
                                                                  profile_cyclic);
 
-            const bool has_caps = fill_caps && !main_cyclic && profile_cyclic &&
-                                  profile_point_num > 2;
+            const bool caps = fill_caps &
+                              has_caps(main_cyclic, profile_cyclic, profile_segment_num);
             const int tube_face_num = main_segment_num * profile_segment_num;
 
             vert_offset += main_point_num * profile_point_num;
@@ -311,11 +314,11 @@ static ResultOffsets calculate_result_offsets(const CurvesInfo &info, const bool
                            main_segment_num * profile_point_num;
 
             /* Add two cap N-gons for every ending. */
-            face_offset += tube_face_num + (has_caps ? 2 : 0);
+            face_offset += tube_face_num + (caps ? 2 : 0);
 
             /* All faces on the tube are quads, and all cap faces are N-gons with an edge for each
              * profile edge. */
-            loop_offset += tube_face_num * 4 + (has_caps ? profile_segment_num * 2 : 0);
+            loop_offset += tube_face_num * 4 + (caps ? profile_segment_num * 2 : 0);
 
             mesh_index++;
           }
@@ -368,8 +371,13 @@ static bool should_add_attribute_to_mesh(const AttributeAccessor &curve_attribut
                                          const AttributeFilter &attribute_filter)
 {
 
-  /* The position attribute has special non-generic evaluation. */
   if (id == "position") {
+    /* The position attribute has special non-generic evaluation. */
+    return false;
+  }
+  if (id == "custom_normal") {
+    /* The custom normal attribute is builtin on both meshes and curves, but has a different
+     * meaning and shouldn't be directly propagated. */
     return false;
   }
   /* Don't propagate built-in curves attributes that are not built-in on meshes. */
@@ -858,8 +866,7 @@ Mesh *curve_to_mesh_sweep(const CurvesGeometry &main,
     SpanAttributeWriter<bool> sharp_faces = mesh_attributes.lookup_or_add_for_write_span<bool>(
         "sharp_face", AttrDomain::Face);
     foreach_curve_combination(curves_info, offsets, [&](const CombinationInfo &info) {
-      const bool has_caps = fill_caps && !info.main_cyclic && info.profile_cyclic;
-      if (has_caps) {
+      if (has_caps(info.main_cyclic, info.profile_cyclic, info.profile_segment_num)) {
         const int face_num = info.main_segment_num * info.profile_segment_num;
         const int cap_face_offset = info.face_range.start() + face_num;
         sharp_faces.span[cap_face_offset] = true;

@@ -2,8 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#pragma BLENDER_REQUIRE(common_gpencil_lib.glsl)
-#pragma BLENDER_REQUIRE(select_lib.glsl)
+#include "common_gpencil_lib.glsl"
+#include "select_lib.glsl"
 
 vec3 ray_plane_intersection(vec3 ray_ori, vec3 ray_dir, vec4 plane)
 {
@@ -44,7 +44,7 @@ void main()
     vec3 ray_ori = pos;
     vec3 ray_dir = (is_persp) ? (drw_view.viewinv[3].xyz - pos) : drw_view.viewinv[2].xyz;
     vec3 isect = ray_plane_intersection(ray_ori, ray_dir, gpDepthPlane);
-    vec4 ndc = point_world_to_ndc(isect);
+    vec4 ndc = drw_point_world_to_homogenous(isect);
     gl_FragDepth = (ndc.z / ndc.w) * 0.5 + 0.5;
   }
   else {

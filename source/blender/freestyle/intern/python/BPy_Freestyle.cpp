@@ -44,6 +44,7 @@
 
 #include "BKE_colorband.hh"  /* BKE_colorband_evaluate() */
 #include "BKE_colortools.hh" /* BKE_curvemapping_evaluateF() */
+#include "BKE_material.hh"   /* ramp_blend() */
 
 #ifdef __cplusplus
 extern "C" {
@@ -70,7 +71,7 @@ static PyObject *Freestyle_getCurrentScene(PyObject * /*self*/)
     PyErr_SetString(PyExc_TypeError, "current scene not available");
     return nullptr;
   }
-  PointerRNA ptr_scene = RNA_pointer_create(&scene->id, &RNA_Scene, scene);
+  PointerRNA ptr_scene = RNA_pointer_create_discrete(&scene->id, &RNA_Scene, scene);
   return pyrna_struct_CreatePyObject(&ptr_scene);
 }
 
@@ -137,8 +138,6 @@ static int ramp_blend_type(const char *type)
   }
   return -1;
 }
-
-#include "BKE_material.h" /* ramp_blend() */
 
 PyDoc_STRVAR(
     /* Wrap. */
@@ -218,11 +217,11 @@ static PyObject *Freestyle_evaluateColorRamp(PyObject * /*self*/, PyObject *args
   if (!PyArg_ParseTuple(args, "O!f", &pyrna_struct_Type, &py_srna, &in)) {
     return nullptr;
   }
-  if (!RNA_struct_is_a(py_srna->ptr.type, &RNA_ColorRamp)) {
+  if (!RNA_struct_is_a(py_srna->ptr->type, &RNA_ColorRamp)) {
     PyErr_SetString(PyExc_TypeError, "1st argument is not a ColorRamp object");
     return nullptr;
   }
-  coba = (ColorBand *)py_srna->ptr.data;
+  coba = (ColorBand *)py_srna->ptr->data;
   if (!BKE_colorband_evaluate(coba, in, out)) {
     PyErr_SetString(PyExc_ValueError, "failed to evaluate the color ramp");
     return nullptr;
@@ -258,7 +257,7 @@ static PyObject *Freestyle_evaluateCurveMappingF(PyObject * /*self*/, PyObject *
   if (!PyArg_ParseTuple(args, "O!if", &pyrna_struct_Type, &py_srna, &cur, &value)) {
     return nullptr;
   }
-  if (!RNA_struct_is_a(py_srna->ptr.type, &RNA_CurveMapping)) {
+  if (!RNA_struct_is_a(py_srna->ptr->type, &RNA_CurveMapping)) {
     PyErr_SetString(PyExc_TypeError, "1st argument is not a CurveMapping object");
     return nullptr;
   }
@@ -266,7 +265,7 @@ static PyObject *Freestyle_evaluateCurveMappingF(PyObject * /*self*/, PyObject *
     PyErr_SetString(PyExc_ValueError, "2nd argument is out of range");
     return nullptr;
   }
-  cumap = (CurveMapping *)py_srna->ptr.data;
+  cumap = (CurveMapping *)py_srna->ptr->data;
   BKE_curvemapping_init(cumap);
   /* disable extrapolation if enabled */
   if (cumap->flag & CUMA_EXTEND_EXTRAPOLATE) {

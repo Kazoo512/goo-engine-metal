@@ -17,15 +17,10 @@
 #  include "pylifecycle.h" /* For `Py_Version`. */
 #endif
 
-#include "MEM_guardedalloc.h"
-
 #include "CLG_log.h"
 
-#include "BLI_fileops.h"
-#include "BLI_listbase.h"
 #include "BLI_path_utils.hh"
 #include "BLI_string.h"
-#include "BLI_string_utf8.h"
 #include "BLI_threads.h"
 #include "BLI_utildefines.h"
 
@@ -39,7 +34,6 @@
 #include "bpy_path.hh"
 #include "bpy_props.hh"
 #include "bpy_rna.hh"
-#include "bpy_traceback.hh"
 
 #include "bpy_app_translations.hh"
 
@@ -63,7 +57,7 @@
 
 /* `inittab` initialization functions. */
 #include "../bmesh/bmesh_py_api.hh"
-#include "../generic/bgl.h"
+#include "../generic/bgl.hh"
 #include "../generic/bl_math_py_api.hh"
 #include "../generic/blf_py_api.hh"
 #include "../generic/idprop_py_api.hh"
@@ -240,22 +234,22 @@ void BPY_modules_update()
 
 bContext *BPY_context_get()
 {
-  return static_cast<bContext *>(bpy_context_module->ptr.data);
+  return static_cast<bContext *>(bpy_context_module->ptr->data);
 }
 
 void BPY_context_set(bContext *C)
 {
-  bpy_context_module->ptr.data = (void *)C;
+  bpy_context_module->ptr->data = (void *)C;
 }
 
 #ifdef WITH_FLUID
 /* Defined in `manta` module. */
-extern "C" PyObject *Manta_initPython(void);
+extern "C" PyObject *Manta_initPython();
 #endif
 
 #ifdef WITH_AUDASPACE_PY
 /* Defined in `AUD_C-API.cpp`. */
-extern "C" PyObject *AUD_initPython(void);
+extern "C" PyObject *AUD_initPython();
 #endif
 
 #ifdef WITH_CYCLES
@@ -387,9 +381,16 @@ void BPY_python_start(bContext *C, int argc, const char **argv)
 
     if (py_use_system_env) {
       PyConfig_InitPythonConfig(&config);
+
+      BLI_assert(config.install_signal_handlers);
     }
     else {
       PyConfig_InitIsolatedConfig(&config);
+      /* Python's isolated config disables it's own signal overrides.
+       * While it makes sense not to interfering with other components of the process,
+       * the signal handlers are needed for Python's own error handling to work properly.
+       * Without this a `SIGPIPE` signal will crash Blender, see: #129657. */
+      config.install_signal_handlers = 1;
     }
 
     /* Suppress error messages when calculating the module search path.
@@ -579,7 +580,7 @@ void BPY_python_end(const bool do_python_exit)
   BPY_rna_props_clear_all();
 
   /* Free other Python data. */
-  pyrna_free_types();
+  RNA_bpy_exit();
 
   BPY_rna_exit();
 
@@ -754,7 +755,7 @@ int BPY_context_member_get(bContext *C, const char *member, bContextDataResult *
     done = true;
   }
   else if (BPy_StructRNA_Check(item)) {
-    ptr = &(((BPy_StructRNA *)item)->ptr);
+    ptr = &reinterpret_cast<BPy_StructRNA *>(item)->ptr.value();
 
     // result->ptr = ((BPy_StructRNA *)item)->ptr;
     CTX_data_pointer_set_ptr(result, ptr);
@@ -776,7 +777,7 @@ int BPY_context_member_get(bContext *C, const char *member, bContextDataResult *
         PyObject *list_item = seq_fast_items[i];
 
         if (BPy_StructRNA_Check(list_item)) {
-          ptr = &(((BPy_StructRNA *)list_item)->ptr);
+          ptr = &reinterpret_cast<BPy_StructRNA *>(list_item)->ptr.value();
           CTX_data_list_add_ptr(result, ptr);
         }
         else {

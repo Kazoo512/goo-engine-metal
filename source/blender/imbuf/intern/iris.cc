@@ -6,6 +6,7 @@
  * \ingroup imbuf
  */
 
+#include <algorithm>
 #include <cstring>
 
 #include "BLI_fileops.h"
@@ -253,6 +254,10 @@ ImBuf *imb_loadiris(const uchar *mem, size_t size, int flags, char colorspace[IM
     fprintf(stderr, "longimagedata: channels over 8 not supported\n");
     return nullptr;
   }
+  if (image.xsize == 0 || image.ysize == 0 || image.zsize == 0) {
+    fprintf(stderr, "longimagedata: zero size image found\n");
+    return nullptr;
+  }
 
   const int xsize = image.xsize;
   const int ysize = image.ysize;
@@ -282,7 +287,7 @@ ImBuf *imb_loadiris(const uchar *mem, size_t size, int flags, char colorspace[IM
   } \
   ((void)0)
 
-    MFILE_CAPACITY_AT_PTR_OK_OR_FAIL(MFILE_DATA(inf) + ((4 * 2) * tablen));
+    MFILE_CAPACITY_AT_PTR_OK_OR_FAIL(MFILE_DATA(inf) + (2 * tablen));
 
     readtab(inf, starttab, tablen);
     readtab(inf, lengthtab, tablen);
@@ -309,9 +314,7 @@ ImBuf *imb_loadiris(const uchar *mem, size_t size, int flags, char colorspace[IM
       if (!ibuf) {
         goto fail_rle;
       }
-      if (ibuf->planes > 32) {
-        ibuf->planes = 32;
-      }
+      ibuf->planes = std::min<int>(ibuf->planes, 32);
       base = (uint *)ibuf->byte_buffer.data;
 
       if (badorder) {
@@ -419,9 +422,7 @@ ImBuf *imb_loadiris(const uchar *mem, size_t size, int flags, char colorspace[IM
       if (!ibuf) {
         goto fail_uncompressed;
       }
-      if (ibuf->planes > 32) {
-        ibuf->planes = 32;
-      }
+      ibuf->planes = std::min<int>(ibuf->planes, 32);
 
       base = (uint *)ibuf->byte_buffer.data;
 
@@ -925,11 +926,17 @@ static int compressrow(const uchar *lbuf, uchar *rlebuf, const int z, const int 
     }
   }
   *optr++ = 0;
-  return optr - (uchar *)rlebuf;
+  return optr - rlebuf;
 }
 
 bool imb_saveiris(ImBuf *ibuf, const char *filepath, int /*flags*/)
 {
+  const uint limit = std::numeric_limits<ushort>::max();
+  if (ibuf->x > limit || ibuf->y > limit) {
+    fprintf(stderr, "output_iris: image x/y exceeds %u\n", limit);
+    return false;
+  }
+
   const short zsize = (ibuf->planes + 7) >> 3;
 
   IMB_convert_rgba_to_abgr(ibuf);

@@ -6,8 +6,10 @@
  * \ingroup edgreasepencil
  */
 
+#include "DNA_brush_types.h"
+
 #include "BKE_context.hh"
-#include "BKE_material.h"
+#include "BKE_material.hh"
 #include "BKE_paint.hh"
 
 #include "DNA_brush_enums.h"
@@ -60,6 +62,11 @@ bool editable_grease_pencil_poll(bContext *C)
     return false;
   }
   return true;
+}
+
+bool editable_grease_pencil_with_region_view3d_poll(bContext *C)
+{
+  return ED_operator_region_view3d_active(C) && editable_grease_pencil_poll(C);
 }
 
 bool active_grease_pencil_layer_poll(bContext *C)

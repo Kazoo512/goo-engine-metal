@@ -8,8 +8,11 @@
  * \ingroup bke
  */
 
+#include <cstddef>
+
 struct BlendDataReader;
 struct BlendWriter;
+struct ID;
 struct ImbFormatOptions;
 struct ImageFormatData;
 struct ImBuf;
@@ -28,6 +31,8 @@ void BKE_image_format_update_color_space_for_type(ImageFormatData *format);
 
 void BKE_image_format_blend_read_data(BlendDataReader *reader, ImageFormatData *imf);
 void BKE_image_format_blend_write(BlendWriter *writer, ImageFormatData *imf);
+
+void BKE_image_format_set(ImageFormatData *imf, ID *owner_id, const char imtype);
 
 /* File Paths */
 
@@ -84,6 +89,8 @@ bool BKE_imtype_supports_quality(char imtype);
 bool BKE_imtype_requires_linear_float(char imtype);
 char BKE_imtype_valid_channels(char imtype, bool write_file);
 char BKE_imtype_valid_depths(char imtype);
+char BKE_imtype_valid_depths_with_video(char imtype, const ID *owner_id);
+char BKE_imtype_first_valid_depth(const char valid_depths);
 
 /**
  * String is from command line `--render-format` argument,

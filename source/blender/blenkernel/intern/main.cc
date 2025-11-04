@@ -15,10 +15,11 @@
 
 #include "MEM_guardedalloc.h"
 
-#include "BLI_blenlib.h"
 #include "BLI_ghash.h"
 #include "BLI_map.hh"
 #include "BLI_mempool.h"
+#include "BLI_path_utils.hh"
+#include "BLI_string.h"
 #include "BLI_threads.h"
 #include "BLI_vector.hh"
 
@@ -491,7 +492,7 @@ static int main_relations_create_idlink_cb(LibraryIDLinkCallbackData *cb_data)
   MainIDRelations *bmain_relations = static_cast<MainIDRelations *>(cb_data->user_data);
   ID *self_id = cb_data->self_id;
   ID **id_pointer = cb_data->id_pointer;
-  const int cb_flag = cb_data->cb_flag;
+  const LibraryForeachIDCallbackFlag cb_flag = cb_data->cb_flag;
 
   if (*id_pointer) {
     MainIDRelationsEntry **entry_p;
@@ -558,8 +559,10 @@ void BKE_main_relations_create(Main *bmain, const short flag)
 
   ID *id;
   FOREACH_MAIN_ID_BEGIN (bmain, id) {
-    const int idwalk_flag = IDWALK_READONLY |
-                            ((flag & MAINIDRELATIONS_INCLUDE_UI) != 0 ? IDWALK_INCLUDE_UI : 0);
+    const LibraryForeachIDFlag idwalk_flag = IDWALK_READONLY |
+                                             ((flag & MAINIDRELATIONS_INCLUDE_UI) != 0 ?
+                                                  IDWALK_INCLUDE_UI :
+                                                  IDWALK_NOP);
 
     /* Ensure all IDs do have an entry, even if they are not connected to any other. */
     MainIDRelationsEntry **entry_p;
@@ -708,14 +711,10 @@ void BKE_main_library_weak_reference_add_item(
   BLI_assert(new_id->library_weak_reference == nullptr);
   BLI_assert(BKE_idtype_idcode_append_is_reusable(GS(new_id->name)));
 
-  new_id->library_weak_reference = static_cast<LibraryWeakReference *>(
-      MEM_mallocN(sizeof(*(new_id->library_weak_reference)), __func__));
-
   const LibWeakRefKey key{library_filepath, library_id_name};
   library_weak_reference_mapping->map.add_new(key, new_id);
 
-  STRNCPY(new_id->library_weak_reference->library_filepath, library_filepath);
-  STRNCPY(new_id->library_weak_reference->library_id_name, library_id_name);
+  BKE_main_library_weak_reference_add(new_id, library_filepath, library_id_name);
 }
 
 void BKE_main_library_weak_reference_update_item(
@@ -755,6 +754,49 @@ void BKE_main_library_weak_reference_remove_item(
   library_weak_reference_mapping->map.remove(key);
 
   MEM_SAFE_FREE(old_id->library_weak_reference);
+}
+
+ID *BKE_main_library_weak_reference_find(Main *bmain,
+                                         const char *library_filepath,
+                                         const char *library_id_name)
+{
+  /* Make filepath absolute so we can compare filepaths that may be either relative or absolute. */
+  char library_filepath_abs[FILE_MAX];
+  STRNCPY(library_filepath_abs, library_filepath);
+  BLI_path_abs(library_filepath_abs, BKE_main_blendfile_path(bmain));
+
+  ListBase *id_list = which_libbase(bmain, GS(library_id_name));
+  LISTBASE_FOREACH (ID *, existing_id, id_list) {
+    if (!(existing_id->library_weak_reference &&
+          STREQ(existing_id->library_weak_reference->library_id_name, library_id_name)))
+    {
+      continue;
+    }
+
+    char existing_filepath_abs[FILE_MAX];
+    STRNCPY(existing_filepath_abs, existing_id->library_weak_reference->library_filepath);
+    BLI_path_abs(existing_filepath_abs, BKE_main_blendfile_path(bmain));
+
+    if (!STREQ(existing_filepath_abs, library_filepath_abs)) {
+      continue;
+    }
+
+    return existing_id;
+  }
+
+  return nullptr;
+}
+
+void BKE_main_library_weak_reference_add(ID *local_id,
+                                         const char *library_filepath,
+                                         const char *library_id_name)
+{
+  if (local_id->library_weak_reference == nullptr) {
+    local_id->library_weak_reference = MEM_cnew<LibraryWeakReference>(__func__);
+  }
+
+  STRNCPY(local_id->library_weak_reference->library_filepath, library_filepath);
+  STRNCPY(local_id->library_weak_reference->library_id_name, library_id_name);
 }
 
 BlendThumbnail *BKE_main_thumbnail_from_buffer(Main *bmain, const uint8_t *rect, const int size[2])

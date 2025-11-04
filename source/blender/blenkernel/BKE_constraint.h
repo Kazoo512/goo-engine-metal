@@ -109,8 +109,16 @@ typedef struct bConstraintTypeInfo {
   void (*flush_constraint_targets)(struct bConstraint *con, struct ListBase *list, bool no_copy);
 
   /* evaluation */
-  /** set the ct->matrix for the given constraint target (at the given ctime) */
-  void (*get_target_matrix)(struct Depsgraph *depsgraph,
+  /**
+   * Set the ct->matrix for the given constraint target (at the given ctime).
+   *
+   * \returns Whether the constraint has a valid target. This can be an explicitly-given target,
+   * but can also be dynamically chosen (for example for auto-IK).
+   *
+   * Note that ct->matrix may still be updated (typically to the identity matrix) even when this
+   * function returns false.
+   */
+  bool (*get_target_matrix)(struct Depsgraph *depsgraph,
                             struct bConstraint *con,
                             struct bConstraintOb *cob,
                             struct bConstraintTarget *ct,
@@ -235,11 +243,10 @@ struct bConstraint *BKE_constraint_add_for_pose(struct Object *ob,
                                                 const char *name,
                                                 short type);
 
-bool BKE_constraint_remove_ex(ListBase *list, struct Object *ob, struct bConstraint *con);
 /**
  * Remove the specified constraint from the given constraint stack.
  */
-bool BKE_constraint_remove(ListBase *list, struct bConstraint *con);
+bool BKE_constraint_remove_ex(ListBase *list, struct Object *ob, struct bConstraint *con);
 
 /**
  * Apply the specified constraint in the given constraint stack.

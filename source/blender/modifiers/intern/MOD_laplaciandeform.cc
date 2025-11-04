@@ -49,6 +49,9 @@ enum {
   LAPDEFORM_SYSTEM_CHANGE_NOT_VALID_GROUP,
 };
 
+/* Prevent naming collision. */
+namespace {
+
 struct LaplacianSystem {
   bool is_matrix_computed;
   bool has_solution;
@@ -86,6 +89,8 @@ struct LaplacianSystem {
   /** Map of vertex per vertex. */
   MeshElemMap *ringv_map;
 };
+
+};  // namespace
 
 static LaplacianSystem *newLaplacianSystem()
 {
@@ -793,9 +798,9 @@ static void panel_draw(const bContext * /*C*/, Panel *panel)
 
   uiLayoutSetPropSep(layout, true);
 
-  uiItemR(layout, ptr, "iterations", UI_ITEM_NONE, nullptr, ICON_NONE);
+  uiItemR(layout, ptr, "iterations", UI_ITEM_NONE, std::nullopt, ICON_NONE);
 
-  modifier_vgroup_ui(layout, ptr, &ob_ptr, "vertex_group", "invert_vertex_group", nullptr);
+  modifier_vgroup_ui(layout, ptr, &ob_ptr, "vertex_group", "invert_vertex_group", std::nullopt);
 
   uiItemS(layout);
 

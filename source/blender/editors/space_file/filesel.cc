@@ -6,8 +6,6 @@
  * \ingroup spfile
  */
 
-#include <cmath>
-#include <cstdio>
 #include <cstring>
 
 #include <sys/stat.h>
@@ -32,9 +30,12 @@
 
 #include "MEM_guardedalloc.h"
 
-#include "BLI_blenlib.h"
+#include "BLI_fileops.h"
 #include "BLI_fnmatch.h"
 #include "BLI_math_base.h"
+#include "BLI_path_utils.hh"
+#include "BLI_string.h"
+#include "BLI_string_utf8.h"
 #include "BLI_utildefines.h"
 
 #include "BLO_userdef_default.h"
@@ -61,7 +62,6 @@
 #include "UI_interface_icons.hh"
 #include "UI_view2d.hh"
 
-#include "AS_asset_representation.hh"
 #include "AS_essentials_library.hh"
 
 #include "file_intern.hh"
@@ -121,7 +121,7 @@ static void fileselect_ensure_updated_asset_params(SpaceFile *sfile)
   base_params->filter |= FILE_TYPE_BLENDERLIB;
   base_params->filter_id = FILTER_ID_ALL;
   base_params->display = FILE_IMGDISPLAY;
-  base_params->sort = FILE_SORT_ALPHA;
+  base_params->sort = FILE_SORT_ASSET_CATALOG;
   /* Asset libraries include all sub-directories, so enable maximal recursion. */
   base_params->recursion_level = FILE_SELECT_MAX_RECURSIONS;
   /* 'SMALL' size by default. More reasonable since this is typically used as regular editor,
@@ -1300,6 +1300,22 @@ void ED_fileselect_clear(wmWindowManager *wm, SpaceFile *sfile)
   WM_main_add_notifier(NC_SPACE | ND_SPACE_FILE_LIST, nullptr);
 }
 
+void ED_fileselect_clear_main_assets(wmWindowManager *wm, SpaceFile *sfile)
+{
+  /* Only null in rare cases, see: #29734. */
+  if (sfile->files) {
+    filelist_readjob_stop(sfile->files, wm);
+    filelist_freelib(sfile->files);
+    filelist_tag_force_reset_mainfiles(sfile->files);
+    filelist_tag_reload_asset_library(sfile->files);
+    filelist_clear_from_reset_tag(sfile->files);
+  }
+
+  FileSelectParams *params = ED_fileselect_get_active_params(sfile);
+  params->highlight_file = -1;
+  WM_main_add_notifier(NC_SPACE | ND_SPACE_FILE_LIST, nullptr);
+}
+
 void ED_fileselect_exit(wmWindowManager *wm, SpaceFile *sfile)
 {
   if (!sfile) {
@@ -1471,7 +1487,7 @@ void ED_fileselect_ensure_default_filepath(bContext *C, wmOperator *op, const ch
     const char *blendfile_path = BKE_main_blendfile_path(bmain);
 
     if (blendfile_path[0] == '\0') {
-      STRNCPY(filepath, DATA_("untitled"));
+      STRNCPY(filepath, DATA_("Untitled"));
     }
     else {
       STRNCPY(filepath, blendfile_path);

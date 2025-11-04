@@ -2,8 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#pragma BLENDER_REQUIRE(common_view_lib.glsl)
-#pragma BLENDER_REQUIRE(select_lib.glsl)
+#include "draw_view_lib.glsl"
+#include "select_lib.glsl"
 
 void main()
 {
@@ -54,7 +54,7 @@ void main()
   t /= ray_len;
 
 #ifndef SELECT_ENABLE
-  gl_FragDepth = get_depth_from_view_z(ray_dir_view.z * t + ray_ori_view.z);
+  gl_FragDepth = drw_depth_view_to_screen(ray_dir_view.z * t + ray_ori_view.z);
 #endif
   select_id_output(select_id);
 }

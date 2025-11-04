@@ -10,7 +10,7 @@
 #define DNA_DEPRECATED_ALLOW
 #include <cstring>
 
-#include "fmt/format.h"
+#include <fmt/format.h>
 
 #include "BLI_listbase.h"
 #include "BLI_map.hh"
@@ -210,6 +210,19 @@ static void do_versions_theme(const UserDef *userdef, bTheme *btheme)
     FROM_DEFAULT_V4_UCHAR(tui.editor_outline_active);
   }
 
+  if (!USER_VERSION_ATLEAST(404, 7)) {
+    if (btheme->space_view3d.face_front[0] == 0 && btheme->space_view3d.face_front[1] == 0 &&
+        btheme->space_view3d.face_front[2] == 0xFF && btheme->space_view3d.face_front[3] == 0xB3)
+    {
+      /* Use new default value only if currently set to the old default value. */
+      FROM_DEFAULT_V4_UCHAR(space_view3d.face_front);
+    }
+  }
+
+  if (!USER_VERSION_ATLEAST(404, 12)) {
+    FROM_DEFAULT_V4_UCHAR(space_sequencer.text_strip_cursor);
+    FROM_DEFAULT_V4_UCHAR(space_sequencer.selected_text);
+  }
   /**
    * Always bump subversion in BKE_blender_version.h when adding versioning
    * code here, and wrap it inside a USER_VERSION_ATLEAST check.
@@ -305,7 +318,7 @@ static bool keymap_item_update_tweak_event(wmKeyMapItem *kmi, void * /*user_data
 
 static void keymap_update_brushes_handle_add_item(
     const blender::StringRef asset_prefix,
-    const blender::StringRefNull tool_property,
+    const blender::StringRef tool_property,
     const blender::Map<blender::StringRef, blender::StringRefNull> &tool_tool_map,
     const blender::Map<blender::StringRef, blender::StringRef> &tool_asset_map,
     const blender::Map<int, blender::StringRef> &id_asset_map,
@@ -329,7 +342,7 @@ static void keymap_update_brushes_handle_add_item(
     }
   }
   else if (STREQ(kmi->idname, "PAINT_OT_brush_select")) {
-    IDProperty *idprop = IDP_GetPropertyFromGroup(kmi->properties, tool_property.c_str());
+    IDProperty *idprop = IDP_GetPropertyFromGroup(kmi->properties, tool_property);
     if (idprop && (idprop->type == IDP_INT)) {
       const int prop_val = IDP_Int(idprop);
       if (id_asset_map.contains(prop_val)) {
@@ -357,7 +370,7 @@ static void keymap_update_brushes_handle_add_item(
 
 static void keymap_update_brushes_handle_remove_item(
     const blender::StringRef asset_prefix,
-    const blender::StringRefNull tool_property,
+    const blender::StringRef tool_property,
     const blender::Map<int, blender::StringRef> &id_asset_map,
     wmKeyMapItem *kmi)
 {
@@ -365,7 +378,7 @@ static void keymap_update_brushes_handle_remove_item(
   /* Only the paint.brush_select operator is stored in the default keymap & applicable to be
    * updated if the user removed it in a previous version. */
   if (STREQ(kmi->idname, "PAINT_OT_brush_select")) {
-    IDProperty *idprop = IDP_GetPropertyFromGroup(kmi->properties, tool_property.c_str());
+    IDProperty *idprop = IDP_GetPropertyFromGroup(kmi->properties, tool_property);
     if (idprop && (idprop->type == IDP_INT)) {
       const int prop_val = IDP_Int(idprop);
       if (id_asset_map.contains(prop_val)) {
@@ -390,7 +403,7 @@ static void keymap_update_brushes_handle_remove_item(
 static void keymap_update_brushes(
     wmKeyMap *keymap,
     const blender::StringRef asset_prefix,
-    const blender::StringRefNull tool_property,
+    const blender::StringRef tool_property,
     const blender::Map<blender::StringRef, blender::StringRefNull> &tool_tool_map,
     const blender::Map<blender::StringRef, blender::StringRef> &tool_asset_map,
     const blender::Map<int, blender::StringRef> &id_asset_map)
@@ -415,7 +428,7 @@ static void keymap_update_mesh_sculpt_brushes(wmKeyMap *keymap)
 {
   constexpr blender::StringRef asset_prefix =
       "brushes/essentials_brushes-mesh_sculpt.blend/Brush/";
-  constexpr char const *tool_property = "sculpt_tool";
+  constexpr blender::StringRef tool_property = "sculpt_tool";
 
   const auto tool_asset_map = []() {
     blender::Map<blender::StringRef, blender::StringRef> map;
@@ -505,7 +518,7 @@ static void keymap_update_mesh_vertex_paint_brushes(wmKeyMap *keymap)
 {
   constexpr blender::StringRef asset_prefix =
       "brushes/essentials_brushes-mesh_vertex.blend/Brush/";
-  constexpr char const *tool_property = "vertex_tool";
+  constexpr blender::StringRef tool_property = "vertex_tool";
 
   const auto tool_tool_map = []() {
     blender::Map<blender::StringRef, blender::StringRefNull> map;
@@ -532,7 +545,7 @@ static void keymap_update_mesh_weight_paint_brushes(wmKeyMap *keymap)
 {
   constexpr blender::StringRef asset_prefix =
       "brushes/essentials_brushes-mesh_weight.blend/Brush/";
-  constexpr char const *tool_property = "weight_tool";
+  constexpr blender::StringRef tool_property = "weight_tool";
 
   const auto tool_tool_map = []() {
     blender::Map<blender::StringRef, blender::StringRefNull> map;
@@ -559,7 +572,7 @@ static void keymap_update_mesh_texture_paint_brushes(wmKeyMap *keymap)
 {
   constexpr blender::StringRef asset_prefix =
       "brushes/essentials_brushes-mesh_texture.blend/Brush/";
-  constexpr char const *tool_property = "image_tool";
+  constexpr blender::StringRef tool_property = "image_tool";
 
   const auto tool_tool_map = []() {
     blender::Map<blender::StringRef, blender::StringRefNull> map;
@@ -1353,7 +1366,7 @@ void blo_do_versions_userdef(UserDef *userdef)
     userdef->sequencer_editor_flag |= USER_SEQ_ED_CONNECT_STRIPS_BY_DEFAULT;
   }
 
-  if (!USER_VERSION_ATLEAST(403, 32)) {
+  if (!USER_VERSION_ATLEAST(404, 3)) {
     userdef->uiflag &= ~USER_FILTER_BRUSHES_BY_TOOL;
 
     BKE_preferences_asset_shelf_settings_ensure_catalog_path_enabled(
@@ -1371,7 +1384,7 @@ void blo_do_versions_userdef(UserDef *userdef)
         userdef, "VIEW3D_AST_brush_gpencil_sculpt", "Brushes/Grease Pencil Sculpt/Utilities");
   }
 
-  if (!USER_VERSION_ATLEAST(403, 33)) {
+  if (!USER_VERSION_ATLEAST(404, 9)) {
     LISTBASE_FOREACH (wmKeyMap *, keymap, &userdef->user_keymaps) {
       if (STREQ("Sculpt", keymap->idname)) {
         keymap_update_mesh_sculpt_brushes(keymap);
@@ -1386,6 +1399,10 @@ void blo_do_versions_userdef(UserDef *userdef)
         keymap_update_mesh_texture_paint_brushes(keymap);
       }
     }
+  }
+
+  if (!USER_VERSION_ATLEAST(404, 28)) {
+    userdef->ndof_flag |= NDOF_SHOW_GUIDE_ORBIT_CENTER | NDOF_ORBIT_CENTER_AUTO;
   }
 
   /**

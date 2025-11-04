@@ -54,6 +54,16 @@ typedef enum hipMemcpyKind {
 
 } hipMemcpyKind;
 
+
+typedef enum hipMemoryType {  
+    hipMemoryTypeUnregistered = 0,
+    hipMemoryTypeHost         = 1,
+    hipMemoryTypeDevice       = 2,
+    hipMemoryTypeManaged      = 3,
+    hipMemoryTypeArray        = 10,
+    hipMemoryTypeUnified      = 11
+} hipMemoryType;
+
 typedef enum hipDeviceAttribute_t {
   hipDeviceAttributeCudaCompatibleBegin = 0,
   hipDeviceAttributeEccEnabled = hipDeviceAttributeCudaCompatibleBegin, ///< Whether ECC support is enabled.

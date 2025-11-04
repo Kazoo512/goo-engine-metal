@@ -324,7 +324,7 @@ void gpu::MTLTexture::blit(id<MTLBlitCommandEncoder> blit_encoder,
                            uint src_z_offset,
                            uint src_slice,
                            uint src_mip,
-                           gpu::MTLTexture *dest,
+                           gpu::MTLTexture *dst,
                            uint dst_x_offset,
                            uint dst_y_offset,
                            uint dst_z_offset,
@@ -335,13 +335,13 @@ void gpu::MTLTexture::blit(id<MTLBlitCommandEncoder> blit_encoder,
                            uint depth)
 {
 
-  BLI_assert(dest);
+  BLI_assert(dst);
   BLI_assert(width > 0 && height > 0 && depth > 0);
   MTLSize src_size = MTLSizeMake(width, height, depth);
   MTLOrigin src_origin = MTLOriginMake(src_x_offset, src_y_offset, src_z_offset);
   MTLOrigin dst_origin = MTLOriginMake(dst_x_offset, dst_y_offset, dst_z_offset);
 
-  if (this->format_get() != dest->format_get()) {
+  if (this->format_get() != dst->format_get()) {
     MTL_LOG_WARNING(
         "gpu::MTLTexture: Cannot copy between two textures of different types using a "
         "blit encoder. TODO: Support this operation");
@@ -355,7 +355,7 @@ void gpu::MTLTexture::blit(id<MTLBlitCommandEncoder> blit_encoder,
                     sourceLevel:src_mip
                    sourceOrigin:src_origin
                      sourceSize:src_size
-                      toTexture:dest->get_metal_handle_base()
+                      toTexture:dst->get_metal_handle_base()
                destinationSlice:dst_slice
                destinationLevel:dst_mip
               destinationOrigin:dst_origin];
@@ -458,9 +458,8 @@ GPUFrameBuffer *gpu::MTLTexture::get_blit_framebuffer(int dst_slice, uint dst_mi
       /* DEPTH TEX */
       GPU_framebuffer_ensure_config(
           &blit_fb_,
-          {GPU_ATTACHMENT_TEXTURE_LAYER_MIP(wrap(static_cast<Texture *>(this)),
-                                            static_cast<int>(dst_slice),
-                                            static_cast<int>(dst_mip)),
+          {GPU_ATTACHMENT_TEXTURE_LAYER_MIP(
+               wrap(static_cast<Texture *>(this)), int(dst_slice), int(dst_mip)),
            GPU_ATTACHMENT_NONE});
     }
     else {
@@ -468,9 +467,8 @@ GPUFrameBuffer *gpu::MTLTexture::get_blit_framebuffer(int dst_slice, uint dst_mi
       GPU_framebuffer_ensure_config(
           &blit_fb_,
           {GPU_ATTACHMENT_NONE,
-           GPU_ATTACHMENT_TEXTURE_LAYER_MIP(wrap(static_cast<Texture *>(this)),
-                                            static_cast<int>(dst_slice),
-                                            static_cast<int>(dst_mip))});
+           GPU_ATTACHMENT_TEXTURE_LAYER_MIP(
+               wrap(static_cast<Texture *>(this)), int(dst_slice), int(dst_mip))});
     }
     blit_fb_slice_ = dst_slice;
     blit_fb_mip_ = dst_mip;
@@ -505,11 +503,9 @@ void gpu::MTLTexture::update_sub(
   this->ensure_baked();
 
   /* Safety checks. */
-#if TRUST_NO_ONE
   BLI_assert(mip >= mip_min_ && mip <= mip_max_);
   BLI_assert(mip < texture_.mipmapLevelCount);
   BLI_assert(texture_.mipmapLevelCount >= mip_max_);
-#endif
 
   /* DEPTH FLAG - Depth formats cannot use direct BLIT - pass off to their own routine which will
    * do a depth-only render. */
@@ -640,18 +636,6 @@ void gpu::MTLTexture::update_sub(
 
     /* Debug and verification. */
     if (!can_use_direct_blit) {
-      MTL_LOG_WARNING(
-          "gpu::MTLTexture::update_sub supplied bpp is %lu bytes (%d components per "
-          "pixel), but backing texture bpp is %lu bytes (%d components per pixel) "
-          "(TODO(Metal): Channel Conversion needed) (w: %d, h: %d, d: %d)",
-          input_bytes_per_pixel,
-          num_channels,
-          expected_dst_bytes_per_pixel,
-          destination_num_channels,
-          w_,
-          h_,
-          d_);
-
       /* Check mip compatibility. */
       if (mip != 0) {
         MTL_LOG_ERROR(
@@ -1266,7 +1250,7 @@ void gpu::MTLTexture::generate_mipmap()
   BLI_assert_msg(is_baked_ && texture_, "MTLTexture is not valid");
 
   if (mipmaps_ == 1 || mtl_max_mips_ == 1) {
-    MTL_LOG_WARNING("Call to generate mipmaps on texture with 'mipmaps_=1'");
+    /* Nothing to do. */
     return;
   }
 
@@ -1280,7 +1264,6 @@ void gpu::MTLTexture::generate_mipmap()
   }
 
   @autoreleasepool {
-
     /* Fetch active BlitCommandEncoder. */
     id<MTLBlitCommandEncoder> enc = ctx->main_command_buffer.ensure_begin_blit_encoder();
     if (G.debug & G_DEBUG_GPU) {
@@ -1289,7 +1272,6 @@ void gpu::MTLTexture::generate_mipmap()
     [enc generateMipmapsForTexture:texture_];
     has_generated_mips_ = true;
   }
-  return;
 }
 
 void gpu::MTLTexture::copy_to(Texture *dst)
@@ -1369,13 +1351,14 @@ void gpu::MTLTexture::clear(eGPUDataFormat data_format, const void *data)
   /* If texture is buffer-backed, clear directly on buffer.
    * NOTE: This us currently only true for fallback atomic textures. */
   if (backing_buffer_ != nullptr) {
-    uint num_channels = to_component_len(format_);
-    bool fast_buf_clear_to_zero = true;
-    const uint *val = reinterpret_cast<const uint *>(data);
-    for (int i = 0; i < num_channels; i++) {
-      fast_buf_clear_to_zero = fast_buf_clear_to_zero && (val[i] == 0);
+    uint channel_len = to_component_len(format_);
+    uint channel_size = to_bytesize(data_format);
+    bool fast_buf_clear = true;
+    const uchar *val = reinterpret_cast<const uchar *>(data);
+    for (int i = 1; i < channel_size * channel_len; i++) {
+      fast_buf_clear = fast_buf_clear && (val[i] == val[0]);
     }
-    if (fast_buf_clear_to_zero) {
+    if (fast_buf_clear) {
       /* Fetch active context. */
       MTLContext *ctx = MTLContext::get();
       BLI_assert(ctx);
@@ -1385,10 +1368,11 @@ void gpu::MTLTexture::clear(eGPUDataFormat data_format, const void *data)
           ctx->main_command_buffer.ensure_begin_blit_encoder();
       [blit_encoder fillBuffer:backing_buffer_->get_metal_buffer()
                          range:NSMakeRange(0, backing_buffer_->get_size())
-                         value:0];
+                         value:val[0]];
     }
     else {
-      BLI_assert_msg(false, "Non-zero buffer-backed texture clear not supported!");
+      BLI_assert_msg(false,
+                     "Non-repeating-byte-pattern clear for buffer-backed textures not supported!");
     }
     return;
   }
@@ -2092,7 +2076,7 @@ bool gpu::MTLTexture::init_internal(VertBuf *vbo)
   size_t bytes_per_row = bytes_per_pixel * w_;
 
   MTLContext *mtl_ctx = MTLContext::get();
-  uint32_t align_requirement = static_cast<uint32_t>(
+  uint32_t align_requirement = uint32_t(
       [mtl_ctx->device minimumLinearTextureAlignmentForPixelFormat:mtl_format]);
 
   /* If stride is larger than bytes per pixel, but format has multiple attributes,
@@ -2469,7 +2453,7 @@ void gpu::MTLTexture::ensure_baked()
 
       /* Texture allocation with buffer as backing storage. Bytes per row must satisfy alignment
        * rules for device. */
-      uint32_t align_requirement = static_cast<uint32_t>(
+      uint32_t align_requirement = uint32_t(
           [ctx->device minimumLinearTextureAlignmentForPixelFormat:mtl_format]);
       size_t aligned_bytes_per_row = ceil_to_multiple_ul(bytes_per_row, align_requirement);
       texture_ = [backing_buffer_->get_metal_buffer()

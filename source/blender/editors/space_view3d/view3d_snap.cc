@@ -6,8 +6,6 @@
  * \ingroup spview3d
  */
 
-#include "MEM_guardedalloc.h"
-
 #include "DNA_armature_types.h"
 #include "DNA_object_types.h"
 
@@ -52,6 +50,7 @@
 #include "ANIM_action.hh"
 #include "ANIM_bone_collections.hh"
 #include "ANIM_keyframing.hh"
+#include "ANIM_keyingsets.hh"
 
 #include "view3d_intern.hh"
 
@@ -125,7 +124,7 @@ static int snap_sel_to_grid_exec(bContext *C, wmOperator *op)
     }
   }
   else if (OBPOSE_FROM_OBACT(obact)) {
-    KeyingSet *ks = ANIM_get_keyingset_for_autokeying(scene, ANIM_KS_LOCATION_ID);
+    KeyingSet *ks = blender::animrig::get_keyingset_for_autokeying(scene, ANIM_KS_LOCATION_ID);
     Vector<Object *> objects_eval = BKE_object_pose_array_get(scene, view_layer_eval, v3d);
     for (Object *ob_eval : objects_eval) {
       Object *ob = DEG_get_original_object(ob_eval);
@@ -182,7 +181,7 @@ static int snap_sel_to_grid_exec(bContext *C, wmOperator *op)
     /* Object mode. */
     Main *bmain = CTX_data_main(C);
 
-    KeyingSet *ks = ANIM_get_keyingset_for_autokeying(scene, ANIM_KS_LOCATION_ID);
+    KeyingSet *ks = blender::animrig::get_keyingset_for_autokeying(scene, ANIM_KS_LOCATION_ID);
 
     const bool use_transform_skip_children = (scene->toolsettings->transform_flag &
                                               SCE_XFORM_SKIP_CHILDREN);
@@ -387,7 +386,7 @@ static bool snap_selected_to_location(bContext *C,
     }
   }
   else if (OBPOSE_FROM_OBACT(obact)) {
-    KeyingSet *ks = ANIM_get_keyingset_for_autokeying(scene, ANIM_KS_LOCATION_ID);
+    KeyingSet *ks = blender::animrig::get_keyingset_for_autokeying(scene, ANIM_KS_LOCATION_ID);
     ViewLayer *view_layer = CTX_data_view_layer(C);
     Vector<Object *> objects = BKE_object_pose_array_get(scene, view_layer, v3d);
 
@@ -463,9 +462,10 @@ static bool snap_selected_to_location(bContext *C,
     }
   }
   else {
-    KeyingSet *ks = ANIM_get_keyingset_for_autokeying(scene, ANIM_KS_LOCATION_ID);
+    KeyingSet *ks = blender::animrig::get_keyingset_for_autokeying(scene, ANIM_KS_LOCATION_ID);
     Main *bmain = CTX_data_main(C);
     Depsgraph *depsgraph = CTX_data_depsgraph_pointer(C);
+    BKE_scene_graph_evaluated_ensure(depsgraph, bmain);
 
     /* Reset flags. */
     for (Object *ob = static_cast<Object *>(bmain->objects.first); ob;
@@ -495,13 +495,11 @@ static bool snap_selected_to_location(bContext *C,
     object::XFormObjectData_Container *xds = nullptr;
 
     if (use_transform_skip_children) {
-      BKE_scene_graph_evaluated_ensure(depsgraph, bmain);
       xcs = object::xform_skip_child_container_create();
       object::xform_skip_child_container_item_ensure_from_array(
           xcs, scene, view_layer, objects.data(), objects.size());
     }
     if (use_transform_data_origin) {
-      BKE_scene_graph_evaluated_ensure(depsgraph, bmain);
       xds = object::data_xform_container_create();
 
       /* Initialize the transform data in a separate loop because the depsgraph
@@ -713,7 +711,7 @@ void VIEW3D_OT_snap_cursor_to_grid(wmOperatorType *ot)
   ot->poll = ED_operator_region_view3d_active;
 
   /* flags */
-  ot->flag = OPTYPE_REGISTER | OPTYPE_UNDO;
+  ot->flag = OPTYPE_REGISTER;
 }
 
 /** \} */
@@ -904,7 +902,7 @@ void VIEW3D_OT_snap_cursor_to_selected(wmOperatorType *ot)
   ot->poll = ED_operator_view3d_active;
 
   /* flags */
-  ot->flag = OPTYPE_REGISTER | OPTYPE_UNDO;
+  ot->flag = OPTYPE_REGISTER;
 }
 
 /** \} */
@@ -953,7 +951,7 @@ void VIEW3D_OT_snap_cursor_to_active(wmOperatorType *ot)
   ot->poll = ED_operator_view3d_active;
 
   /* flags */
-  ot->flag = OPTYPE_REGISTER | OPTYPE_UNDO;
+  ot->flag = OPTYPE_REGISTER;
 }
 
 /** \} */
@@ -987,7 +985,7 @@ void VIEW3D_OT_snap_cursor_to_center(wmOperatorType *ot)
   ot->poll = ED_operator_view3d_active;
 
   /* flags */
-  ot->flag = OPTYPE_REGISTER | OPTYPE_UNDO;
+  ot->flag = OPTYPE_REGISTER;
 }
 
 /** \} */
@@ -1026,7 +1024,7 @@ bool ED_view3d_minmax_verts(const Scene *scene, Object *obedit, float r_min[3], 
   TransVert *tv;
   float centroid[3], vec[3], bmat[3][3];
 
-  /* Metaballs are an exception. */
+  /* Meta-balls are an exception. */
   if (obedit->type == OB_MBALL) {
     float ob_min[3], ob_max[3];
     bool changed;
@@ -1073,7 +1071,7 @@ bool ED_view3d_minmax_verts(const Scene *scene, Object *obedit, float r_min[3], 
         greasepencil::retrieve_editable_drawings(*scene, grease_pencil);
     for (const greasepencil::MutableDrawingInfo info : drawings) {
       const bke::CurvesGeometry &curves = info.drawing.strokes();
-      if (curves.points_num() == 0) {
+      if (curves.is_empty()) {
         continue;
       }
 

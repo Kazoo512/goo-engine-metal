@@ -185,14 +185,17 @@ UniqueName_Map *BKE_main_namemap_create()
 void BKE_main_namemap_destroy(UniqueName_Map **r_name_map)
 {
 #ifdef DEBUG_PRINT_MEMORY_USAGE
-  int64_t size_sets = 0;
-  int64_t size_maps = 0;
-  for (const UniqueName_TypeMap &type_map : (*r_name_map)->type_maps) {
-    size_sets += type_map.full_names.size_in_bytes();
-    size_maps += type_map.base_name_to_num_suffix.size_in_bytes();
+  if (*r_name_map) {
+    int64_t size_sets = 0;
+    int64_t size_maps = 0;
+    for (const UniqueName_TypeMap &type_map : (*r_name_map)->type_maps) {
+      size_sets += type_map.full_names.size_in_bytes();
+      size_maps += type_map.base_name_to_num_suffix.size_in_bytes();
+    }
+    printf("NameMap memory usage: sets %.1fKB, maps %.1fKB\n",
+           size_sets / 1024.0,
+           size_maps / 1024.0);
   }
-  printf(
-      "NameMap memory usage: sets %.1fKB, maps %.1fKB\n", size_sets / 1024.0, size_maps / 1024.0);
 #endif
   MEM_delete<UniqueName_Map>(*r_name_map);
   *r_name_map = nullptr;
@@ -534,9 +537,8 @@ static bool main_namemap_validate_and_fix(Main *bmain, const bool do_fix)
       if (!type_map->full_names.contains(key_namemap)) {
         is_valid = false;
         if (do_fix) {
-          CLOG_INFO(
+          CLOG_WARN(
               &LOG,
-              3,
               "ID name '%s' (from library '%s') exists in current Main, but is not listed in "
               "the namemap",
               id_iter->name,
@@ -573,9 +575,8 @@ static bool main_namemap_validate_and_fix(Main *bmain, const bool do_fix)
             if (!id_names_libs.contains(key)) {
               is_valid = false;
               if (do_fix) {
-                CLOG_INFO(
+                CLOG_WARN(
                     &LOG,
-                    3,
                     "ID name '%s' (from library '%s') is listed in the namemap, but does not "
                     "exists in current Main",
                     key.name,

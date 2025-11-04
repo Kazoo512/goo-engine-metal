@@ -8,8 +8,6 @@
  * Manages materials, lights and textures.
  */
 
-#include <algorithm>
-#include <cmath>
 #include <cstring>
 
 #include "MEM_guardedalloc.h"
@@ -25,7 +23,7 @@
 #include "BLI_utildefines.h"
 
 #include "BKE_main.hh"
-#include "BKE_material.h"
+#include "BKE_material.hh"
 #include "BKE_node.hh"
 
 #include "NOD_shader.h"
@@ -280,12 +278,6 @@ void GPU_material_free_single(GPUMaterial *material)
   }
   if (material->sky_tex != nullptr) {
     GPU_texture_free(material->sky_tex);
-  }
-  if (material->sss_profile != nullptr) {
-    GPU_uniformbuf_free(material->sss_profile);
-  }
-  if (material->sss_tex_profile != nullptr) {
-    GPU_texture_free(material->sss_tex_profile);
   }
   MEM_freeN(material);
 }

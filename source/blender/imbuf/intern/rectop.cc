@@ -6,6 +6,7 @@
  * \ingroup imbuf
  */
 
+#include <algorithm>
 #include <cstdlib>
 
 #include "BLI_math_base.h"
@@ -340,23 +341,15 @@ void IMB_rectclip(ImBuf *dbuf,
   }
 
   tmp = dbuf->x - *destx;
-  if (*width > tmp) {
-    *width = tmp;
-  }
+  *width = std::min(*width, tmp);
   tmp = dbuf->y - *desty;
-  if (*height > tmp) {
-    *height = tmp;
-  }
+  *height = std::min(*height, tmp);
 
   if (sbuf) {
     tmp = sbuf->x - *srcx;
-    if (*width > tmp) {
-      *width = tmp;
-    }
+    *width = std::min(*width, tmp);
     tmp = sbuf->y - *srcy;
-    if (*height > tmp) {
-      *height = tmp;
-    }
+    *height = std::min(*height, tmp);
   }
 
   if ((*height <= 0) || (*width <= 0)) {
@@ -422,34 +415,22 @@ static void imb_rectclip3(ImBuf *dbuf,
   }
 
   tmp = dbuf->x - *destx;
-  if (*width > tmp) {
-    *width = tmp;
-  }
+  *width = std::min(*width, tmp);
   tmp = dbuf->y - *desty;
-  if (*height > tmp) {
-    *height = tmp;
-  }
+  *height = std::min(*height, tmp);
 
   if (obuf) {
     tmp = obuf->x - *origx;
-    if (*width > tmp) {
-      *width = tmp;
-    }
+    *width = std::min(*width, tmp);
     tmp = obuf->y - *origy;
-    if (*height > tmp) {
-      *height = tmp;
-    }
+    *height = std::min(*height, tmp);
   }
 
   if (sbuf) {
     tmp = sbuf->x - *srcx;
-    if (*width > tmp) {
-      *width = tmp;
-    }
+    *width = std::min(*width, tmp);
     tmp = sbuf->y - *srcy;
-    if (*height > tmp) {
-      *height = tmp;
-    }
+    *height = std::min(*height, tmp);
   }
 
   if ((*height <= 0) || (*width <= 0)) {
@@ -813,7 +794,7 @@ void IMB_rectblend(ImBuf *dbuf,
           else {
             for (x = width; x > 0; x--, dr++, outr++, sr++, cmr++) {
               uchar *src = (uchar *)sr;
-              float mask = float(mask_max) * float(*cmr);
+              float mask = mask_max * float(*cmr);
 
               if (texmaskrect) {
                 mask *= (float(*tmr++) / 65535.0f);
@@ -911,7 +892,7 @@ void IMB_rectblend(ImBuf *dbuf,
           /* No destination mask buffer, do regular blend with mask-texture if present. */
           else {
             for (x = width; x > 0; x--, drf += 4, orf += 4, srf += 4, cmr++) {
-              float mask = float(mask_max) * float(*cmr);
+              float mask = mask_max * float(*cmr);
 
               if (texmaskrect) {
                 mask *= (float(*tmr++) / 65535.0f);
@@ -1050,7 +1031,7 @@ void IMB_rectblend_threaded(ImBuf *dbuf,
 
 void IMB_rectfill(ImBuf *drect, const float col[4])
 {
-  int num;
+  size_t num;
 
   if (drect->byte_buffer.data) {
     uint *rrect = (uint *)drect->byte_buffer.data;
@@ -1061,7 +1042,7 @@ void IMB_rectfill(ImBuf *drect, const float col[4])
     ccol[2] = int(col[2] * 255);
     ccol[3] = int(col[3] * 255);
 
-    num = drect->x * drect->y;
+    num = size_t(drect->x) * size_t(drect->y);
     for (; num > 0; num--) {
       *rrect++ = *((uint *)ccol);
     }
@@ -1070,7 +1051,7 @@ void IMB_rectfill(ImBuf *drect, const float col[4])
   if (drect->float_buffer.data) {
     float *rrectf = drect->float_buffer.data;
 
-    num = drect->x * drect->y;
+    num = size_t(drect->x) * size_t(drect->y);
     for (; num > 0; num--) {
       *rrectf++ = col[0];
       *rrectf++ = col[1];
@@ -1258,11 +1239,11 @@ void IMB_rectfill_area(
 
 void IMB_rectfill_alpha(ImBuf *ibuf, const float value)
 {
-  int i;
+  size_t i;
 
   if (ibuf->float_buffer.data && (ibuf->channels == 4)) {
     float *fbuf = ibuf->float_buffer.data + 3;
-    for (i = ibuf->x * ibuf->y; i > 0; i--, fbuf += 4) {
+    for (i = size_t(ibuf->x) * size_t(ibuf->y); i > 0; i--, fbuf += 4) {
       *fbuf = value;
     }
   }
@@ -1270,7 +1251,7 @@ void IMB_rectfill_alpha(ImBuf *ibuf, const float value)
   if (ibuf->byte_buffer.data) {
     const uchar cvalue = value * 255;
     uchar *cbuf = ibuf->byte_buffer.data + 3;
-    for (i = ibuf->x * ibuf->y; i > 0; i--, cbuf += 4) {
+    for (i = size_t(ibuf->x) * size_t(ibuf->y); i > 0; i--, cbuf += 4) {
       *cbuf = cvalue;
     }
   }

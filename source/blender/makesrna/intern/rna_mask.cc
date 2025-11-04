@@ -9,19 +9,11 @@
 #include <climits>
 #include <cstdlib>
 
-#include "MEM_guardedalloc.h"
-
-#include "DNA_defaults.h"
 #include "DNA_mask_types.h"
 #include "DNA_object_types.h" /* SELECT */
 #include "DNA_scene_types.h"
 
-#include "BLI_math_vector.h"
-
 #include "BLT_translation.hh"
-
-#include "BKE_movieclip.h"
-#include "BKE_tracking.h"
 
 #include "RNA_define.hh"
 #include "RNA_enum_types.hh"
@@ -30,17 +22,19 @@
 
 #include "WM_types.hh"
 
-#include "IMB_imbuf.hh"
-#include "IMB_imbuf_types.hh"
-
 #ifdef RNA_RUNTIME
 
 #  include <algorithm>
 #  include <fmt/format.h>
 
+#  include "DNA_defaults.h"
 #  include "DNA_movieclip_types.h"
 
+#  include "BLI_math_vector.h"
+
 #  include "BKE_mask.h"
+#  include "BKE_movieclip.h"
+#  include "BKE_tracking.h"
 
 #  include "DEG_depsgraph.hh"
 
@@ -425,6 +419,24 @@ static void rna_Mask_layers_clear(Mask *mask)
   WM_main_add_notifier(NC_MASK | NA_EDITED, mask);
 }
 
+static void rna_MaskSplinePoint_handle_single_select_set(PointerRNA *ptr, bool value)
+{
+  Mask *mask = (Mask *)ptr->owner_id;
+  MaskSplinePoint *point = (MaskSplinePoint *)ptr->data;
+
+  BKE_mask_point_select_set_handle(point, MASK_WHICH_HANDLE_STICK, value);
+
+  DEG_id_tag_update(&mask->id, ID_RECALC_SELECT);
+  WM_main_add_notifier(NC_MASK | NA_SELECTED, mask);
+}
+
+static bool rna_MaskSplinePoint_handle_single_select_get(PointerRNA *ptr)
+{
+  MaskSplinePoint *point = (MaskSplinePoint *)ptr->data;
+
+  return MASKPOINT_ISSEL_HANDLE(point, MASK_WHICH_HANDLE_STICK);
+}
+
 static MaskSpline *rna_MaskLayer_spline_new(ID *id, MaskLayer *mask_layer)
 {
   Mask *mask = (Mask *)id;
@@ -771,9 +783,37 @@ static void rna_def_maskSplinePoint(BlenderRNA *brna)
   RNA_def_property_update(prop, 0, "rna_Mask_update_data");
 
   /* select */
+
+  /* DEPRECATED */
   prop = RNA_def_property(srna, "select", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "bezt.f2", SELECT);
+  RNA_def_property_ui_text(
+      prop,
+      "Select",
+      "Selection status of the control point. (Deprecated: use Select Control Point instead)");
+  RNA_def_property_update(prop, 0, "rna_Mask_update_data");
+
+  prop = RNA_def_property(srna, "select_left_handle", PROP_BOOLEAN, PROP_NONE);
   RNA_def_property_boolean_sdna(prop, nullptr, "bezt.f1", SELECT);
-  RNA_def_property_ui_text(prop, "Select", "Selection status");
+  RNA_def_property_ui_text(prop, "Select Left Handle", "Selection status of the left handle");
+  RNA_def_property_update(prop, 0, "rna_Mask_update_data");
+
+  prop = RNA_def_property(srna, "select_control_point", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "bezt.f2", SELECT);
+  RNA_def_property_ui_text(prop, "Select Control Point", "Selection status of the control point");
+  RNA_def_property_update(prop, 0, "rna_Mask_update_data");
+
+  prop = RNA_def_property(srna, "select_right_handle", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "bezt.f3", SELECT);
+  RNA_def_property_ui_text(prop, "Select Right Handle", "Selection status of the right handle");
+  RNA_def_property_update(prop, 0, "rna_Mask_update_data");
+
+  prop = RNA_def_property(srna, "select_single_handle", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_funcs(prop,
+                                 "rna_MaskSplinePoint_handle_single_select_get",
+                                 "rna_MaskSplinePoint_handle_single_select_set");
+  RNA_def_property_ui_text(
+      prop, "Select Aligned Single Handle", "Selection status of the Aligned Single handle");
   RNA_def_property_update(prop, 0, "rna_Mask_update_data");
 
   /* parent */
@@ -1029,7 +1069,7 @@ static void rna_def_mask_layer(BlenderRNA *brna)
 
   prop = RNA_def_property(srna, "invert", PROP_BOOLEAN, PROP_NONE);
   RNA_def_property_boolean_sdna(prop, nullptr, "blend_flag", MASK_BLENDFLAG_INVERT);
-  RNA_def_property_ui_text(prop, "Restrict View", "Invert the mask black/white");
+  RNA_def_property_ui_text(prop, "Invert", "Invert the mask black/white");
   RNA_def_property_update(prop, NC_MASK | NA_EDITED, nullptr);
 
   prop = RNA_def_property(srna, "falloff", PROP_ENUM, PROP_NONE);

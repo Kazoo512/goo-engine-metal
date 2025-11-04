@@ -49,10 +49,10 @@ static int py_rna_gizmo_parse(PyObject *o, void *p)
 {
   /* No type checking (this is `self` not a user defined argument). */
   BLI_assert(BPy_StructRNA_Check(o));
-  BLI_assert(RNA_struct_is_a(((const BPy_StructRNA *)o)->ptr.type, &RNA_Gizmo));
+  BLI_assert(RNA_struct_is_a(((const BPy_StructRNA *)o)->ptr->type, &RNA_Gizmo));
 
   wmGizmo **gz_p = static_cast<wmGizmo **>(p);
-  *gz_p = static_cast<wmGizmo *>(((const BPy_StructRNA *)o)->ptr.data);
+  *gz_p = static_cast<wmGizmo *>(((const BPy_StructRNA *)o)->ptr->data);
   return 1;
 }
 
@@ -332,8 +332,6 @@ PyDoc_STRVAR(
     "   :type range: callable\n");
 static PyObject *bpy_gizmo_target_set_handler(PyObject * /*self*/, PyObject *args, PyObject *kw)
 {
-  const PyGILState_STATE gilstate = PyGILState_Ensure();
-
   struct {
     BPyGizmoWithTargetType gz_with_target_type;
     PyObject *py_fn_slots[BPY_GIZMO_FN_SLOT_LEN];
@@ -417,12 +415,9 @@ static PyObject *bpy_gizmo_target_set_handler(PyObject * /*self*/, PyObject *arg
     WM_gizmo_target_property_def_func_ptr(gz, gz_prop_type, &fn_params);
   }
 
-  PyGILState_Release(gilstate);
-
   Py_RETURN_NONE;
 
 fail:
-  PyGILState_Release(gilstate);
   return nullptr;
 }
 

@@ -25,7 +25,6 @@
 
 #include "BLT_translation.hh"
 
-#include "DNA_screen_types.h"
 #include "DNA_text_types.h"
 #include "DNA_userdef_types.h"
 
@@ -155,7 +154,7 @@ static void text_foreach_path(ID *id, BPathForeachPathData *bpath_data)
 {
   Text *text = (Text *)id;
 
-  if (text->filepath != nullptr) {
+  if (text->filepath != nullptr && text->filepath[0] != '\0') {
     BKE_bpath_foreach_path_allocated_process(bpath_data, &text->filepath);
   }
 }

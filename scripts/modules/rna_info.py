@@ -4,6 +4,15 @@
 
 # classes for extracting info from blenders internal classes
 
+__all__ = (
+    "BuildRNAInfo",
+    "InfoFunctionRNA",
+    "InfoOperatorRNA",
+    "InfoPropertyRNA",
+    "InfoStructRNA",
+    "rna_id_ignore",
+)
+
 import bpy
 
 # use to strip python paths
@@ -386,6 +395,8 @@ class InfoPropertyRNA:
         type_str = ""
         if self.fixed_type is None:
             type_str += self.type
+            if self.type == "string" and self.subtype == "BYTE_STRING":
+                type_str = "byte string"
             if self.array_length:
                 if self.array_dimensions[1] != 0:
                     dimension_str = " of {:s} items".format(
@@ -645,7 +656,7 @@ def BuildRNAInfo():
     def base_id(rna_struct):
         try:
             return rna_struct.base.identifier
-        except:
+        except AttributeError:
             return ""  # invalid id
 
     # structs = [(base_id(rna_struct), rna_struct.identifier, rna_struct) for rna_struct in bpy.doc.structs.values()]

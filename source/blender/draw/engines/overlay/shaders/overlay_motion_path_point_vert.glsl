@@ -2,8 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#pragma BLENDER_REQUIRE(common_view_clipping_lib.glsl)
-#pragma BLENDER_REQUIRE(common_view_lib.glsl)
+#include "common_view_clipping_lib.glsl"
+#include "draw_view_lib.glsl"
 
 #define pointSize mpathPointSettings.x
 #define frameCurrent mpathPointSettings.y
@@ -47,7 +47,7 @@ void main()
 
   if (showKeyFrames) {
     /* Overrides the color to highlight points that are keyframes. */
-    if ((flag & MOTIONPATH_VERT_KEY) != 0u) {
+    if ((uint(flag) & MOTIONPATH_VERT_KEY) != 0u) {
       gl_PointSize = float(pointSize + 5);
       finalColor = colorVertexSelect;
       /* Bias more to get these on top of regular points */

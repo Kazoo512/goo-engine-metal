@@ -75,7 +75,7 @@ void extract_edituv_tris(const MeshRenderData &mr, gpu::IndexBuf &ibo)
 
   GPUIndexBufBuilder builder;
   GPU_indexbuf_init(&builder, GPU_PRIM_TRIS, mr.corner_tris_num, mr.corners_num);
-  if (mr.extract_type == MR_EXTRACT_BMESH) {
+  if (mr.extract_type == MeshExtractType::BMesh) {
     extract_edituv_tris_bm(mr, sync_selection, builder);
   }
   else {
@@ -136,7 +136,7 @@ void extract_edituv_tris_subdiv(const MeshRenderData &mr,
   GPUIndexBufBuilder builder;
   GPU_indexbuf_init(
       &builder, GPU_PRIM_TRIS, subdiv_cache.num_subdiv_triangles, subdiv_cache.num_subdiv_loops);
-  if (mr.extract_type == MR_EXTRACT_BMESH) {
+  if (mr.extract_type == MeshExtractType::BMesh) {
     extract_edituv_tris_subdiv_bm(mr, subdiv_cache, sync_selection, builder);
   }
   else {
@@ -235,7 +235,7 @@ void extract_edituv_lines(const MeshRenderData &mr, gpu::IndexBuf &ibo)
 
   GPUIndexBufBuilder builder;
   GPU_indexbuf_init(&builder, GPU_PRIM_LINES, mr.corners_num, mr.corners_num);
-  if (mr.extract_type == MR_EXTRACT_BMESH) {
+  if (mr.extract_type == MeshExtractType::BMesh) {
     extract_edituv_lines_bm(mr, sync_selection, builder);
   }
   else {
@@ -324,7 +324,7 @@ void extract_edituv_lines_subdiv(const MeshRenderData &mr,
   GPUIndexBufBuilder builder;
   GPU_indexbuf_init(
       &builder, GPU_PRIM_LINES, subdiv_cache.num_subdiv_loops, subdiv_cache.num_subdiv_loops);
-  if (mr.extract_type == MR_EXTRACT_BMESH) {
+  if (mr.extract_type == MeshExtractType::BMesh) {
     extract_edituv_lines_subdiv_bm(mr, subdiv_cache, sync_selection, builder);
   }
   else {
@@ -392,7 +392,7 @@ void extract_edituv_points(const MeshRenderData &mr, gpu::IndexBuf &ibo)
 
   GPUIndexBufBuilder builder;
   GPU_indexbuf_init(&builder, GPU_PRIM_POINTS, mr.corners_num, mr.corners_num);
-  if (mr.extract_type == MR_EXTRACT_BMESH) {
+  if (mr.extract_type == MeshExtractType::BMesh) {
     extract_edituv_points_bm(mr, sync_selection, builder);
   }
   else {
@@ -464,7 +464,7 @@ void extract_edituv_points_subdiv(const MeshRenderData &mr,
   GPUIndexBufBuilder builder;
   GPU_indexbuf_init(
       &builder, GPU_PRIM_POINTS, subdiv_cache.num_subdiv_loops, subdiv_cache.num_subdiv_loops);
-  if (mr.extract_type == MR_EXTRACT_BMESH) {
+  if (mr.extract_type == MeshExtractType::BMesh) {
     extract_edituv_points_subdiv_bm(mr, subdiv_cache, sync_selection, builder);
   }
   else {
@@ -533,7 +533,7 @@ static void extract_edituv_face_dots_mesh(const MeshRenderData &mr,
 void extract_edituv_face_dots(const MeshRenderData &mr, gpu::IndexBuf &ibo)
 {
   const bool sync_selection = (mr.toolsettings->uv_flag & UV_SYNC_SELECTION) != 0;
-  if (mr.extract_type == MR_EXTRACT_BMESH) {
+  if (mr.extract_type == MeshExtractType::BMesh) {
     extract_edituv_face_dots_bm(mr, sync_selection, ibo);
   }
   else {

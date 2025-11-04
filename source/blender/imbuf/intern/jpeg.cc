@@ -587,7 +587,7 @@ static void write_jpeg(jpeg_compress_struct *cinfo, ImBuf *ibuf)
          * name and property value, followed by the nullptr-terminator
          * which isn't needed by JPEG but #BLI_snprintf_rlen requires it. */
         const int text_length_required = 7 + 2 + strlen(prop->name) + strlen(IDP_String(prop)) + 1;
-        if (text_length_required <= static_text_size) {
+        if (text_length_required > static_text_size) {
           text = static_cast<char *>(MEM_mallocN(text_length_required, "jpeg metadata field"));
           text_size = text_length_required;
         }
@@ -662,9 +662,7 @@ static int init_jpeg(FILE *outfile, jpeg_compress_struct *cinfo, ImBuf *ibuf)
   if (quality <= 0) {
     quality = jpeg_default_quality;
   }
-  if (quality > 100) {
-    quality = 100;
-  }
+  quality = std::min(quality, 100);
 
   jpeg_create_compress(cinfo);
   jpeg_stdio_dest(cinfo, outfile);

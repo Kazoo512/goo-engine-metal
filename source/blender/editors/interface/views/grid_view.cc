@@ -12,6 +12,7 @@
 #include <optional>
 #include <stdexcept>
 
+#include "BKE_context.hh"
 #include "BKE_icons.h"
 
 #include "BLI_index_range.hh"
@@ -242,7 +243,7 @@ BuildOnlyVisibleButtonsHelper::BuildOnlyVisibleButtonsHelper(
     const AbstractGridViewItem *force_visible_item)
     : grid_view_(grid_view), style_(grid_view.get_style()), cols_per_row_(cols_per_row)
 {
-  if ((v2d.flag & V2D_IS_INIT) && grid_view.get_item_count_filtered()) {
+  if (v2d.flag & V2D_IS_INIT && grid_view.get_item_count_filtered()) {
     visible_items_range_ = this->get_visible_range(v2d, force_visible_item);
   }
 }
@@ -452,11 +453,13 @@ GridViewBuilder::GridViewBuilder(uiBlock & /*block*/) {}
 
 void GridViewBuilder::build_grid_view(const bContext &C,
                                       AbstractGridView &grid_view,
-                                      const View2D &v2d,
                                       uiLayout &layout,
                                       std::optional<StringRef> search_string)
 {
   uiBlock &block = *uiLayoutGetBlock(&layout);
+
+  const ARegion *region = CTX_wm_region_popup(&C) ? CTX_wm_region_popup(&C) : CTX_wm_region(&C);
+  ui_block_view_persistent_state_restore(*region, block, grid_view);
 
   grid_view.build_items();
   grid_view.update_from_old(block);
@@ -467,7 +470,7 @@ void GridViewBuilder::build_grid_view(const bContext &C,
   UI_block_layout_set_current(&block, &layout);
 
   GridViewLayoutBuilder builder(layout);
-  builder.build_from_view(C, grid_view, v2d);
+  builder.build_from_view(C, grid_view, region->v2d);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -501,15 +504,10 @@ void PreviewGridItem::build_grid_tile_button(uiLayout &layout,
 
   const BIFIconID icon_id = override_preview_icon_id ? override_preview_icon_id : preview_icon_id;
 
-  /* Draw icons that are not previews or images as normal icons with a fixed icon size. Otherwise
-   * they will be upscaled to the button size. Should probably be done by the widget code. */
-  const int is_preview_flag = (BKE_icon_is_preview(icon_id) || BKE_icon_is_image(icon_id)) ?
-                                  int(UI_BUT_ICON_PREVIEW) :
-                                  0;
   ui_def_but_icon(but,
                   icon_id,
                   /* NOLINTNEXTLINE: bugprone-suspicious-enum-usage */
-                  UI_HAS_ICON | is_preview_flag);
+                  UI_HAS_ICON | UI_BUT_ICON_PREVIEW);
   but->emboss = UI_EMBOSS_NONE;
 }
 

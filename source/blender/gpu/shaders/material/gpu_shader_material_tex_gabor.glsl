@@ -41,6 +41,9 @@ float goo_atan2(float y, float x)
 }
 
 
+#include "gpu_shader_common_hash.glsl"
+#include "gpu_shader_math_base_lib.glsl"
+#include "gpu_shader_math_vector_lib.glsl"
 
 #define SHD_GABOR_TYPE_2D 0.0
 #define SHD_GABOR_TYPE_3D 1.0

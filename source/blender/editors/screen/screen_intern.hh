@@ -17,9 +17,12 @@ struct bContextDataResult;
 struct bScreen;
 struct Main;
 struct rcti;
+struct ScrArea;
 struct ScrAreaMap;
 struct ScrEdge;
 struct ScrVert;
+struct WorkSpaceLayout;
+struct wmOperatorType;
 struct wmWindow;
 
 /* internal exports only */
@@ -56,8 +59,6 @@ enum class AreaDockTarget {
   Center, /* Middle portion of area. */
 };
 
-#define AZONESPOTW UI_HEADER_OFFSET         /* width of corner #AZone - max */
-#define AZONESPOTH (0.6f * U.widget_unit)   /* height of corner #AZone */
 #define AZONEFADEIN (5.0f * U.widget_unit)  /* when #AZone is totally visible */
 #define AZONEFADEOUT (6.5f * U.widget_unit) /* when we start seeing the #AZone */
 
@@ -89,8 +90,13 @@ void region_toggle_hidden(bContext *C, ARegion *region, bool do_fade);
  * \param sa2: Target area that will be replaced.
  */
 void screen_draw_join_highlight(const wmWindow *win, ScrArea *sa1, ScrArea *sa2, eScreenDir dir);
-void screen_draw_dock_preview(
-    ScrArea *source, ScrArea *target, AreaDockTarget dock_target, float factor, int x, int y);
+void screen_draw_dock_preview(const wmWindow *win,
+                              ScrArea *source,
+                              ScrArea *target,
+                              AreaDockTarget dock_target,
+                              float factor,
+                              int x,
+                              int y);
 void screen_draw_split_preview(ScrArea *area, eScreenAxis dir_axis, float factor);
 
 void screen_draw_move_highlight(bScreen *screen, eScreenAxis dir_axis);
@@ -139,6 +145,8 @@ void area_getoffsets(ScrArea *sa_a, ScrArea *sa_b, eScreenDir dir, int *r_offset
 bool screen_area_close(bContext *C, bScreen *screen, ScrArea *area);
 void screen_area_spacelink_add(const Scene *scene, ScrArea *area, eSpace_Type space_type);
 AZone *ED_area_actionzone_find_xy(ScrArea *area, const int xy[2]);
+
+bool area_regions_poll(bContext *C, const bScreen *screen, ScrArea *area);
 
 /* `screen_geometry.cc` */
 

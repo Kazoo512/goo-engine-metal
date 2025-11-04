@@ -8,12 +8,16 @@
 
 #pragma once
 
+struct Depsgraph;
+struct Main;
+struct Mesh;
 struct Object;
 struct ReportList;
+struct Scene;
 struct UndoType;
 struct bContext;
-struct wmOperator;
 struct wmKeyConfig;
+struct wmOperator;
 
 namespace blender::ed::sculpt_paint {
 
@@ -43,6 +47,7 @@ void keymap_sculpt(wmKeyConfig *keyconf);
 /* `sculpt_transform.cc` */
 
 void update_modal_transform(bContext *C, Object &ob);
+void cancel_modal_transform(bContext *C, Object &ob);
 void init_transform(bContext *C, Object &ob, const float mval_fl[2], const char *undo_name);
 void end_transform(bContext *C, Object &ob);
 

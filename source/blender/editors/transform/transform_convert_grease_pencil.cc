@@ -34,6 +34,7 @@ static void createTransGreasePencilVerts(bContext *C, TransInfo *t)
   MutableSpan<TransDataContainer> trans_data_contrainers(t->data_container, t->data_container_len);
   const bool use_proportional_edit = (t->flag & T_PROP_EDIT_ALL) != 0;
   const bool use_connected_only = (t->flag & T_PROP_CONNECTED) != 0;
+  const bool use_individual_origins = (t->around == V3D_AROUND_LOCAL_ORIGINS);
   ToolSettings *ts = scene->toolsettings;
   const bool is_scale_thickness = ((t->mode == TFM_CURVE_SHRINKFATTEN) ||
                                    (ts->gp_sculpt.flag & GP_SCULPT_SETT_FLAG_SCALE_THICKNESS));
@@ -140,22 +141,13 @@ static void createTransGreasePencilVerts(bContext *C, TransInfo *t)
       }
 
       if (use_proportional_edit) {
-        Array<int> bezier_point_offset_data(bezier_curves[layer_offset].size() + 1);
-        const OffsetIndices<int> bezier_offsets = offset_indices::gather_selected_offsets(
-            curves.points_by_curve(), bezier_curves[layer_offset], bezier_point_offset_data);
+        const IndexMask bezier_points = bke::curves::curve_to_point_selection(
+            curves.points_by_curve(), bezier_curves[layer_offset], curves_transform_data->memory);
 
-        const int bezier_point_count = bezier_offsets.total_size();
-        tc.data_len += curves.points_num() + 2 * bezier_point_count;
-        points_to_transform_per_attribute[layer_offset].append(curves.points_range());
+        tc.data_len += editable_points.size() + 2 * bezier_points.size();
+        points_to_transform_per_attribute[layer_offset].append(editable_points);
 
-        if (bezier_point_count > 0) {
-          Vector<index_mask::IndexMask::Initializer> bezier_point_ranges;
-          const OffsetIndices<int> points_by_curve = curves.points_by_curve();
-          bezier_curves[layer_offset].foreach_index(GrainSize(512), [&](const int bezier_curve_i) {
-            bezier_point_ranges.append(points_by_curve[bezier_curve_i]);
-          });
-          IndexMask bezier_points = IndexMask::from_initializers(bezier_point_ranges,
-                                                                 curves_transform_data->memory);
+        if (selection_attribute_names.size() > 1) {
           points_to_transform_per_attribute[layer_offset].append(bezier_points);
           points_to_transform_per_attribute[layer_offset].append(bezier_points);
         }
@@ -200,18 +192,21 @@ static void createTransGreasePencilVerts(bContext *C, TransInfo *t)
       const bke::greasepencil::Layer &layer = *layers[info.layer_index];
       const float4x4 layer_space_to_world_space = layer.to_world_space(*object_eval);
       bke::CurvesGeometry &curves = info.drawing.strokes_for_write();
+      const bke::crazyspace::GeometryDeformation deformation =
+          bke::crazyspace::get_evaluated_grease_pencil_drawing_deformation(
+              *CTX_data_depsgraph_pointer(C), *object, info.layer_index, info.frame_number);
 
       std::optional<MutableSpan<float>> value_attribute;
-      if (is_scale_thickness) {
-        MutableSpan<float> radii = info.drawing.radii_for_write();
-        value_attribute = radii;
-      }
-      else if (t->mode == TFM_GPENCIL_OPACITY) {
+      if (t->mode == TFM_GPENCIL_OPACITY) {
         MutableSpan<float> opacities = info.drawing.opacities_for_write();
         value_attribute = opacities;
       }
+      else if (is_scale_thickness) {
+        MutableSpan<float> radii = info.drawing.radii_for_write();
+        value_attribute = radii;
+      }
 
-      const IndexMask affected_strokes = use_proportional_edit ?
+      const IndexMask affected_strokes = use_proportional_edit || use_individual_origins ?
                                              ed::greasepencil::retrieve_editable_strokes(
                                                  *object, info.drawing, info.layer_index, memory) :
                                              IndexMask();
@@ -220,9 +215,11 @@ static void createTransGreasePencilVerts(bContext *C, TransInfo *t)
           tc.custom.type.data);
       curves_transform_data.grease_pencil_falloffs[drawing] = info.multi_frame_falloff;
       float &drawing_falloff = curves_transform_data.grease_pencil_falloffs[drawing];
-      curve_populate_trans_data_structs(tc,
+      curve_populate_trans_data_structs(*t,
+                                        tc,
                                         curves,
                                         layer_space_to_world_space,
+                                        deformation,
                                         value_attribute,
                                         points_to_transform_per_attribute[layer_offset],
                                         affected_strokes,
@@ -252,10 +249,10 @@ static void recalcData_grease_pencil(TransInfo *t)
       bke::CurvesGeometry &curves = info.drawing.strokes_for_write();
 
       if (t->mode == TFM_CURVE_SHRINKFATTEN) {
-        /* No cache to update currently. */
+        curves.tag_radii_changed();
       }
       else if (t->mode == TFM_TILT) {
-        /* No cache to update currently. */
+        curves.tag_normals_changed();
       }
       else {
         const Vector<MutableSpan<float3>> positions_per_selection_attr =

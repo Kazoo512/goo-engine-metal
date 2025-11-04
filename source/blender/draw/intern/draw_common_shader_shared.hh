@@ -6,6 +6,8 @@
  * \ingroup draw
  */
 
+#pragma once
+
 #ifndef GPU_SHADER
 #  include "GPU_shader_shared_utils.hh"
 
@@ -142,7 +144,10 @@ struct GlobalsUboStorage {
   float size_vertex_gpencil;
   float fresnel_mix_edit;
   float size_viewport_line;
-  float _pad0, _pad1;
+
+  bool32_t backface_culling;
+
+  float _pad1;
 };
 BLI_STATIC_ASSERT_ALIGN(GlobalsUboStorage, 16)
 

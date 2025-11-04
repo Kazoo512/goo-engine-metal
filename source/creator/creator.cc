@@ -28,6 +28,7 @@
 
 #include "DNA_genfile.h"
 
+#include "BLI_fftw.hh"
 #include "BLI_string.h"
 #include "BLI_system.h"
 #include "BLI_task.h"
@@ -44,7 +45,7 @@
 #include "BKE_cpp_types.hh"
 #include "BKE_global.hh"
 #include "BKE_idtype.hh"
-#include "BKE_material.h"
+#include "BKE_material.hh"
 #include "BKE_modifier.hh"
 #include "BKE_node.hh"
 #include "BKE_particle.h"
@@ -61,6 +62,8 @@
 
 #include "IMB_imbuf.hh" /* For #IMB_init. */
 
+#include "MOV_util.hh"
+
 #include "RE_engine.h"
 #include "RE_texture.h"
 
@@ -70,7 +73,9 @@
 
 #include "RNA_define.hh"
 
-#include "GPU_compilation_subprocess.hh"
+#ifdef WITH_OPENGL_BACKEND
+#  include "GPU_compilation_subprocess.hh"
+#endif
 
 #ifdef WITH_FREESTYLE
 #  include "FRS_freestyle.h"
@@ -82,15 +87,17 @@
 #  include <floatingpoint.h>
 #endif
 
+#ifdef _OPENMP
+#  include <omp.h>
+#endif
+
 #ifdef WITH_BINRELOC
 #  include "binreloc.h"
 #endif
 
 #ifdef WITH_LIBMV
 #  include "libmv-capi.h"
-#endif
-
-#ifdef WITH_CYCLES_LOGGING
+#elif defined(WITH_CYCLES_LOGGING)
 #  include "CCL_api.h"
 #endif
 
@@ -300,12 +307,19 @@ int main(int argc,
   setvbuf(stdout, nullptr, _IONBF, 0);
 #endif
 
-#ifdef WIN32
-/* We delay loading of OPENMP so we can set the policy here. */
-#  if defined(_MSC_VER)
+#ifdef _OPENMP
+#  if defined(WIN32) && defined(_MSC_VER)
+  /* We delay loading of OPENMP so we can set the policy here. */
   _putenv_s("OMP_WAIT_POLICY", "PASSIVE");
 #  endif
+  /* Ensure the OpenMP runtime is initialized as soon as possible to make sure duplicate
+   * `libomp/libiomp5` runtime conflicts are detected as soon as a second runtime is initialized.
+   * Initialization must be done after setting any relevant environment variables, but before
+   * installing signal handlers. */
+  omp_get_max_threads();
+#endif
 
+#ifdef WIN32
 #  ifdef USE_WIN32_UNICODE_ARGS
   /* Win32 Unicode Arguments. */
   {
@@ -467,6 +481,9 @@ int main(int argc,
   /* After parsing number of threads argument. */
   BLI_task_scheduler_init();
 
+  /* Initialize FFTW threading support. */
+  blender::fftw::initialize_float();
+
 #ifndef WITH_PYTHON_MODULE
   /* The settings pass includes:
    * - Background-mode assignment (#Global.background), checked by other subsystems
@@ -484,10 +501,8 @@ int main(int argc,
 
   /* Must be initialized after #BKE_appdir_init to account for color-management paths. */
   IMB_init();
-#ifdef WITH_FFMPEG
   /* Keep after #ARG_PASS_SETTINGS since debug flags are checked. */
-  IMB_ffmpeg_init();
-#endif
+  MOV_init();
 
   /* After #ARG_PASS_SETTINGS arguments, this is so #WM_main_playanim skips #RNA_init. */
   RNA_init();

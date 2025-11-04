@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later */
 #pragma once
 
-#include "BLI_utildefines.h"
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,9 +21,9 @@ extern "C" {
  */
 
 /** Blender major and minor version. */
-#define BLENDER_VERSION 403
+#define BLENDER_VERSION 404
 /** Blender patch version for bug-fix releases. */
-#define BLENDER_VERSION_PATCH 2
+#define BLENDER_VERSION_PATCH 3
 /** Blender release cycle stage: alpha/beta/rc/release. */
 #define BLENDER_VERSION_CYCLE release
 /** Blender release type suffix. LTS or blank. */

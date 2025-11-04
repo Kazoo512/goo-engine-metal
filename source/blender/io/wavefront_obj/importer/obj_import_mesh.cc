@@ -6,7 +6,7 @@
  * \ingroup obj
  */
 
-#include <iostream>
+#include <algorithm>
 
 #include "DNA_customdata_types.h"
 #include "DNA_material_types.h"
@@ -15,7 +15,7 @@
 #include "BKE_attribute.hh"
 #include "BKE_deform.hh"
 #include "BKE_lib_id.hh"
-#include "BKE_material.h"
+#include "BKE_material.hh"
 #include "BKE_mesh.hh"
 #include "BKE_node_tree_update.hh"
 #include "BKE_object.hh"
@@ -28,6 +28,9 @@
 #include "importer_mesh_utils.hh"
 #include "obj_export_mtl.hh"
 #include "obj_import_mesh.hh"
+
+#include "CLG_log.h"
+static CLG_LogRef LOG = {"io.obj"};
 
 namespace blender::io::obj {
 
@@ -221,7 +224,7 @@ void MeshFromGeometry::create_faces(Mesh *mesh, bool use_vertex_groups)
     const FaceElem &curr_face = mesh_geometry_.face_elements_[face_idx];
     if (curr_face.corner_count_ < 3) {
       /* Don't add single vertex face, or edges. */
-      std::cerr << "Face with less than 3 vertices found, skipping." << std::endl;
+      CLOG_WARN(&LOG, "Face with less than 3 vertices found, skipping.");
       continue;
     }
 
@@ -235,9 +238,7 @@ void MeshFromGeometry::create_faces(Mesh *mesh, bool use_vertex_groups)
     material_indices.span[face_idx] = curr_face.material_index;
     /* Importing obj files without any materials would result in negative indices, which is not
      * supported. */
-    if (material_indices.span[face_idx] < 0) {
-      material_indices.span[face_idx] = 0;
-    }
+    material_indices.span[face_idx] = std::max(material_indices.span[face_idx], 0);
 
     for (int idx = 0; idx < curr_face.corner_count_; ++idx) {
       const FaceCorner &curr_corner = mesh_geometry_.face_corners_[curr_face.start_index_ + idx];
@@ -372,7 +373,7 @@ static Material *get_or_create_material(Main *bmain,
 
   mat->use_nodes = true;
   mat->nodetree = create_mtl_node_tree(bmain, mtl, mat, relative_paths);
-  BKE_ntree_update_main_tree(bmain, mat->nodetree, nullptr);
+  BKE_ntree_update_after_single_tree_change(*bmain, *mat->nodetree);
 
   created_materials.add_new(name, mat);
   return mat;
@@ -422,7 +423,7 @@ void MeshFromGeometry::create_normals(Mesh *mesh)
       corner_index++;
     }
   }
-  BKE_mesh_set_custom_normals(mesh, reinterpret_cast<float(*)[3]>(corner_normals.data()));
+  bke::mesh_set_custom_normals(*mesh, corner_normals);
 }
 
 void MeshFromGeometry::create_colors(Mesh *mesh)

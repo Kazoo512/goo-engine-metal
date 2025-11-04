@@ -2,21 +2,28 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#pragma BLENDER_REQUIRE(draw_view_lib.glsl)
-#pragma BLENDER_REQUIRE(draw_model_lib.glsl)
-#pragma BLENDER_REQUIRE(gpu_shader_utildefines_lib.glsl)
-#pragma BLENDER_REQUIRE(gpu_shader_math_base_lib.glsl)
-#pragma BLENDER_REQUIRE(gpu_shader_math_vector_lib.glsl)
-#pragma BLENDER_REQUIRE(gpu_shader_codegen_lib.glsl)
-#pragma BLENDER_REQUIRE(eevee_renderpass_lib.glsl)
+#pragma once
 
-vec3 g_emission;
-vec3 g_transmittance;
+#include "infos/eevee_common_info.hh"
+
+SHADER_LIBRARY_CREATE_INFO(eevee_global_ubo)
+SHADER_LIBRARY_CREATE_INFO(eevee_utility_texture)
+
+#include "draw_model_lib.glsl"
+#include "draw_view_lib.glsl"
+#include "eevee_renderpass_lib.glsl"
+#include "gpu_shader_codegen_lib.glsl"
+#include "gpu_shader_math_base_lib.glsl"
+#include "gpu_shader_math_vector_lib.glsl"
+#include "gpu_shader_utildefines_lib.glsl"
+
+packed_float3 g_emission;
+packed_float3 g_transmittance;
 float g_holdout;
 
-vec3 g_volume_scattering;
+packed_float3 g_volume_scattering;
 float g_volume_anisotropy;
-vec3 g_volume_absorption;
+packed_float3 g_volume_absorption;
 
 /* The Closure type is never used. Use float as dummy type. */
 #define Closure float
@@ -31,7 +38,7 @@ ClosureUndetermined g_closure_bins[CLOSURE_BIN_COUNT];
 /* Random number per sampled closure type. */
 float g_closure_rand[CLOSURE_BIN_COUNT];
 
-ClosureUndetermined g_closure_get(int i)
+ClosureUndetermined g_closure_get(uchar i)
 {
   switch (i) {
     case 0:
@@ -50,7 +57,7 @@ ClosureUndetermined g_closure_get(int i)
   return cl_empty;
 }
 
-ClosureUndetermined g_closure_get_resolved(int i, float weight_fac)
+ClosureUndetermined g_closure_get_resolved(uchar i, float weight_fac)
 {
   ClosureUndetermined cl = g_closure_get(i);
   cl.color *= cl.weight * weight_fac;
@@ -614,8 +621,12 @@ vec2 bsdf_lut(float cos_theta, float roughness, float ior, bool do_multiscatter)
 vec3 displacement_bump()
 {
 #  if defined(GPU_FRAGMENT_SHADER) && !defined(MAT_GEOM_CURVES)
+  /* This is the filter width for automatic displacement + bump mapping, which is fixed.
+   * NOTE: keep the same as default bump node filter width. */
+  const float bump_filter_width = 0.1;
+
   vec2 dHd;
-  dF_branch(dot(nodetree_displacement(), g_data.N + dF_impl(g_data.N)), dHd);
+  dF_branch(dot(nodetree_displacement(), g_data.N + dF_impl(g_data.N)), bump_filter_width, dHd);
 
   vec3 dPdx = dFdx(g_data.P);
   vec3 dPdy = dFdy(g_data.P);
@@ -630,7 +641,7 @@ vec3 displacement_bump()
   vec3 surfgrad = dHd.x * Rx + dHd.y * Ry;
 
   float facing = FrontFacing ? 1.0 : -1.0;
-  return normalize(abs(det) * g_data.N - facing * sign(det) * surfgrad);
+  return normalize(bump_filter_width * abs(det) * g_data.N - facing * sign(det) * surfgrad);
 #  else
   return g_data.N;
 #  endif

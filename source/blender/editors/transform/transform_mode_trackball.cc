@@ -168,7 +168,7 @@ static void applyTrackball(TransInfo *t)
   if (hasNumInput(&t->num)) {
     char c[NUM_STR_REP_LEN * 2];
 
-    outputNumInput(&(t->num), c, &t->scene->unit);
+    outputNumInput(&(t->num), c, t->scene->unit);
 
     ofs += BLI_snprintf_rlen(str + ofs,
                              sizeof(str) - ofs,
@@ -219,7 +219,14 @@ static void initTrackball(TransInfo *t, wmOperator * /*op*/)
 {
   t->mode = TFM_TRACKBALL;
 
-  initMouseInputMode(t, &t->mouse, INPUT_TRACKBALL);
+  if (transform_mode_affect_only_locations(t)) {
+    WorkspaceStatus status(t->context);
+    status.item(TIP_("Transform is set to only affect location"), ICON_ERROR);
+    initMouseInputMode(t, &t->mouse, INPUT_ERROR);
+  }
+  else {
+    initMouseInputMode(t, &t->mouse, INPUT_TRACKBALL);
+  }
 
   /* Initialize re-used matrix storage to I */
   unit_m3(t->orient[0].matrix);

@@ -16,7 +16,6 @@
 #include <fstream>
 #include <iostream>
 #include <set>
-#include <stdexcept>
 #include <string>
 
 /* The OpenEXR version can reliably be found in this header file from OpenEXR,
@@ -75,10 +74,12 @@
 
 #include "MEM_guardedalloc.h"
 
-#include "BLI_blenlib.h"
 #include "BLI_fileops.h"
+#include "BLI_math_base.hh"
 #include "BLI_math_color.h"
 #include "BLI_mmap.h"
+#include "BLI_path_utils.hh"
+#include "BLI_string.h"
 #include "BLI_threads.h"
 
 #include "BKE_idprop.hh"
@@ -121,6 +122,19 @@ class IMemStream : public Imf::IStream {
       memcpy(c, (void *)(&_exrbuf[_exrpos]), n);
       _exrpos += n;
       return true;
+    }
+
+    /* OpenEXR requests chunks of 4096 bytes even if the file is smaller than that. Return
+     * zeros when reading up to 2x that amount past the end of the file.
+     * This was fixed after the OpenEXR 3.3.2 release, but not in an official release yet. */
+    if (n + _exrpos < _exrsize + 8192) {
+      const size_t remainder = _exrsize - _exrpos;
+      if (remainder > 0) {
+        memcpy(c, (void *)(&_exrbuf[_exrpos]), remainder);
+        memset(c + remainder, 0, n - remainder);
+        _exrpos += n;
+        return true;
+      }
     }
 
     return false;
@@ -385,7 +399,20 @@ bool imb_is_a_openexr(const uchar *mem, const size_t size)
   return Imf::isImfMagic((const char *)mem);
 }
 
-static void openexr_header_compression(Header *header, int compression)
+static int openexr_jpg_like_quality_to_dwa_quality(int q)
+{
+  q = blender::math::clamp(q, 0, 100);
+
+  /* Map default JPG quality of 90 to default DWA level of 45,
+   * "lossless" JPG quality of 100 to DWA level of 0, and everything else
+   * linearly based on those. */
+  constexpr int x0 = 100, y0 = 0;
+  constexpr int x1 = 90, y1 = 45;
+  q = y0 + (q - x0) * (y1 - y0) / (x1 - x0);
+  return q;
+}
+
+static void openexr_header_compression(Header *header, int compression, int quality)
 {
   switch (compression) {
     case R_IMF_EXR_CODEC_NONE:
@@ -415,9 +442,11 @@ static void openexr_header_compression(Header *header, int compression)
 #if OPENEXR_VERSION_MAJOR > 2 || (OPENEXR_VERSION_MAJOR >= 2 && OPENEXR_VERSION_MINOR >= 2)
     case R_IMF_EXR_CODEC_DWAA:
       header->compression() = DWAA_COMPRESSION;
+      header->dwaCompressionLevel() = openexr_jpg_like_quality_to_dwa_quality(quality);
       break;
     case R_IMF_EXR_CODEC_DWAB:
       header->compression() = DWAB_COMPRESSION;
+      header->dwaCompressionLevel() = openexr_jpg_like_quality_to_dwa_quality(quality);
       break;
 #endif
     default:
@@ -462,7 +491,8 @@ static bool imb_save_openexr_half(ImBuf *ibuf, const char *filepath, const int f
   try {
     Header header(width, height);
 
-    openexr_header_compression(&header, ibuf->foptions.flag & OPENEXR_COMPRESS);
+    openexr_header_compression(
+        &header, ibuf->foptions.flag & OPENEXR_CODEC_MASK, ibuf->foptions.quality);
     openexr_header_metadata(&header, ibuf);
 
     /* create channels */
@@ -485,8 +515,8 @@ static bool imb_save_openexr_half(ImBuf *ibuf, const char *filepath, const int f
     OutputFile file(*file_stream, header);
 
     /* we store first everything in half array */
-    std::vector<RGBAZ> pixels(height * width);
-    RGBAZ *to = pixels.data();
+    std::unique_ptr<RGBAZ[]> pixels = std::unique_ptr<RGBAZ[]>(new RGBAZ[int64_t(height) * width]);
+    RGBAZ *to = pixels.get();
     int xstride = sizeof(RGBAZ);
     int ystride = xstride * width;
 
@@ -501,7 +531,7 @@ static bool imb_save_openexr_half(ImBuf *ibuf, const char *filepath, const int f
       float *from;
 
       for (int i = ibuf->y - 1; i >= 0; i--) {
-        from = ibuf->float_buffer.data + channels * i * width;
+        from = ibuf->float_buffer.data + int64_t(channels) * i * width;
 
         for (int j = ibuf->x; j > 0; j--) {
           to->r = float_to_half_safe(from[0]);
@@ -517,7 +547,7 @@ static bool imb_save_openexr_half(ImBuf *ibuf, const char *filepath, const int f
       uchar *from;
 
       for (int i = ibuf->y - 1; i >= 0; i--) {
-        from = ibuf->byte_buffer.data + 4 * i * width;
+        from = ibuf->byte_buffer.data + int64_t(4) * i * width;
 
         for (int j = ibuf->x; j > 0; j--) {
           to->r = srgb_to_linearrgb(float(from[0]) / 255.0f);
@@ -563,7 +593,8 @@ static bool imb_save_openexr_float(ImBuf *ibuf, const char *filepath, const int 
   try {
     Header header(width, height);
 
-    openexr_header_compression(&header, ibuf->foptions.flag & OPENEXR_COMPRESS);
+    openexr_header_compression(
+        &header, ibuf->foptions.flag & OPENEXR_CODEC_MASK, ibuf->foptions.quality);
     openexr_header_metadata(&header, ibuf);
 
     /* create channels */
@@ -590,7 +621,7 @@ static bool imb_save_openexr_float(ImBuf *ibuf, const char *filepath, const int 
 
     /* Last scan-line, stride negative. */
     float *rect[4] = {nullptr, nullptr, nullptr, nullptr};
-    rect[0] = ibuf->float_buffer.data + channels * (height - 1) * width;
+    rect[0] = ibuf->float_buffer.data + int64_t(channels) * (height - 1) * width;
     rect[1] = (channels >= 2) ? rect[0] + 1 : rect[0];
     rect[2] = (channels >= 3) ? rect[0] + 2 : rect[0];
     rect[3] = (channels >= 4) ?
@@ -742,7 +773,7 @@ void *IMB_exr_get_handle_name(const char *name)
 void IMB_exr_add_view(void *handle, const char *name)
 {
   ExrHandle *data = (ExrHandle *)handle;
-  data->multiView->push_back(name);
+  data->multiView->emplace_back(name);
 }
 
 static int imb_exr_get_multiView_id(StringVector &views, const std::string &name)
@@ -875,6 +906,7 @@ bool IMB_exr_begin_write(void *handle,
                          int width,
                          int height,
                          int compress,
+                         int quality,
                          const StampData *stamp)
 {
   ExrHandle *data = (ExrHandle *)handle;
@@ -889,7 +921,7 @@ bool IMB_exr_begin_write(void *handle,
     header.channels().insert(echan->name, Channel(echan->use_half_float ? Imf::HALF : Imf::FLOAT));
   }
 
-  openexr_header_compression(&header, compress);
+  openexr_header_compression(&header, compress, quality);
   BKE_stamp_info_callback(
       &header, const_cast<StampData *>(stamp), openexr_header_metadata_callback, false);
   /* header.lineOrder() = DECREASING_Y; this crashes in windows for file read! */
@@ -1502,7 +1534,8 @@ static int imb_exr_split_channel_name(ExrChannel *echan,
   if (len == 1) {
     echan->chan_id = BLI_toupper_ascii(channelname[0]);
   }
-  else if (len > 1) {
+  else {
+    BLI_assert(len > 1); /* Checks above ensure. */
     if (len == 2) {
       /* Some multi-layers are using two-letter channels name,
        * like, MX or NZ, which is basically has structure of
@@ -1641,11 +1674,11 @@ static std::vector<MultiViewChannelName> exr_channels_in_multi_part_file(
   for (int p = 0; p < file.parts(); p++) {
     const ChannelList &c = file.header(p).channels();
 
-    std::string part_view = "";
+    std::string part_view;
     if (file.header(p).hasView()) {
       part_view = file.header(p).view();
     }
-    std::string part_name = "";
+    std::string part_name;
     if (file.header(p).hasName()) {
       part_name = file.header(p).name();
     }

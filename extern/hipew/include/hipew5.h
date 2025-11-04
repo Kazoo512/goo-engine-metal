@@ -17,6 +17,8 @@
 #ifndef __HIPEW5_H__
 #define __HIPEW5_H__
 
+#define WIN_DRIVER "amdhip64.dll"
+
 typedef enum hipMemcpyKind {
     hipMemcpyHostToHost = 0,
     hipMemcpyHostToDevice = 1,
@@ -24,6 +26,14 @@ typedef enum hipMemcpyKind {
     hipMemcpyDeviceToDevice = 3,
     hipMemcpyDefault = 4
 } hipMemcpyKind;
+
+typedef enum hipMemoryType {
+  hipMemoryTypeHost    = 0,
+  hipMemoryTypeDevice  = 1,
+  hipMemoryTypeArray   = 2,
+  hipMemoryTypeUnified = 3,
+  hipMemoryTypeManaged = 4
+} hipMemoryType;
 
 typedef struct HIP_POINTER_ATTRIBUTE_P2P_TOKENS_st {
   unsigned long long p2pToken;

@@ -3,14 +3,13 @@
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
 #include "BKE_attribute.hh"
-
 #include "BKE_context.hh"
 #include "BKE_curves.hh"
 #include "BKE_grease_pencil.hh"
 #include "BKE_paint.hh"
 
-#include "BLI_virtual_array.hh"
 #include "DNA_brush_enums.h"
+#include "DNA_brush_types.h"
 
 #include "GEO_smooth_curves.hh"
 
@@ -28,13 +27,12 @@ namespace blender::ed::sculpt_paint::greasepencil {
 class SmoothOperation : public GreasePencilStrokeOperationCommon {
  private:
   bool temp_smooth_;
-  int context_type_;
 
  public:
   using GreasePencilStrokeOperationCommon::GreasePencilStrokeOperationCommon;
 
-  SmoothOperation(const BrushStrokeMode stroke_mode, const bool temp_smooth = false, const int context_type = 0)
-      : GreasePencilStrokeOperationCommon(stroke_mode), temp_smooth_(temp_smooth), context_type_(context_type)
+  SmoothOperation(const BrushStrokeMode stroke_mode, const bool temp_smooth = false)
+      : GreasePencilStrokeOperationCommon(stroke_mode), temp_smooth_(temp_smooth)
   {
   }
 
@@ -58,6 +56,7 @@ void SmoothOperation::on_stroke_begin(const bContext &C, const InputSample &star
   else {
     this->init_stroke(C, start_sample);
   }
+  this->init_auto_masking(C, start_sample);
 }
 
 void SmoothOperation::on_stroke_extended(const bContext &C, const InputSample &extension_sample)
@@ -75,98 +74,96 @@ void SmoothOperation::on_stroke_extended(const bContext &C, const InputSample &e
   }();
   const int sculpt_mode_flag = brush.gpencil_settings->sculpt_mode_flag;
 
-  const bool is_masking = GPENCIL_ANY_SCULPT_MASK(
-      eGP_Sculpt_SelectMaskFlag(scene.toolsettings->gpencil_selectmode_sculpt));
+  this->foreach_editable_drawing_with_automask(
+      C, [&](const GreasePencilStrokeParams &params, const IndexMask &point_mask) {
+        Array<float2> view_positions = calculate_view_positions(params, point_mask);
+        bke::CurvesGeometry &curves = params.drawing.strokes_for_write();
+        bke::MutableAttributeAccessor attributes = curves.attributes_for_write();
+        const OffsetIndices points_by_curve = curves.points_by_curve();
+        const VArray<bool> cyclic = curves.cyclic();
+        const int iterations = 2;
 
-  this->foreach_editable_drawing(C, [&](const GreasePencilStrokeParams &params) {
-    IndexMaskMemory selection_memory;
-    const IndexMask selection = point_selection_mask(params, is_masking, selection_memory);
-    if (selection.is_empty()) {
-      return false;
-    }
+        const VArray<float> influences = VArray<float>::ForFunc(
+            view_positions.size(), [&](const int64_t point_) {
+              return brush_point_influence(scene,
+                                           brush,
+                                           view_positions[point_],
+                                           extension_sample,
+                                           params.multi_frame_falloff);
+            });
+        Array<bool> selection_array(curves.points_num());
+        point_mask.to_bools(selection_array);
+        const VArray<bool> selection_varray = VArray<bool>::ForSpan(selection_array);
 
-    Array<float2> view_positions = calculate_view_positions(params, selection);
-    bke::CurvesGeometry &curves = params.drawing.strokes_for_write();
-    bke::MutableAttributeAccessor attributes = curves.attributes_for_write();
-    const OffsetIndices points_by_curve = curves.points_by_curve();
-    const VArray<bool> cyclic = curves.cyclic();
-    const int iterations = 2;
-
-    const VArray<float> influences = VArray<float>::ForFunc(
-        view_positions.size(), [&](const int64_t point_) {
-          return brush_point_influence(
-              scene, brush, view_positions[point_], extension_sample, params.multi_frame_falloff);
-        });
-    Array<bool> selection_array(curves.points_num());
-    selection.to_bools(selection_array);
-    const VArray<bool> selection_varray = VArray<bool>::ForSpan(selection_array);
-
-    bool changed = false;
-    if (((sculpt_mode_flag & GP_SCULPT_FLAGMODE_APPLY_POSITION) & context_type_ == 0) || context_type_ == 1) {
-      MutableSpan<float3> positions = curves.positions_for_write();
-      geometry::smooth_curve_attribute(curves.curves_range(),
-                                       points_by_curve,
-                                       selection_varray,
-                                       cyclic,
-                                       iterations,
-                                       influences,
-                                       false,
-                                       false,
-                                       positions);
-      params.drawing.tag_positions_changed();
-      changed = true;
-    }
-    if (((sculpt_mode_flag & GP_SCULPT_FLAGMODE_APPLY_STRENGTH) & context_type_ == 0) || context_type_ == 2) {
-      MutableSpan<float> opacities = params.drawing.opacities_for_write();
-      geometry::smooth_curve_attribute(curves.curves_range(),
-                                       points_by_curve,
-                                       selection_varray,
-                                       cyclic,
-                                       iterations,
-                                       influences,
-                                       true,
-                                       false,
-                                       opacities);
-      changed = true;
-    }
-    if (((sculpt_mode_flag & GP_SCULPT_FLAGMODE_APPLY_THICKNESS) & context_type_ == 0) || context_type_ == 3) {
-      const MutableSpan<float> radii = params.drawing.radii_for_write();
-      geometry::smooth_curve_attribute(curves.curves_range(),
-                                       points_by_curve,
-                                       selection_varray,
-                                       cyclic,
-                                       iterations,
-                                       influences,
-                                       true,
-                                       false,
-                                       radii);
-      curves.tag_radii_changed();
-      changed = true;
-    }
-    if ((sculpt_mode_flag & GP_SCULPT_FLAGMODE_APPLY_UV) & context_type_ == 0) {
-      bke::SpanAttributeWriter<float> rotations = attributes.lookup_or_add_for_write_span<float>(
-          "rotation", bke::AttrDomain::Point);
-      geometry::smooth_curve_attribute(curves.curves_range(),
-                                       points_by_curve,
-                                       selection_varray,
-                                       cyclic,
-                                       iterations,
-                                       influences,
-                                       true,
-                                       false,
-                                       rotations.span);
-      rotations.finish();
-      changed = true;
-    }
-    return changed;
-  });
+        bool changed = false;
+        if (sculpt_mode_flag & GP_SCULPT_FLAGMODE_APPLY_POSITION) {
+          MutableSpan<float3> positions = curves.positions_for_write();
+          geometry::smooth_curve_attribute(curves.curves_range(),
+                                           points_by_curve,
+                                           selection_varray,
+                                           cyclic,
+                                           iterations,
+                                           influences,
+                                           false,
+                                           false,
+                                           positions);
+          params.drawing.tag_positions_changed();
+          changed = true;
+        }
+        if (sculpt_mode_flag & GP_SCULPT_FLAGMODE_APPLY_STRENGTH) {
+          MutableSpan<float> opacities = params.drawing.opacities_for_write();
+          geometry::smooth_curve_attribute(curves.curves_range(),
+                                           points_by_curve,
+                                           selection_varray,
+                                           cyclic,
+                                           iterations,
+                                           influences,
+                                           true,
+                                           false,
+                                           opacities);
+          changed = true;
+        }
+        if (sculpt_mode_flag & GP_SCULPT_FLAGMODE_APPLY_THICKNESS) {
+          const MutableSpan<float> radii = params.drawing.radii_for_write();
+          geometry::smooth_curve_attribute(curves.curves_range(),
+                                           points_by_curve,
+                                           selection_varray,
+                                           cyclic,
+                                           iterations,
+                                           influences,
+                                           true,
+                                           false,
+                                           radii);
+          curves.tag_radii_changed();
+          changed = true;
+        }
+        if (sculpt_mode_flag & GP_SCULPT_FLAGMODE_APPLY_UV) {
+          if (bke::SpanAttributeWriter<float> rotations =
+                  attributes.lookup_or_add_for_write_span<float>("rotation",
+                                                                 bke::AttrDomain::Point))
+          {
+            geometry::smooth_curve_attribute(curves.curves_range(),
+                                             points_by_curve,
+                                             selection_varray,
+                                             cyclic,
+                                             iterations,
+                                             influences,
+                                             true,
+                                             false,
+                                             rotations.span);
+            rotations.finish();
+            changed = true;
+          }
+        }
+        return changed;
+      });
   this->stroke_extended(extension_sample);
 }
 
 std::unique_ptr<GreasePencilStrokeOperation> new_smooth_operation(
-    const BrushStrokeMode stroke_mode, const bool temp_smooth, const int context_type)
+    const BrushStrokeMode stroke_mode, const bool temp_smooth)
 {
-  return std::make_unique<SmoothOperation>(stroke_mode, temp_smooth, context_type);
+  return std::make_unique<SmoothOperation>(stroke_mode, temp_smooth);
 }
 
 }  // namespace blender::ed::sculpt_paint::greasepencil
