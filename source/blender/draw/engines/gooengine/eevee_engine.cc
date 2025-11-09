@@ -255,16 +255,12 @@ static void eevee_draw_scene(void *vedata)
 
     /* Refresh Probes
      * Shadows needs to be updated for correct probes */
-    DRW_stats_group_start("Probes Refresh");
     EEVEE_shadows_update(sldata, static_cast<EEVEE_Data *>(vedata));
     EEVEE_lightprobes_refresh(sldata, static_cast<EEVEE_Data *>(vedata));
     EEVEE_lightprobes_refresh_planar(sldata, static_cast<EEVEE_Data *>(vedata));
-    DRW_stats_group_end();
-
+  
     /* Refresh shadows */
-    DRW_stats_group_start("Shadows");
     EEVEE_shadows_draw(sldata, static_cast<EEVEE_Data *>(vedata), stl->effects->taa_view);
-    DRW_stats_group_end();
 
     if (((stl->effects->enabled_effects & EFFECT_TAA) != 0) &&
         (stl->effects->taa_current_sample > 1) && !DRW_state_is_image_render() &&
@@ -297,26 +293,20 @@ static void eevee_draw_scene(void *vedata)
     GPU_framebuffer_clear(fbl->main_fb, clear_bits, clear_col, clear_depth, clear_stencil);
 
     /* Depth pre-pass. */
-    DRW_stats_group_start("Prepass");
     DRW_draw_pass(psl->depth_ps);
-    DRW_stats_group_end();
 
     /* Create minmax texture */
-    DRW_stats_group_start("Main MinMax buffer");
     EEVEE_create_minmax_buffer(static_cast<EEVEE_Data *>(vedata), dtxl->depth, -1);
-    DRW_stats_group_end();
 
     EEVEE_occlusion_compute(sldata, static_cast<EEVEE_Data *>(vedata));
     EEVEE_volumes_compute(sldata, static_cast<EEVEE_Data *>(vedata));
 
     /* Shading pass */
-    DRW_stats_group_start("Shading");
     if (DRW_state_draw_background()) {
       DRW_draw_pass(psl->background_ps);
     }
     DRW_draw_pass(psl->material_ps);
     EEVEE_subsurface_data_render(sldata, static_cast<EEVEE_Data *>(vedata));
-    DRW_stats_group_end();
 
     /* Effects pre-transparency */
     EEVEE_subsurface_compute(sldata, static_cast<EEVEE_Data *>(vedata));
@@ -328,10 +318,8 @@ static void eevee_draw_scene(void *vedata)
     EEVEE_refraction_compute(sldata, static_cast<EEVEE_Data *>(vedata));
 
     /* Opaque refraction */
-    DRW_stats_group_start("Opaque Refraction");
     DRW_draw_pass(psl->depth_refract_ps);
     DRW_draw_pass(psl->material_refract_ps);
-    DRW_stats_group_end();
 
     /* Streamlined version of EEVEE_refraction_compute to just copy the colour buffer */
     EEVEE_effects_radiance_copy(sldata, static_cast<EEVEE_Data *>(vedata));
@@ -353,9 +341,7 @@ static void eevee_draw_scene(void *vedata)
     GPU_framebuffer_texture_detach(fbl->main_color_fb, dtxl->depth);
 
     /* Post Process */
-    DRW_stats_group_start("Post FX");
     EEVEE_draw_effects(sldata, static_cast<EEVEE_Data *>(vedata));
-    DRW_stats_group_end();
 
     DRW_view_set_active(nullptr);
 

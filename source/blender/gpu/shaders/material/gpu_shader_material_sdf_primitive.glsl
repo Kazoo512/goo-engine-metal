@@ -24,28 +24,28 @@
 // Specialized implementations can well be faster in all cases.
 //
 
-const vec3 GDFVectors[19] = vec3[](normalize(vec3(1.0, 0.0, 0.0)),
-                                   normalize(vec3(0.0, 1.0, 0.0)),
-                                   normalize(vec3(0.0, 0.0, 1.0)),
+const vec3 GDFVectors[19] = float3_array(normalize(vec3(1.0, 0.0, 0.0)),
+                                          normalize(vec3(0.0, 1.0, 0.0)),
+                                          normalize(vec3(0.0, 0.0, 1.0)),
 
-                                   normalize(vec3(1.0, 1.0, 1.0)),
-                                   normalize(vec3(-1.0, 1.0, 1.0)),
-                                   normalize(vec3(1.0, -1.0, 1.0)),
-                                   normalize(vec3(1.0, 1.0, -1.0)),
+                                          normalize(vec3(1.0, 1.0, 1.0)),
+                                          normalize(vec3(-1.0, 1.0, 1.0)),
+                                          normalize(vec3(1.0, -1.0, 1.0)),
+                                          normalize(vec3(1.0, 1.0, -1.0)),
 
-                                   normalize(vec3(0.0, 1.0, M_PHI + 1.0)),
-                                   normalize(vec3(0.0, -1.0, M_PHI + 1.0)),
-                                   normalize(vec3(M_PHI + 1.0, 0.0, 1.0)),
-                                   normalize(vec3(-M_PHI - 1.0, 0.0, 1.0)),
-                                   normalize(vec3(1.0, M_PHI + 1.0, 0.0)),
-                                   normalize(vec3(-1.0, M_PHI + 1.0, 0.0)),
+                                          normalize(vec3(0.0, 1.0, M_PHI + 1.0)),
+                                          normalize(vec3(0.0, -1.0, M_PHI + 1.0)),
+                                          normalize(vec3(M_PHI + 1.0, 0.0, 1.0)),
+                                          normalize(vec3(-M_PHI - 1.0, 0.0, 1.0)),
+                                          normalize(vec3(1.0, M_PHI + 1.0, 0.0)),
+                                          normalize(vec3(-1.0, M_PHI + 1.0, 0.0)),
 
-                                   normalize(vec3(0.0, M_PHI, 1.0)),
-                                   normalize(vec3(0.0, -M_PHI, 1.0)),
-                                   normalize(vec3(1.0, 0.0, M_PHI)),
-                                   normalize(vec3(-1.0, 0.0, M_PHI)),
-                                   normalize(vec3(M_PHI, 1.0, 0.0)),
-                                   normalize(vec3(-M_PHI, 1.0, 0.0)));
+                                          normalize(vec3(0.0, M_PHI, 1.0)),
+                                          normalize(vec3(0.0, -M_PHI, 1.0)),
+                                          normalize(vec3(1.0, 0.0, M_PHI)),
+                                          normalize(vec3(-1.0, 0.0, M_PHI)),
+                                          normalize(vec3(M_PHI, 1.0, 0.0)),
+                                          normalize(vec3(-M_PHI, 1.0, 0.0)));
 
 // Version with variable exponent.
 // This is slow and does not produce correct distances, but allows for bulging of objects.

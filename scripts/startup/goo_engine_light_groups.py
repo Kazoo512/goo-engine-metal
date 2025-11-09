@@ -16,6 +16,7 @@ from ctypes import c_int32
 SIZEOF_INT = 32
 MAX_LIGHT_GROUP_BIT = 127
 
+
 def set_bit(vec, bit):
     index = bit // SIZEOF_INT
     mask = 1 << (bit % SIZEOF_INT)

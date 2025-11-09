@@ -187,8 +187,6 @@ void EEVEE_occlusion_compute(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)
   EEVEE_CommonUniformBuffer *common_data = &sldata->common_data;
 
   if ((effects->enabled_effects & EFFECT_GTAO) != 0) {
-    DRW_stats_group_start("GTAO Horizon Scan");
-
     GPU_framebuffer_bind(fbl->gtao_fb);
 
     /** NOTE(fclem): Kind of fragile. We need this to make sure everything lines up
@@ -213,8 +211,6 @@ void EEVEE_occlusion_compute(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)
 
     /* Restore */
     GPU_framebuffer_bind(fbl->main_fb);
-
-    DRW_stats_group_end();
   }
 }
 
@@ -226,15 +222,11 @@ void EEVEE_occlusion_draw_debug(EEVEE_ViewLayerData * /*sldata*/, EEVEE_Data *ve
   EEVEE_EffectsInfo *effects = stl->effects;
 
   if (((effects->enabled_effects & EFFECT_GTAO) != 0) && (G.debug_value == 6)) {
-    DRW_stats_group_start("GTAO Debug");
-
     GPU_framebuffer_bind(fbl->gtao_debug_fb);
     DRW_draw_pass(psl->ao_horizon_debug);
 
     /* Restore */
     GPU_framebuffer_bind(fbl->main_fb);
-
-    DRW_stats_group_end();
   }
 }
 

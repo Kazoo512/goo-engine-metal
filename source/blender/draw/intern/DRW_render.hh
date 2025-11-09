@@ -10,9 +10,34 @@
 
 #pragma once
 
-#include "DNA_object_enums.h"
+#include "BLI_math_matrix.h"
+#include "BLI_string.h"
 
+#include "BKE_context.hh"
+#include "BKE_layer.hh"
+#include "BKE_material.hh"
+
+#include "BLT_translation.hh"
+
+#include "DNA_light_types.h"
+#include "DNA_material_types.h"
+#include "DNA_world_types.h"
+
+#include "GPU_framebuffer.hh"
 #include "GPU_material.hh"
+#include "GPU_primitive.hh"
+#include "GPU_storage_buffer.hh"
+#include "GPU_uniform_buffer.hh"
+
+#include "draw_cache.hh"
+#include "draw_common_c.hh"
+
+#include "draw_debug_c.hh"
+#include "draw_manager_profiling.hh"
+#include "draw_state.hh"
+#include "draw_view_data.hh"
+
+#include "RE_engine.h"
 
 /* Uncomment to track unused resource bindings. */
 // #define DRW_UNUSED_RESOURCE_TRACKING
@@ -38,6 +63,8 @@ struct GPUTexture;
 struct GPUUniformBuf;
 struct Object;
 struct ParticleSystem;
+struct RenderEngineType;
+struct bContext;
 struct rcti;
 struct RegionView3D;
 struct RenderEngine;
@@ -53,9 +80,12 @@ namespace blender::draw {
 class TextureFromPool;
 }  // namespace blender::draw
 
+typedef struct DRWCallBuffer DRWCallBuffer;
 typedef struct DRWPass DRWPass;
+typedef struct DRWShaderLibrary DRWShaderLibrary;
 typedef struct DRWShadingGroup DRWShadingGroup;
 typedef struct DRWUniform DRWUniform;
+typedef struct DRWView DRWView;
 
 /* TODO: Put it somewhere else? */
 struct BoundSphere {
@@ -111,6 +141,98 @@ struct DrawEngineType {
                           const rcti *rect);
   void (*store_metadata)(void *vedata, RenderResult *render_result);
 };
+
+/* Textures */
+enum DRWTextureFlag {
+  DRW_TEX_FILTER = (1 << 0),
+  DRW_TEX_WRAP = (1 << 1),
+  DRW_TEX_COMPARE = (1 << 2),
+  DRW_TEX_MIPMAP = (1 << 3),
+};
+
+/**
+ * Textures from `DRW_texture_pool_query_*` have the options
+ * #DRW_TEX_FILTER for color float textures, and no options
+ * for depth textures and integer textures.
+ */
+GPUTexture *DRW_texture_pool_query_2d(int w,
+                                      int h,
+                                      eGPUTextureFormat format,
+                                      DrawEngineType *engine_type);
+
+GPUTexture *DRW_texture_create_2d(
+    int w, int h, eGPUTextureFormat format, DRWTextureFlag flags, const float *fpixels);
+GPUTexture *DRW_texture_create_2d_array(
+    int w, int h, int d, eGPUTextureFormat format, DRWTextureFlag flags, const float *fpixels);
+GPUTexture *DRW_texture_create_3d(
+    int w, int h, int d, eGPUTextureFormat format, DRWTextureFlag flags, const float *fpixels);
+GPUTexture *DRW_texture_create_cube(int w,
+                                    eGPUTextureFormat format,
+                                    DRWTextureFlag flags,
+                                    const float *fpixels);
+GPUTexture *DRW_texture_create_cube_array(
+    int w, int d, eGPUTextureFormat format, DRWTextureFlag flags, const float *fpixels);
+
+void DRW_texture_ensure_fullscreen_2d(GPUTexture **tex,
+                                      eGPUTextureFormat format,
+                                      DRWTextureFlag flags);
+void DRW_texture_ensure_2d(
+    GPUTexture **tex, int w, int h, eGPUTextureFormat format, DRWTextureFlag flags);
+
+/* Explicit parameter variants. */
+GPUTexture *DRW_texture_pool_query_2d_ex(
+    int w, int h, eGPUTextureFormat format, eGPUTextureUsage usage, DrawEngineType *engine_type);
+
+GPUTexture *DRW_texture_create_2d_ex(int w,
+                                     int h,
+                                     eGPUTextureFormat format,
+                                     eGPUTextureUsage usage_flags,
+                                     DRWTextureFlag flags,
+                                     const float *fpixels);
+GPUTexture *DRW_texture_create_2d_array_ex(int w,
+                                           int h,
+                                           int d,
+                                           eGPUTextureFormat format,
+                                           eGPUTextureUsage usage_flags,
+                                           DRWTextureFlag flags,
+                                           const float *fpixels);
+GPUTexture *DRW_texture_create_3d_ex(int w,
+                                     int h,
+                                     int d,
+                                     eGPUTextureFormat format,
+                                     eGPUTextureUsage usage_flags,
+                                     DRWTextureFlag flags,
+                                     const float *fpixels);
+GPUTexture *DRW_texture_create_cube_ex(int w,
+                                       eGPUTextureFormat format,
+                                       eGPUTextureUsage usage_flags,
+                                       DRWTextureFlag flags,
+                                       const float *fpixels);
+GPUTexture *DRW_texture_create_cube_array_ex(int w,
+                                             int d,
+                                             eGPUTextureFormat format,
+                                             eGPUTextureUsage usage_flags,
+                                             DRWTextureFlag flags,
+                                             const float *fpixels);
+
+void DRW_texture_ensure_fullscreen_2d_ex(GPUTexture **tex,
+                                         eGPUTextureFormat format,
+                                         eGPUTextureUsage usage,
+                                         DRWTextureFlag flags);
+void DRW_texture_ensure_2d_ex(GPUTexture **tex,
+                              int w,
+                              int h,
+                              eGPUTextureFormat format,
+                              eGPUTextureUsage usage,
+                              DRWTextureFlag flags);
+void DRW_texture_free(GPUTexture *tex);
+#define DRW_TEXTURE_FREE_SAFE(tex) \
+  do { \
+    if (tex != nullptr) { \
+      DRW_texture_free(tex); \
+      tex = nullptr; \
+    } \
+  } while (0)
 
 /* Shaders */
 GPUShader *DRW_shader_create_from_info_name(const char *info_name);
@@ -173,14 +295,6 @@ GPUMaterial *DRW_shader_from_material(
     void *thunk,
     GPUMaterialPassReplacementCallbackFn pass_replacement_cb = nullptr);
 void DRW_shader_queue_optimize_material(GPUMaterial *mat);
-void DRW_shader_free(GPUShader *shader);
-#define DRW_SHADER_FREE_SAFE(shader) \
-  do { \
-    if (shader != nullptr) { \
-      DRW_shader_free(shader); \
-      shader = nullptr; \
-    } \
-  } while (0)
 
 DRWShaderLibrary *DRW_shader_library_create();
 
@@ -218,7 +332,6 @@ enum eDRWAttrType {
   DRW_ATTR_INT,
   DRW_ATTR_FLOAT,
 };
-
 struct DRWInstanceAttrFormat {
   char name[32];
   eDRWAttrType type;
@@ -619,7 +732,7 @@ void DRW_view_frustum_corners_get(const DRWView *view, BoundBox *corners);
  * \return world space frustum sides as planes.
  * See #draw_frustum_culling_planes_calc() for the plane order.
  */
-void DRW_view_frustum_planes_get(const DRWView *view, float planes[6][4]);
+std::array<float4, 6> DRW_view_frustum_planes_get(const DRWView *view);
 
 /**
  * These are in view-space, so negative if in perspective.
@@ -641,19 +754,6 @@ bool DRW_culling_sphere_test(const DRWView *view, const BoundSphere *bsphere);
  * bbox must be in world space.
  */
 bool DRW_culling_box_test(const DRWView *view, const BoundBox *bbox);
-/**
- * \return True if the view frustum is inside or intersect the given plane.
- * plane must be in world space.
- */
-bool DRW_culling_plane_test(const DRWView *view, const float plane[4]);
-/**
- * Return True if the given box intersect the current view frustum.
- * This function will have to be replaced when world space bounding-box per objects is implemented.
- */
-bool DRW_culling_min_max_test(const DRWView *view, float obmat[4][4], float min[3], float max[3]);
-
-void DRW_culling_frustum_corners_get(const DRWView *view, BoundBox *corners);
-void DRW_culling_frustum_planes_get(const DRWView *view, float planes[6][4]);
 
 /* Viewport. */
 
@@ -675,11 +775,18 @@ void DRW_render_object_iter(
     RenderEngine *engine,
     Depsgraph *depsgraph,
     void (*callback)(void *vedata, Object *ob, RenderEngine *engine, Depsgraph *depsgraph));
-
+/**
+ * Must run after all instance datas have been added.
+ */
+void DRW_render_instance_buffer_finish();
 /**
  * \warning Changing frame might free the #ViewLayerEngineData.
  */
 void DRW_render_set_time(RenderEngine *engine, Depsgraph *depsgraph, int frame, float subframe);
+/**
+ * \warning only use for custom pipeline. 99% of the time, you don't want to use this.
+ */
+void DRW_render_viewport_size_set(const int size[2]);
 
 /**
  * Assume a valid GL context is bound (and that the gl_context_mutex has been acquired).
@@ -747,8 +854,29 @@ bool DRW_object_is_visible_psys_in_active_context(const Object *object,
 Object *DRW_object_get_dupli_parent(const Object *ob);
 DupliObject *DRW_object_get_dupli(const Object *ob);
 
+/* Draw commands */
+
+void DRW_draw_pass(DRWPass *pass);
+
 void DRW_draw_callbacks_pre_scene();
 void DRW_draw_callbacks_post_scene();
+
+/**
+ * Reset state to not interfere with other UI draw-call.
+ */
+void DRW_state_reset_ex(DRWState state);
+void DRW_state_reset();
+/**
+ * Use with care, intended so selection code can override passes depth settings,
+ * which is important for selection to work properly.
+ *
+ * Should be set in main draw loop, cleared afterwards
+ */
+void DRW_state_lock(DRWState state);
+
+/* Selection. */
+
+void DRW_select_load_id(uint id);
 
 /* Draw State. */
 

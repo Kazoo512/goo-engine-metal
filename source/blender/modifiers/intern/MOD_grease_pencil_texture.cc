@@ -266,7 +266,7 @@ static void write_fill_transforms(bke::greasepencil::Drawing &drawing,
   curves_mask.foreach_index(GrainSize(512), [&](int64_t curve_i) {
     const IndexRange points = curves.points_by_curve()[curve_i];
     float4x2 &texture_matrix = texture_matrices[curve_i];
-    
+  
     /* Randomness factors for loc/rot/scale per curve. */
     const float2 loc_factor = get_random_vector(0, curve_i, tmd.rnd_fill_offset);
     const float rot_factor = get_random_value(1, curve_i, tmd.rnd_fill_rot);
@@ -417,7 +417,7 @@ static void panel_draw(const bContext *C, Panel *panel)
     uiItemR(subcol, ptr, "rnd_fill_rot", UI_ITEM_NONE, IFACE_("Fill Rot"), ICON_NONE);
     uiItemR(subcol, ptr, "rnd_fill_offset", UI_ITEM_NONE, IFACE_("Fill Offset"), ICON_NONE);
     uiItemR(subcol, ptr, "rnd_fill_scale", UI_ITEM_NONE, IFACE_("Fill Scale"), ICON_NONE);
-    uiItemR(subcol, ptr, "seed", UI_ITEM_NONE, nullptr, ICON_NONE);
+    uiItemR(subcol, ptr, "seed", UI_ITEM_NONE, std::nullopt, ICON_NONE);
   }
 
   if (uiLayout *influence_panel = uiLayoutPanelProp(

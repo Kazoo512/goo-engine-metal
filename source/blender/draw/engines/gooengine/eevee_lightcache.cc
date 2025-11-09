@@ -24,6 +24,7 @@
 #include "DNA_collection_types.h"
 #include "DNA_lightprobe_types.h"
 
+#include "draw_common.hh"
 #include "eevee_lightcache.h"
 #include "eevee_private.hh"
 
@@ -1016,7 +1017,7 @@ static void eevee_lightbake_cache_create(EEVEE_Data *vedata, EEVEE_LightBake *lb
   txl->color = nullptr;
 
   DRW_render_instance_buffer_finish();
-  DRW_curves_update();
+  DRW_curves_update(*DRW_manager_get());
 }
 
 static void eevee_lightbake_copy_irradiance(EEVEE_LightBake *lbake, LightCache *lcache)

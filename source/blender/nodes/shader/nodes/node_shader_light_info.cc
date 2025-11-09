@@ -93,13 +93,17 @@ static int node_shader_gpu_light_info(GPUMaterial *mat,
 }  // namespace blender::nodes::node_shader_light_info_cc
 
 /* node type definition */
-void register_node_type_sh_light_info(void)
+void register_node_type_sh_light_info()
 {
   namespace file_ns = blender::nodes::node_shader_light_info_cc;
 
   static blender::bke::bNodeType ntype;
 
-  sh_node_type_base(&ntype, SH_NODE_LIGHT_INFO, "Light Info", NODE_CLASS_INPUT);
+  sh_node_type_base(&ntype, "ShaderNodeLightInfo", SH_NODE_LIGHT_INFO);
+  ntype.ui_name = "Light Info";
+  ntype.ui_description = "Get information from a selected light object";
+  ntype.enum_name_legacy = "LIGHT_INFO";
+  ntype.nclass = NODE_CLASS_INPUT;
   ntype.declare = file_ns::sh_node_light_info_declare;
   ntype.draw_buttons = file_ns::node_shader_draw_light_info;
   ntype.gpu_fn = file_ns::node_shader_gpu_light_info;

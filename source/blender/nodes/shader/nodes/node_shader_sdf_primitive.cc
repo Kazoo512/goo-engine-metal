@@ -81,7 +81,7 @@ static void node_shader_init_sdf_primitive(bNodeTree * /* ntree */, bNode *node)
 static void node_shader_buts_sdf_primitive(uiLayout *layout, bContext * /* C */, PointerRNA *ptr)
 {
   uiItemR(layout, ptr, "mode", UI_ITEM_NONE, "", ICON_NONE);
-  uiItemR(layout, ptr, "invert", UI_ITEM_NONE, NULL, ICON_NONE);
+  uiItemR(layout, ptr, "invert", UI_ITEM_NONE, std::nullopt, ICON_NONE);
 }
 
 
@@ -466,11 +466,14 @@ static void node_shader_update_sdf_primitive(bNodeTree *ntree, bNode *node)
 }
 
 /* node type definition */
-void register_node_type_sh_sdf_primitive(void)
+void register_node_type_sh_sdf_primitive()
 {
   static blender::bke::bNodeType ntype;
 
-  sh_node_type_base(&ntype, SH_NODE_SDF_PRIMITIVE, "Sdf Primitive", NODE_CLASS_TEXTURE);
+  sh_node_type_base(&ntype, "ShaderNodeSdfPrimitive", SH_NODE_SDF_PRIMITIVE);
+  ntype.ui_name = "Sdf Primitive";
+  ntype.enum_name_legacy = "SDF_PRIMITIVE";
+  ntype.nclass = NODE_CLASS_TEXTURE;
   ntype.declare = blender::nodes::sh_node_sdf_primitive_declare;
   blender::bke::node_type_storage(
       &ntype, "NodeSdfPrimitive", node_free_standard_storage, node_copy_standard_storage);

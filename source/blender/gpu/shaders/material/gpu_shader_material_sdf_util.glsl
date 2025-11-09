@@ -19,6 +19,15 @@
 #define M_SQRT1_2 0.70710678118654752440 /* sqrt(1/2) */
 #define M_PHI 4.97213595499957939281     /* (sqrt(5)*0.5 + 0.5) */
 
+/**
+ * Safe square root function. Returns `sqrt(a)`.
+ * If `a` is less or equal to 0 then the result will be 0.
+ */
+float safe_sqrt(float a)
+{
+  return sqrt(max(0.0, a));
+}
+
 float safe_mod(float a, float b)
 {
   return (b != 0.0) ? a - b * floor(a / b) : 0.0;

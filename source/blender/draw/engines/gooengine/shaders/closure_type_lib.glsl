@@ -2,8 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#pragma BLENDER_REQUIRE(gpu_shader_codegen_lib.glsl)
-/* #pragma (common_math_geom_lib.glsl) */
+#pragma BLENDER_REQUIRE(goo_gpu_shader_codegen_lib.glsl)
+/* #pragma (goo_common_math_geom_lib.glsl) */
 /* #pragma (common_uniforms_lib.glsl) */
 /* #pragma (renderpass_lib.glsl) */
 

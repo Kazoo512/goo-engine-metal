@@ -217,6 +217,8 @@ void EEVEE_screen_raytrace_cache_init(EEVEE_ViewLayerData *sldata, EEVEE_Data *v
       DRW_shgroup_uniform_texture_ref(grp, "maxzBuffer", &txl->maxzbuffer);
       DRW_shgroup_uniform_texture_ref(grp, "shadowCubeTexture", &sldata->shadow_cube_pool);
       DRW_shgroup_uniform_texture_ref(grp, "shadowCascadeTexture", &sldata->shadow_cascade_pool);
+      DRW_shgroup_uniform_texture_ref(grp, "shadowCubeIDTexture", &sldata->shadow_cube_id_pool);
+      DRW_shgroup_uniform_texture_ref(grp, "shadowCascadeIDTexture", &sldata->shadow_cascade_id_pool);
       DRW_shgroup_uniform_texture(grp, "utilTex", EEVEE_materials_get_util_tex());
       DRW_shgroup_uniform_block(grp, "light_block", sldata->light_ubo);
       DRW_shgroup_uniform_block(grp, "shadow_block", sldata->shadow_ubo);
@@ -256,7 +258,6 @@ void EEVEE_reflection_compute(EEVEE_ViewLayerData * /*sldata*/, EEVEE_Data *veda
   EEVEE_EffectsInfo *effects = stl->effects;
 
   if (((effects->enabled_effects & EFFECT_SSR) != 0) && stl->g_data->valid_double_buffer) {
-    DRW_stats_group_start("SSR");
 
     /* Ray-trace. */
     GPU_framebuffer_bind(fbl->screen_tracing_fb);
@@ -277,7 +278,6 @@ void EEVEE_reflection_compute(EEVEE_ViewLayerData * /*sldata*/, EEVEE_Data *veda
 
     /* Restore */
     GPU_framebuffer_bind(fbl->main_fb);
-    DRW_stats_group_end();
   }
 }
 

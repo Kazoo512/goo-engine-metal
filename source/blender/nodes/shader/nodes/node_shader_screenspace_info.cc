@@ -34,12 +34,18 @@ static int node_shader_gpu_screenspace_info(GPUMaterial *mat,
 /* node type definition */
 void register_node_type_sh_screenspace_info(void)
 {
- namespace file_ns = blender::nodes::node_shader_screenspace_info_cc;
- static blender::bke::bNodeType ntype;
+  namespace file_ns = blender::nodes::node_shader_screenspace_info_cc;
 
- sh_node_type_base(&ntype, SH_NODE_SCREENSPACE_INFO, "Screenspace Info", NODE_CLASS_INPUT);
- ntype.declare = file_ns::node_declare;
- ntype.gpu_fn = node_shader_gpu_screenspace_info;
+  static blender::bke::bNodeType ntype;
 
- blender::bke::node_register_type(&ntype);
+  sh_node_type_base(&ntype, "ShaderNodeScreenspaceInfo", SH_NODE_SCREENSPACE_INFO);
+  ntype.ui_name = "Screenspace Info";
+  ntype.ui_description =
+      "Sample internal colour and depth buffers";
+  ntype.enum_name_legacy = "SCREENSPACEINFO";
+  ntype.nclass = NODE_CLASS_INPUT;
+  ntype.declare = file_ns::node_declare;
+  ntype.gpu_fn = node_shader_gpu_screenspace_info;
+
+  blender::bke::node_register_type(&ntype);
 }

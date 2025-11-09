@@ -2,7 +2,7 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#pragma BLENDER_REQUIRE(common_math_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_lib.glsl)
 #pragma BLENDER_REQUIRE(common_utiltex_lib.glsl)
 #pragma BLENDER_REQUIRE(lights_lib.glsl)
 
@@ -10,7 +10,7 @@ void main()
 {
   if (laNumLight == 0) {
     /* Early exit: No lights in scene */
-    fragColor.r = 1.0;
+    FragColor.r = 1.0;
     return;
   }
 
@@ -18,7 +18,7 @@ void main()
   float depth = texelFetch(depthBuffer, texel, 0).r;
   if (depth == 1.0f) {
     /* Early exit background does not receive shadows */
-    fragColor.r = 1.0;
+    FragColor.r = 1.0;
     return;
   }
 
@@ -47,5 +47,5 @@ void main()
     accum_light += l_vis;
   }
 
-  fragColor.r = accum_light / float(laNumLight);
+  FragColor.r = accum_light / float(laNumLight);
 }

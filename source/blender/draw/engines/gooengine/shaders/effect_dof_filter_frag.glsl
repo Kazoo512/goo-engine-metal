@@ -41,7 +41,7 @@ vec4 median_filter(sampler2D tex, vec2 uv)
   vec4 samples[9];
   int s = 0;
 
-  const vec2 ofs[9] = vec2[9](vec2(-1, -1),
+  const vec2 ofs[9] = float2_array(vec2(-1, -1),
                               vec2(0, -1),
                               vec2(1, -1),
                               vec2(-1, 0),

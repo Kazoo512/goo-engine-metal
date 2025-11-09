@@ -9,6 +9,7 @@
 #include "eevee_private.hh"
 
 #include "BLI_math_rotation.h"
+#include "BLI_math_geom.h"
 
 void EEVEE_shadows_cube_add(EEVEE_LightsInfo *linfo, EEVEE_Light *evli, Object *ob)
 {

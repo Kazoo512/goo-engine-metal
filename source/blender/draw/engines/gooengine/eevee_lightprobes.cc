@@ -11,6 +11,7 @@
 #include "BLI_rand.h"
 #include "BLI_string_utils.hh"
 #include "BLI_utildefines.h"
+#include "BLI_math_geom.h"
 
 #include "DNA_image_types.h"
 #include "DNA_lightprobe_types.h"
@@ -918,8 +919,6 @@ static void lightbake_render_scene_reflected(int layer, EEVEE_BakeRenderData *us
   txl->planar_pool = e_data.planar_pool_placeholder;
   txl->planar_depth = e_data.depth_array_placeholder;
 
-  DRW_stats_group_start("Planar Reflection");
-
   /* Be sure that cascaded shadow maps are updated. */
   EEVEE_shadows_draw(sldata, vedata, stl->g_data->planar_views[layer]);
 
@@ -952,8 +951,6 @@ static void lightbake_render_scene_reflected(int layer, EEVEE_BakeRenderData *us
     DRW_pass_sort_shgroup_z(psl->transparent_pass);
   }
   DRW_draw_pass(psl->transparent_pass);
-
-  DRW_stats_group_end();
 
   /* Restore */
   txl->planar_pool = tmp_planar_pool;
@@ -1182,14 +1179,11 @@ static void EEVEE_lightbake_filter_planar(EEVEE_Data *vedata)
   EEVEE_TextureList *txl = vedata->txl;
   EEVEE_FramebufferList *fbl = vedata->fbl;
 
-  DRW_stats_group_start("Planar Probe Downsample");
-
   GPU_framebuffer_ensure_config(&fbl->planar_downsample_fb,
                                 {GPU_ATTACHMENT_NONE, GPU_ATTACHMENT_TEXTURE(txl->planar_pool)});
 
   GPU_framebuffer_recursive_downsample(
       fbl->planar_downsample_fb, MAX_SCREEN_BUFFERS_LOD_LEVEL, &downsample_planar, vedata);
-  DRW_stats_group_end();
 }
 
 /** \} */

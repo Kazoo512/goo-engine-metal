@@ -211,7 +211,7 @@ void EEVEE_shadows_update(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)
 
   eGPUTextureFormat shadow_pool_format = (linfo->shadow_high_bitdepth) ? GPU_DEPTH_COMPONENT24 :
                                                                          GPU_DEPTH_COMPONENT16;
-                                                                    
+                                                                         
   eGPUTextureFormat shadow_id_pool_format = (linfo->shadow_id_high_bitdepth) ? GPU_R32UI : GPU_R16UI;
 
   /* Setup enough layers. */
@@ -228,7 +228,6 @@ void EEVEE_shadows_update(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)
   if (linfo->num_cascade_layer != linfo->cache_num_cascade_layer) {
     DRW_TEXTURE_FREE_SAFE(sldata->shadow_cascade_pool);
     DRW_TEXTURE_FREE_SAFE(sldata->shadow_cascade_id_pool);
-
     linfo->cache_num_cascade_layer = linfo->num_cascade_layer;
   }
 
@@ -343,7 +342,6 @@ void EEVEE_shadows_draw(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata, DRWView
     GPU_uniformbuf_update(sldata->common_ubo, &sldata->common_data);
   }
 
-  DRW_stats_group_start("Cube Shadow Maps");
   {
     for (int cube = 0; cube < linfo->cube_len; cube++) {
       if (BLI_BITMAP_TEST(cube_visible, cube) && BLI_BITMAP_TEST(linfo->sh_cube_update, cube)) {
@@ -351,15 +349,12 @@ void EEVEE_shadows_draw(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata, DRWView
       }
     }
   }
-  DRW_stats_group_end();
 
-  DRW_stats_group_start("Cascaded Shadow Maps");
   {
     for (int cascade = 0; cascade < linfo->cascade_len; cascade++) {
       EEVEE_shadows_draw_cascades(sldata, vedata, view, cascade);
     }
   }
-  DRW_stats_group_end();
 
   DRW_view_set_active(view);
 
@@ -409,7 +404,7 @@ void EEVEE_shadow_output_init(EEVEE_ViewLayerData *sldata,
   DRW_shgroup_uniform_texture_ref(grp, "shadowCascadeTexture", &sldata->shadow_cascade_pool);
   DRW_shgroup_uniform_texture_ref(grp, "shadowCubeIDTexture", &sldata->shadow_cube_id_pool);
   DRW_shgroup_uniform_texture_ref(grp, "shadowCascadeIDTexture", &sldata->shadow_cascade_id_pool);
-  
+
   DRW_shgroup_call(grp, DRW_cache_fullscreen_quad_get(), nullptr);
 }
 

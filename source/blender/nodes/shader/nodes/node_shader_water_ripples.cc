@@ -16,7 +16,7 @@ static void node_shader_init_water_ripples(bNodeTree * /*ntree*/, bNode *node)
 static void node_layout(uiLayout *layout, bContext * /*C*/, PointerRNA *ptr)
 {
   uiLayout *col = uiLayoutColumn(layout, false);
-  uiItemR(col, ptr, "mode", UI_ITEM_R_SPLIT_EMPTY_NAME, nullptr, ICON_NONE);
+  uiItemR(col, ptr, "mode", UI_ITEM_R_SPLIT_EMPTY_NAME, std::nullopt, ICON_NONE);
 }
 
 static void node_declare(NodeDeclarationBuilder &b)
@@ -71,7 +71,11 @@ void register_node_type_sh_water_ripples()
     
     static blender::bke::bNodeType ntype;
 
-    sh_node_type_base(&ntype, SH_NODE_WATER_RIPPLES, "Water Ripples", NODE_CLASS_TEXTURE);
+    sh_node_type_base(&ntype, "ShaderNodeWaterRipples", SH_NODE_WATER_RIPPLES);
+  ntype.ui_name = "Water Ripples";
+  ntype.ui_description = "Generate concentric ripples simulating water surface disturbances";
+  ntype.enum_name_legacy = "WATER_RIPPLES";
+  ntype.nclass = NODE_CLASS_TEXTURE;
     ntype.declare = file_ns::node_declare;
     ntype.gpu_fn = file_ns::gpu_shader_water_ripples;
     ntype.draw_buttons = file_ns::node_layout;

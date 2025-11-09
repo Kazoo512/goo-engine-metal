@@ -7,9 +7,9 @@
  * The final integration is done at the resolve stage with the shading normal.
  */
 
-#pragma BLENDER_REQUIRE(common_view_lib.glsl)
-#pragma BLENDER_REQUIRE(common_math_lib.glsl)
-#pragma BLENDER_REQUIRE(common_math_geom_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_view_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_geom_lib.glsl)
 #pragma BLENDER_REQUIRE(common_utiltex_lib.glsl)
 #pragma BLENDER_REQUIRE(ambient_occlusion_lib.glsl)
 

@@ -9,6 +9,8 @@
 #include "DNA_material_types.h"
 #include "DNA_world_types.h"
 
+#include "BLI_dynstr.h"
+#include "BLI_string_utils.hh"
 #include "BLI_threads.h"
 #include "BLI_time.h"
 
@@ -289,6 +291,42 @@ static void drw_deferred_shader_add(GPUMaterial *mat, bool deferred)
   drw_deferred_queue_append(mat, false);
 }
 
+static void drw_register_shader_vlattrs(GPUMaterial *mat)
+{
+  const ListBase *attrs = GPU_material_layer_attributes(mat);
+
+  if (!attrs) {
+    return;
+  }
+
+  GHash *hash = DST.vmempool->vlattrs_name_cache;
+  ListBase *list = &DST.vmempool->vlattrs_name_list;
+
+  LISTBASE_FOREACH (GPULayerAttr *, attr, attrs) {
+    GPULayerAttr **p_val;
+
+    /* Add to the table and list if newly seen. */
+    if (!BLI_ghash_ensure_p(hash, POINTER_FROM_UINT(attr->hash_code), (void ***)&p_val)) {
+      DST.vmempool->vlattrs_ubo_ready = false;
+
+      GPULayerAttr *new_link = *p_val = static_cast<GPULayerAttr *>(MEM_dupallocN(attr));
+
+      /* Insert into the list ensuring sorted order. */
+      GPULayerAttr *link = static_cast<GPULayerAttr *>(list->first);
+
+      while (link && link->hash_code <= attr->hash_code) {
+        link = link->next;
+      }
+
+      new_link->prev = new_link->next = nullptr;
+      BLI_insertlinkbefore(list, link, new_link);
+    }
+
+    /* Reset the unused frames counter. */
+    (*p_val)->users = 0;
+  }
+}
+
 void DRW_deferred_shader_remove(GPUMaterial *mat)
 {
   if (GPU_use_main_context_workaround()) {
@@ -355,6 +393,8 @@ GPUMaterial *DRW_shader_from_world(World *wo,
                                                 callback,
                                                 thunk);
 
+  drw_register_shader_vlattrs(mat);
+  
   if (DRW_state_is_image_render()) {
     /* Do not deferred if doing render. */
     deferred = false;
@@ -387,14 +427,13 @@ GPUMaterial *DRW_shader_from_material(Material *ma,
                                                 false,
                                                 callback,
                                                 thunk,
-                                                pass_replacement_cb);
-
-  drw_register_shader_vlattrs(mat);
-
+                                                 pass_replacement_cb);
   if (DRW_state_is_image_render()) {
     /* Do not deferred if doing render. */
     deferred = false;
   }
+
+  drw_register_shader_vlattrs(mat);
 
   drw_deferred_shader_add(mat, deferred);
   DRW_shader_queue_optimize_material(mat);
@@ -458,7 +497,7 @@ GPUShader *DRW_shader_create_from_info_name(const char *info_name)
 GPUShader *DRW_shader_create_ex(
     const char *vert, const char *geom, const char *frag, const char *defines, const char *name)
 {
-  return GPU_shader_create(vert, frag, geom, nullptr, defines, name);
+  return GPU_shader_create(vert, frag, geom, std::nullopt, defines, name);
 }
 
 GPUShader *DRW_shader_create_with_lib_ex(const char *vert,
@@ -479,7 +518,7 @@ GPUShader *DRW_shader_create_with_lib_ex(const char *vert,
     geom_with_lib = BLI_string_joinN(lib, geom);
   }
 
-  sh = GPU_shader_create(vert_with_lib, frag_with_lib, geom_with_lib, nullptr, defines, name);
+  sh = GPU_shader_create(vert_with_lib, frag_with_lib, geom_with_lib, std::nullopt, defines, name);
 
   MEM_freeN(vert_with_lib);
   MEM_freeN(frag_with_lib);
@@ -502,7 +541,7 @@ GPUShader *DRW_shader_create_with_shaderlib_ex(const char *vert,
   char *frag_with_lib = DRW_shader_library_create_shader_string(lib, frag);
   char *geom_with_lib = (geom) ? DRW_shader_library_create_shader_string(lib, geom) : nullptr;
 
-  sh = GPU_shader_create(vert_with_lib, frag_with_lib, geom_with_lib, nullptr, defines, name);
+  sh = GPU_shader_create(vert_with_lib, frag_with_lib, geom_with_lib, std::nullopt, defines, name);
 
   MEM_SAFE_FREE(vert_with_lib);
   MEM_SAFE_FREE(frag_with_lib);
@@ -521,8 +560,8 @@ GPUShader *DRW_shader_create_with_transform_feedback(const char *vert,
   return GPU_shader_create_ex(vert,
                               datatoc_gpu_shader_depth_only_frag_glsl,
                               geom,
-                              nullptr,
-                              nullptr,
+                              std::nullopt,
+                              std::nullopt,
                               defines,
                               prim_type,
                               varying_names,
@@ -533,7 +572,7 @@ GPUShader *DRW_shader_create_with_transform_feedback(const char *vert,
 GPUShader *DRW_shader_create_fullscreen_ex(const char *frag, const char *defines, const char *name)
 {
   return GPU_shader_create(
-      datatoc_common_fullscreen_vert_glsl, frag, nullptr, nullptr, defines, name);
+      datatoc_common_fullscreen_vert_glsl, frag, std::nullopt, std::nullopt, defines, name);
 }
 
 GPUShader *DRW_shader_create_fullscreen_with_shaderlib_ex(const char *frag,
@@ -546,7 +585,7 @@ GPUShader *DRW_shader_create_fullscreen_with_shaderlib_ex(const char *frag,
   char *vert = datatoc_common_fullscreen_vert_glsl;
   char *frag_with_lib = DRW_shader_library_create_shader_string(lib, frag);
 
-  sh = GPU_shader_create(vert, frag_with_lib, nullptr, nullptr, defines, name);
+  sh = GPU_shader_create(vert, frag_with_lib, std::nullopt, std::nullopt, defines, name);
 
   MEM_SAFE_FREE(frag_with_lib);
 

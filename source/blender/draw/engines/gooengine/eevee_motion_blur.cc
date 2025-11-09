@@ -32,6 +32,7 @@
 #include "DEG_depsgraph.hh"
 #include "DEG_depsgraph_query.hh"
 
+#include "draw_common.hh"
 #include "GPU_batch.hh"
 #include "GPU_texture.hh"
 #include "eevee_private.hh"
@@ -452,7 +453,8 @@ void EEVEE_motion_blur_cache_finish(EEVEE_Data *vedata)
     /* Need to be called after #DRW_render_instance_buffer_finish() */
     /* Also we weed to have a correct FBO bound for #DRW_curves_update. */
     GPU_framebuffer_bind(vedata->fbl->main_fb);
-    DRW_curves_update();
+
+    DRW_curves_update(*DRW_manager_get());
 
     DRW_cache_restart();
   }

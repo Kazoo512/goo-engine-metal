@@ -319,7 +319,11 @@ void register_node_type_sh_oklab_color_ramp()
 
   static blender::bke::bNodeType ntype;
 
-  sh_fn_node_type_base(&ntype, SH_NODE_OKLAB_COLOR_RAMP, "OKLab Color Ramp", NODE_CLASS_CONVERTER);
+  sh_fn_node_type_base(&ntype, "ShaderNodeOKLabColorRamp", SH_NODE_OKLAB_COLOR_RAMP);
+  ntype.ui_name = "OKLab Color Ramp";
+  ntype.ui_description = "Color ramp with perceptually uniform OKLab interpolation";
+  ntype.enum_name_legacy = "OKLAB_COLOR_RAMP";
+  ntype.nclass = NODE_CLASS_CONVERTER;
   ntype.declare = file_ns::sh_node_oklab_valtorgb_declare;
   ntype.initfunc = file_ns::node_shader_init_oklab_valtorgb;
   blender::bke::node_type_size_preset(&ntype, blender::bke::eNodeSizePreset::Large);
@@ -327,6 +331,7 @@ void register_node_type_sh_oklab_color_ramp()
   ntype.gpu_fn = file_ns::gpu_shader_oklab_valtorgb;
   ntype.build_multi_function = file_ns::sh_node_oklab_valtorgb_build_multi_function;
   ntype.materialx_fn = file_ns::node_shader_materialx;
+
 
   blender::bke::node_register_type(&ntype);
 }

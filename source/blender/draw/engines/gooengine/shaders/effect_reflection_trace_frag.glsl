@@ -12,8 +12,8 @@
  * https://media.contentapi.ea.com/content/dam/ea/seed/presentations/dd18-seed-raytracing-in-hybrid-real-time-rendering.pdf
  */
 
-#pragma BLENDER_REQUIRE(common_math_lib.glsl)
-#pragma BLENDER_REQUIRE(common_math_geom_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_geom_lib.glsl)
 #pragma BLENDER_REQUIRE(common_utiltex_lib.glsl)
 #pragma BLENDER_REQUIRE(raytrace_lib.glsl)
 #pragma BLENDER_REQUIRE(lightprobe_lib.glsl)
@@ -136,7 +136,7 @@ void main()
   else {
     data.is_hit = raytrace(ray, params, true, false, hit_sP);
   }
-  data.ray_pdf_inv = safe_rcp(pdf);
+  data.ray_pdf_inv = goo_safe_rcp(pdf);
 
   encode_hit_data(data, hit_sP, ray.origin, hitData, hitDepth);
 }

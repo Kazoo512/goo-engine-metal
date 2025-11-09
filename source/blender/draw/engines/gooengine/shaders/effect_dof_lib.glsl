@@ -2,8 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#pragma BLENDER_REQUIRE(common_view_lib.glsl)
-#pragma BLENDER_REQUIRE(common_math_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_view_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_lib.glsl)
 
 #define cocMul cocParams[0]  /* `distance * aperturesize * invsensorsize`. */
 #define cocBias cocParams[1] /* `aperturesize * invsensorsize`. */
@@ -48,7 +48,7 @@
  * register space rather than per-thread, reducing spill and increasing
  * thread execution width - and thus performance. */
 #define DEFINE_DOF_QUAD_OFFSETS \
-  const vec2 quad_offsets[4] = vec2[4]( \
+  const vec2 quad_offsets[4] = float2_array( \
       vec2(-0.5, 0.5), vec2(0.5, 0.5), vec2(0.5, -0.5), vec2(-0.5, -0.5));
 
 /* Divide by sensor size to get the normalized size. */
@@ -581,7 +581,7 @@ void dof_gather_accumulate_resolve(int total_sample_count,
                                    out float out_weight,
                                    out vec2 out_occlusion)
 {
-  float weight_inv = safe_rcp(accum_data.weight);
+  float weight_inv = goo_safe_rcp(accum_data.weight);
   out_col = accum_data.color * weight_inv;
   out_occlusion = vec2(abs(accum_data.coc), accum_data.coc_sqr) * weight_inv;
 

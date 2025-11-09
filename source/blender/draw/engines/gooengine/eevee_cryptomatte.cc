@@ -297,7 +297,7 @@ void EEVEE_cryptomatte_cache_populate(EEVEE_Data *vedata, EEVEE_ViewLayerData *s
     const int materials_len = DRW_cache_object_material_count_get(ob);
     GPUMaterial **gpumat_array = BLI_array_alloca(gpumat_array, materials_len);
     memset(gpumat_array, 0, sizeof(*gpumat_array) * materials_len);
-    blender::gpu::Batch **geoms = DRW_cache_object_surface_material_get(
+    blender::gpu::Batch **geoms = GOO_cache_object_surface_material_get(
         ob, gpumat_array, materials_len);
     if (geoms) {
       for (int i = 0; i < materials_len; i++) {

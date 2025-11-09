@@ -346,10 +346,14 @@ static void node_shader_buts_sdf_vector_op(uiLayout *layout, bContext* /* C */, 
 }
 
 /* node type definition */
-void register_node_type_sh_sdf_vector_op(void)
+void register_node_type_sh_sdf_vector_op()
 {
   static blender::bke::bNodeType ntype;
-  sh_node_type_base(&ntype, SH_NODE_SDF_VECTOR_OP, "Sdf Vector Operator", NODE_CLASS_OP_VECTOR);
+
+  sh_node_type_base(&ntype, "ShaderNodeSdfVectorOp", SH_NODE_SDF_VECTOR_OP);
+  ntype.ui_name = "Sdf Vector Operator";
+  ntype.enum_name_legacy = "SDF_VECTOR_OP";
+  ntype.nclass = NODE_CLASS_OP_VECTOR;
   ntype.declare = blender::nodes::sh_node_sdf_vector_op_declare;
   blender::bke::node_type_storage(
       &ntype, "NodeSdfVectorOp", node_free_standard_storage, node_copy_standard_storage);

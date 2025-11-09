@@ -14,6 +14,7 @@
 #include "eevee_private.hh"
 
 #include "BLI_rand.h" /* needs to be after for some reason. */
+#include "BLI_math_geom.h"
 
 void EEVEE_shadows_cascade_add(EEVEE_LightsInfo *linfo, EEVEE_Light *evli, Object *ob)
 {

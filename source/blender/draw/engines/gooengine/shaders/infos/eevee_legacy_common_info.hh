@@ -7,210 +7,254 @@
 #pragma once
 
 /* EEVEE defines. */
-GPU_SHADER_CREATE_INFO(eevee_legacy_defines_info).typedef_source("engine_eevee_shared_defines.h");
+GPU_SHADER_CREATE_INFO(eevee_legacy_defines_info)
+TYPEDEF_SOURCE("engine_eevee_shared_defines.h")
+GPU_SHADER_CREATE_END()
 
 /* Only specifies bindings for common_uniform_lib.glsl. */
 GPU_SHADER_CREATE_INFO(eevee_legacy_common_lib)
-    .typedef_source("engine_eevee_shared_defines.h")
-    .typedef_source("engine_eevee_legacy_shared.h")
-    .uniform_buf(1, "CommonUniformBlock", "common_block", Frequency::PASS);
+TYPEDEF_SOURCE("engine_eevee_shared_defines.h")
+TYPEDEF_SOURCE("engine_eevee_legacy_shared.h")
+UNIFORM_BUF(1, CommonUniformBlock, common_block)
+GPU_SHADER_CREATE_END()
 
 /* Only specifies bindings for irradiance_lib.glsl. */
 GPU_SHADER_CREATE_INFO(eevee_legacy_irradiance_lib)
-    .additional_info("eevee_legacy_common_lib")
-    .sampler(1, ImageType::FLOAT_2D_ARRAY, "irradianceGrid");
+ADDITIONAL_INFO(eevee_legacy_common_lib)
+SAMPLER(1, FLOAT_2D_ARRAY, irradianceGrid)
+GPU_SHADER_CREATE_END()
 
 /* Utiltex Lib. */
 GPU_SHADER_CREATE_INFO(eevee_legacy_common_utiltex_lib)
-    .sampler(2, ImageType::FLOAT_2D_ARRAY, "utilTex");
+SAMPLER(2, FLOAT_2D_ARRAY, utilTex)
+GPU_SHADER_CREATE_END()
 
 /* Ray-trace lib. */
 GPU_SHADER_CREATE_INFO(eevee_legacy_raytrace_lib)
-    .additional_info("draw_view")
-    .additional_info("eevee_legacy_common_lib")
-    .sampler(3, ImageType::FLOAT_2D, "maxzBuffer")
-    .sampler(4, ImageType::DEPTH_2D_ARRAY, "planarDepth");
+ADDITIONAL_INFO(draw_view)
+ADDITIONAL_INFO(eevee_legacy_common_lib)
+SAMPLER(3, FLOAT_2D, maxzBuffer)
+SAMPLER(4, DEPTH_2D_ARRAY, planarDepth)
+GPU_SHADER_CREATE_END()
 
 /* Ambient occlusion lib. */
 GPU_SHADER_CREATE_INFO(eevee_legacy_ambient_occlusion_lib)
-    .additional_info("eevee_legacy_raytrace_lib")
-    .sampler(5, ImageType::FLOAT_2D, "horizonBuffer");
+ADDITIONAL_INFO(eevee_legacy_raytrace_lib)
+SAMPLER(5, FLOAT_2D, horizonBuffer)
+GPU_SHADER_CREATE_END()
 
 /* Light-probe lib. */
 GPU_SHADER_CREATE_INFO(eevee_legacy_lightprobe_lib)
-    .additional_info("eevee_legacy_common_lib")
-    .additional_info("eevee_legacy_common_utiltex_lib")
-    .additional_info("eevee_legacy_ambient_occlusion_lib")
-    .additional_info("eevee_legacy_irradiance_lib")
-    .sampler(6, ImageType::FLOAT_2D_ARRAY, "probePlanars")
-    .sampler(7, ImageType::FLOAT_CUBE_ARRAY, "probeCubes")
-    .uniform_buf(2, "ProbeBlock", "probe_block", Frequency::PASS)
-    .uniform_buf(3, "GridBlock", "grid_block", Frequency::PASS)
-    .uniform_buf(4, "PlanarBlock", "planar_block", Frequency::PASS);
+ADDITIONAL_INFO(eevee_legacy_common_lib)
+ADDITIONAL_INFO(eevee_legacy_common_utiltex_lib)
+ADDITIONAL_INFO(eevee_legacy_ambient_occlusion_lib)
+ADDITIONAL_INFO(eevee_legacy_irradiance_lib)
+SAMPLER(6, FLOAT_2D_ARRAY, probePlanars)
+SAMPLER(7, FLOAT_CUBE_ARRAY, probeCubes)
+UNIFORM_BUF(2, ProbeBlock, probe_block)
+UNIFORM_BUF(3, GridBlock, grid_block)
+UNIFORM_BUF(4, PlanarBlock, planar_block)
+GPU_SHADER_CREATE_END()
 
 /* LTC Lib. */
-GPU_SHADER_CREATE_INFO(eevee_legacy_ltc_lib).additional_info("eevee_legacy_common_utiltex_lib");
+GPU_SHADER_CREATE_INFO(eevee_legacy_ltc_lib)
+ADDITIONAL_INFO(eevee_legacy_common_utiltex_lib)
+GPU_SHADER_CREATE_END()
 
 /* Lights lib. */
 GPU_SHADER_CREATE_INFO(eevee_legacy_lights_lib)
-    .additional_info("eevee_legacy_ltc_lib")
-    .additional_info("eevee_legacy_raytrace_lib")
-    .uniform_buf(5, "ShadowBlock", "shadow_block", Frequency::PASS)
-    .uniform_buf(6, "LightBlock", "light_block", Frequency::PASS)
-    .push_constant(Type::IVEC4, "light_groups_in")
-    .push_constant(Type::IVEC4, "light_group_shadows_in")
-    .sampler(8, ImageType::SHADOW_2D_ARRAY, "shadowCubeTexture")
-    .sampler(9, ImageType::SHADOW_2D_ARRAY, "shadowCascadeTexture")
-    /* GooEngine: Use slots 15,16 as others are already taken. */
-    .sampler(23, ImageType::UINT_2D_ARRAY, "shadowCubeIDTexture")
-    .sampler(24, ImageType::UINT_2D_ARRAY, "shadowCascadeIDTexture");
+ADDITIONAL_INFO(eevee_legacy_ltc_lib)
+ADDITIONAL_INFO(eevee_legacy_raytrace_lib)
+UNIFORM_BUF(5, ShadowBlock, shadow_block)
+UNIFORM_BUF(6, LightBlock, light_block)
+PUSH_CONSTANT(IVEC4, light_groups_in)
+PUSH_CONSTANT(IVEC4, light_group_shadows_in)
+SAMPLER(8, SHADOW_2D_ARRAY, shadowCubeTexture)
+SAMPLER(9, SHADOW_2D_ARRAY, shadowCascadeTexture)
+/* GooEngine: Use slots 23, 24 as others are already taken. */
+SAMPLER(23, SHADOW_2D_ARRAY, shadowCubeIDTexture)
+SAMPLER(24, SHADOW_2D_ARRAY, shadowCascadeIDTexture)
+GPU_SHADER_CREATE_END()
 
 /* Hair lib. */
 GPU_SHADER_CREATE_INFO(eevee_legacy_hair_lib)
-    .additional_info("draw_hair")
-    .sampler(10, ImageType::UINT_BUFFER, "hairStrandBuffer")
-    .sampler(11, ImageType::UINT_BUFFER, "hairStrandSegBuffer");
+ADDITIONAL_INFO(draw_hair)
+SAMPLER(10, UINT_BUFFER, hairStrandBuffer)
+SAMPLER(11, UINT_BUFFER, hairStrandSegBuffer)
+GPU_SHADER_CREATE_END()
 
 /* SSR Lib */
 GPU_SHADER_CREATE_INFO(eevee_legacy_ssr_lib)
-    .additional_info("eevee_legacy_raytrace_lib")
-    .push_constant(Type::FLOAT, "refractionDepth")
-    .sampler(12, ImageType::FLOAT_2D, "refractColorBuffer");
+ADDITIONAL_INFO(eevee_legacy_raytrace_lib)
+PUSH_CONSTANT(FLOAT, refractionDepth)
+SAMPLER(12, FLOAT_2D, refractColorBuffer)
+GPU_SHADER_CREATE_END()
 
 /* renderpass_lib */
 GPU_SHADER_CREATE_INFO(eevee_legacy_renderpass_lib)
-    .additional_info("eevee_legacy_common_lib")
-    .uniform_buf(12, "RenderpassBlock", "renderpass_block", Frequency::PASS);
+ADDITIONAL_INFO(eevee_legacy_common_lib)
+UNIFORM_BUF(12, RenderpassBlock, renderpass_block)
+GPU_SHADER_CREATE_END()
 
 /* Reflection lib */
 GPU_SHADER_CREATE_INFO(eevee_legacy_reflection_lib)
-    .additional_info("eevee_legacy_common_lib")
-    .additional_info("draw_view")
-    .push_constant(Type::IVEC2, "halfresOffset");
+ADDITIONAL_INFO(eevee_legacy_common_lib)
+ADDITIONAL_INFO(draw_view)
+PUSH_CONSTANT(IVEC2, halfresOffset)
+GPU_SHADER_CREATE_END()
 
 /* Volumetric lib. */
 GPU_SHADER_CREATE_INFO(eevee_legacy_volumetric_lib)
-    .additional_info("eevee_legacy_lights_lib")
-    .additional_info("eevee_legacy_lightprobe_lib")
-    .additional_info("eevee_legacy_irradiance_lib")
-    .sampler(13, ImageType::FLOAT_3D, "inScattering")
-    .sampler(14, ImageType::FLOAT_3D, "inTransmittance");
+ADDITIONAL_INFO(eevee_legacy_lights_lib)
+ADDITIONAL_INFO(eevee_legacy_lightprobe_lib)
+ADDITIONAL_INFO(eevee_legacy_irradiance_lib)
+SAMPLER(13, FLOAT_3D, inScattering)
+SAMPLER(14, FLOAT_3D, inTransmittance)
+GPU_SHADER_CREATE_END()
 
 /* eevee_legacy_cryptomatte_lib. */
-GPU_SHADER_CREATE_INFO(eevee_legacy_cryptomatte_lib).additional_info("draw_curves_infos");
+GPU_SHADER_CREATE_INFO(eevee_legacy_cryptomatte_lib)
+ADDITIONAL_INFO(draw_curves_infos)
+GPU_SHADER_CREATE_END()
 
 /* ----- SURFACE LIB ----- */
 /* Surface lib has several different components depending on how it is used.
- * Differing root permutations need to be generated and included depending
- * on use-case. */
+* Differing root permutations need to be generated and included depending
+* on use-case. */
 
 /* SURFACE LIB INTERFACES */
-GPU_SHADER_INTERFACE_INFO(eevee_legacy_surface_common_iface, "")
-    .smooth(Type::VEC3, "worldPosition")
-    .smooth(Type::VEC3, "viewPosition")
-    .smooth(Type::VEC3, "worldNormal")
-    .smooth(Type::VEC3, "viewNormal");
+GPU_SHADER_INTERFACE_INFO(eevee_legacy_surface_common_iface)
+SMOOTH(VEC3, worldPosition)
+SMOOTH(VEC3, viewPosition)
+SMOOTH(VEC3, worldNormal)
+SMOOTH(VEC3, viewNormal)
+GPU_SHADER_INTERFACE_END()
 
-GPU_SHADER_INTERFACE_INFO(eevee_legacy_surface_point_cloud_iface, "")
-    .smooth(Type::FLOAT, "pointRadius")
-    .smooth(Type::FLOAT, "pointPosition")
-    .flat(Type::INT, "pointID");
+GPU_SHADER_INTERFACE_INFO(eevee_legacy_surface_point_cloud_iface)
+SMOOTH(FLOAT, pointRadius)
+SMOOTH(FLOAT, pointPosition)
+FLAT(INT, pointID)
+GPU_SHADER_INTERFACE_END()
 
-GPU_SHADER_INTERFACE_INFO(eevee_legacy_surface_hair_iface, "")
-    .smooth(Type::VEC3, "hairTangent")
-    .smooth(Type::FLOAT, "hairThickTime")
-    .smooth(Type::FLOAT, "hairThickness")
-    .smooth(Type::FLOAT, "hairTime")
-    .flat(Type::INT, "hairStrandID")
-    .smooth(Type::VEC2, "hairBary");
+GPU_SHADER_INTERFACE_INFO(eevee_legacy_surface_hair_iface)
+SMOOTH(VEC3, hairTangent)
+SMOOTH(FLOAT, hairThickTime)
+SMOOTH(FLOAT, hairThickness)
+SMOOTH(FLOAT, hairTime)
+FLAT(INT, hairStrandID)
+SMOOTH(VEC2, hairBary)
+GPU_SHADER_INTERFACE_END()
 
 /* Surface lib components */
 GPU_SHADER_CREATE_INFO(eevee_legacy_surface_lib_common)
-    .vertex_out(eevee_legacy_surface_common_iface);
+VERTEX_OUT(eevee_legacy_surface_common_iface)
+GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_surface_lib_hair)
-    .define("USE_SURFACE_LIB_HAIR")
-    /* Hair still uses the common interface as well. */
-    .additional_info("eevee_legacy_surface_lib_common")
-    .vertex_out(eevee_legacy_surface_hair_iface);
+DEFINE("USE_SURFACE_LIB_HAIR")
+/* Hair still uses the common interface as well. */
+ADDITIONAL_INFO(eevee_legacy_surface_lib_common)
+VERTEX_OUT(eevee_legacy_surface_hair_iface)
+GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_surface_lib_pointcloud)
-    .define("USE_SURFACE_LIB_POINTCLOUD")
-    /* Point-cloud still uses the common interface as well. */
-    .additional_info("eevee_legacy_surface_lib_common")
-    .vertex_out(eevee_legacy_surface_point_cloud_iface);
+DEFINE("USE_SURFACE_LIB_POINTCLOUD")
+/* Point-cloud still uses the common interface as well. */
+ADDITIONAL_INFO(eevee_legacy_surface_lib_common)
+VERTEX_OUT(eevee_legacy_surface_point_cloud_iface)
+GPU_SHADER_CREATE_END()
 
-GPU_SHADER_CREATE_INFO(eevee_legacy_surface_lib_step_resolve).define("STEP_RESOLVE");
+GPU_SHADER_CREATE_INFO(eevee_legacy_surface_lib_step_resolve)
+DEFINE("STEP_RESOLVE")
+GPU_SHADER_CREATE_END()
 
-GPU_SHADER_CREATE_INFO(eevee_legacy_surface_lib_step_raytrace).define("STEP_RAYTRACE");
+GPU_SHADER_CREATE_INFO(eevee_legacy_surface_lib_step_raytrace)
+DEFINE("STEP_RAYTRACE")
+GPU_SHADER_CREATE_END()
 
-GPU_SHADER_CREATE_INFO(eevee_legacy_surface_lib_world_background).define("WORLD_BACKGROUND");
+GPU_SHADER_CREATE_INFO(eevee_legacy_surface_lib_world_background)
+DEFINE("WORLD_BACKGROUND")
+GPU_SHADER_CREATE_END()
 
-GPU_SHADER_CREATE_INFO(eevee_legacy_surface_lib_step_probe_capture).define("PROBE_CAPTURE");
+GPU_SHADER_CREATE_INFO(eevee_legacy_surface_lib_step_probe_capture)
+DEFINE("PROBE_CAPTURE")
+GPU_SHADER_CREATE_END()
 
-GPU_SHADER_CREATE_INFO(eevee_legacy_surface_lib_use_barycentrics).define("USE_BARYCENTRICS");
+GPU_SHADER_CREATE_INFO(eevee_legacy_surface_lib_use_barycentrics)
+DEFINE("USE_BARYCENTRICS")
+GPU_SHADER_CREATE_END()
 
-GPU_SHADER_CREATE_INFO(eevee_legacy_surface_lib_codegen_lib).define("CODEGEN_LIB");
+GPU_SHADER_CREATE_INFO(eevee_legacy_surface_lib_codegen_lib)
+DEFINE("CODEGEN_LIB")
+GPU_SHADER_CREATE_END()
 
 /* Surface lib permutations. */
 
 /* Basic - lookdev world frag */
 GPU_SHADER_CREATE_INFO(eevee_legacy_surface_lib_lookdev)
-    .additional_info("eevee_legacy_surface_lib_common");
+ADDITIONAL_INFO(eevee_legacy_surface_lib_common)
+GPU_SHADER_CREATE_END()
 
 /** Closure evaluation libraries **/
 
 /* eevee_legacy_closure_type_lib */
 GPU_SHADER_CREATE_INFO(eevee_legacy_closure_type_lib)
-    .push_constant(Type::INT, "outputSsrId")
-    .push_constant(Type::INT, "outputSssId");
+PUSH_CONSTANT(INT, outputSsrId)
+PUSH_CONSTANT(INT, outputSssId)
+GPU_SHADER_CREATE_END()
 
 /* eevee_legacy_closure_eval_lib */
 GPU_SHADER_CREATE_INFO(eevee_legacy_closure_eval_lib)
-    .additional_info("eevee_legacy_common_utiltex_lib")
-    .additional_info("eevee_legacy_lights_lib")
-    .additional_info("eevee_legacy_lightprobe_lib");
+ADDITIONAL_INFO(eevee_legacy_common_utiltex_lib)
+ADDITIONAL_INFO(eevee_legacy_lights_lib)
+ADDITIONAL_INFO(eevee_legacy_lightprobe_lib)
+GPU_SHADER_CREATE_END()
 
 /* eevee_legacy_closure_eval_diffuse_lib */
 GPU_SHADER_CREATE_INFO(eevee_legacy_closure_eval_diffuse_lib)
-    .additional_info("eevee_legacy_lights_lib")
-    .additional_info("eevee_legacy_lightprobe_lib")
-    .additional_info("eevee_legacy_ambient_occlusion_lib")
-    .additional_info("eevee_legacy_closure_eval_lib")
-    .additional_info("eevee_legacy_renderpass_lib");
+ADDITIONAL_INFO(eevee_legacy_lights_lib)
+ADDITIONAL_INFO(eevee_legacy_lightprobe_lib)
+ADDITIONAL_INFO(eevee_legacy_ambient_occlusion_lib)
+ADDITIONAL_INFO(eevee_legacy_closure_eval_lib)
+ADDITIONAL_INFO(eevee_legacy_renderpass_lib)
+GPU_SHADER_CREATE_END()
 
 /* eevee_legacy_closure_eval_glossy_lib */
 GPU_SHADER_CREATE_INFO(eevee_legacy_closure_eval_glossy_lib)
-    .additional_info("eevee_legacy_common_utiltex_lib")
-    .additional_info("eevee_legacy_lights_lib")
-    .additional_info("eevee_legacy_lightprobe_lib")
-    .additional_info("eevee_legacy_ambient_occlusion_lib")
-    .additional_info("eevee_legacy_closure_eval_lib")
-    .additional_info("eevee_legacy_renderpass_lib");
+ADDITIONAL_INFO(eevee_legacy_common_utiltex_lib)
+ADDITIONAL_INFO(eevee_legacy_lights_lib)
+ADDITIONAL_INFO(eevee_legacy_lightprobe_lib)
+ADDITIONAL_INFO(eevee_legacy_ambient_occlusion_lib)
+ADDITIONAL_INFO(eevee_legacy_closure_eval_lib)
+ADDITIONAL_INFO(eevee_legacy_renderpass_lib)
+GPU_SHADER_CREATE_END()
 
 /* eevee_legacy_closure_eval_refraction_lib */
 GPU_SHADER_CREATE_INFO(eevee_legacy_closure_eval_refraction_lib)
-    .additional_info("eevee_legacy_common_utiltex_lib")
-    .additional_info("eevee_legacy_lights_lib")
-    .additional_info("eevee_legacy_lightprobe_lib")
-    .additional_info("eevee_legacy_ambient_occlusion_lib")
-    .additional_info("eevee_legacy_ssr_lib")
-    .additional_info("eevee_legacy_closure_eval_lib")
-    .additional_info("eevee_legacy_renderpass_lib");
+ADDITIONAL_INFO(eevee_legacy_common_utiltex_lib)
+ADDITIONAL_INFO(eevee_legacy_lights_lib)
+ADDITIONAL_INFO(eevee_legacy_lightprobe_lib)
+ADDITIONAL_INFO(eevee_legacy_ambient_occlusion_lib)
+ADDITIONAL_INFO(eevee_legacy_ssr_lib)
+ADDITIONAL_INFO(eevee_legacy_closure_eval_lib)
+ADDITIONAL_INFO(eevee_legacy_renderpass_lib)
+GPU_SHADER_CREATE_END()
 
 /* eevee_legacy_closure_eval_translucent_lib */
 GPU_SHADER_CREATE_INFO(eevee_legacy_closure_eval_translucent_lib)
-    .additional_info("eevee_legacy_common_utiltex_lib")
-    .additional_info("eevee_legacy_lights_lib")
-    .additional_info("eevee_legacy_lightprobe_lib")
-    .additional_info("eevee_legacy_ambient_occlusion_lib")
-    .additional_info("eevee_legacy_closure_eval_lib")
-    .additional_info("eevee_legacy_renderpass_lib");
+ADDITIONAL_INFO(eevee_legacy_common_utiltex_lib)
+ADDITIONAL_INFO(eevee_legacy_lights_lib)
+ADDITIONAL_INFO(eevee_legacy_lightprobe_lib)
+ADDITIONAL_INFO(eevee_legacy_ambient_occlusion_lib)
+ADDITIONAL_INFO(eevee_legacy_closure_eval_lib)
+ADDITIONAL_INFO(eevee_legacy_renderpass_lib)
+GPU_SHADER_CREATE_END()
 
 /* eevee_legacy_closure_eval_surface_lib */
 GPU_SHADER_CREATE_INFO(eevee_legacy_closure_eval_surface_lib)
-    .additional_info("eevee_legacy_closure_eval_diffuse_lib")
-    .additional_info("eevee_legacy_closure_eval_glossy_lib")
-    .additional_info("eevee_legacy_closure_eval_refraction_lib")
-    .additional_info("eevee_legacy_closure_eval_translucent_lib")
-    .additional_info("eevee_legacy_renderpass_lib");
+ADDITIONAL_INFO(eevee_legacy_closure_eval_diffuse_lib)
+ADDITIONAL_INFO(eevee_legacy_closure_eval_glossy_lib)
+ADDITIONAL_INFO(eevee_legacy_closure_eval_refraction_lib)
+ADDITIONAL_INFO(eevee_legacy_closure_eval_translucent_lib)
+ADDITIONAL_INFO(eevee_legacy_renderpass_lib)
+GPU_SHADER_CREATE_END()

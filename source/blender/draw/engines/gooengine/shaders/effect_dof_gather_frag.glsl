@@ -26,14 +26,14 @@ vec2 outOcclusion;
 #  define is_foreground false
 #endif
 
-const float unit_ring_radius = 1.0 / float(gather_ring_count);
-const float unit_sample_radius = 1.0 / float(gather_ring_count + 0.5);
-const float large_kernel_radius = 0.5 + float(gather_ring_count);
-const float smaller_kernel_radius = 0.5 + float(gather_ring_count - gather_density_change_ring);
+#define unit_ring_radius float(1.0 / float(gather_ring_count))
+#define unit_sample_radius float (1.0 / float(gather_ring_count + 0.5))
+#define large_kernel_radius float (0.5 + float(gather_ring_count))
+#define smaller_kernel_radius float (0.5 + float(gather_ring_count - gather_density_change_ring))
 /* NOTE(@fclem): the bias is reducing issues with density change visible transition. */
-const float radius_downscale_factor = smaller_kernel_radius / large_kernel_radius;
-const int change_density_at_ring = (gather_ring_count - gather_density_change_ring + 1);
-const float coc_radius_error = 2.0;
+#define radius_downscale_factor float(smaller_kernel_radius / large_kernel_radius)
+#define change_density_at_ring int((gather_ring_count - gather_density_change_ring + 1))
+#define coc_radius_error float(2.0)
 
 /* Radii needs to be half-resolution CoC sizes. */
 bool dof_do_density_change(float base_radius, float min_intersectable_radius)

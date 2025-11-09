@@ -81,7 +81,6 @@ typedef struct Light {
 
   /* Goo-engine */
   int light_group_bits[4];
-  // char _pad4[4];
 
   /* Preview */
   struct PreviewImage *preview;

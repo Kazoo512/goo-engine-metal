@@ -4,7 +4,7 @@
 
 #pragma BLENDER_REQUIRE(random_lib.glsl)
 #pragma BLENDER_REQUIRE(bsdf_sampling_lib.glsl)
-#pragma BLENDER_REQUIRE(common_math_geom_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_geom_lib.glsl)
 #pragma BLENDER_REQUIRE(irradiance_lib.glsl)
 
 #define M_4PI 12.5663706143591729
@@ -13,14 +13,30 @@ vec3 get_cubemap_vector(vec2 co, int face)
 {
   /* NOTE(Metal): Declaring constant array in function scope to avoid increasing local shader
    * memory pressure. */
-  const mat3 CUBE_ROTATIONS[6] = mat3[](
-      mat3(vec3(0.0, 0.0, -1.0), vec3(0.0, -1.0, 0.0), vec3(-1.0, 0.0, 0.0)),
-      mat3(vec3(0.0, 0.0, 1.0), vec3(0.0, -1.0, 0.0), vec3(1.0, 0.0, 0.0)),
-      mat3(vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), vec3(0.0, -1.0, 0.0)),
-      mat3(vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, -1.0), vec3(0.0, 1.0, 0.0)),
-      mat3(vec3(1.0, 0.0, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0, 0.0, -1.0)),
-      mat3(vec3(-1.0, 0.0, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0, 0.0, 1.0)));
-  return normalize(CUBE_ROTATIONS[face] * vec3(co * 2.0 - 1.0, 1.0));
+  mat3 CUBE_ROTATION;
+
+  switch (face) {
+    case 0:
+      CUBE_ROTATION = mat3(vec3(0.0, 0.0, -1.0), vec3(0.0, -1.0, 0.0), vec3(-1.0, 0.0, 0.0));
+      break;
+    case 1:
+      CUBE_ROTATION = mat3(vec3(0.0, 0.0, 1.0), vec3(0.0, -1.0, 0.0), vec3(1.0, 0.0, 0.0));
+      break;
+    case 2:
+      CUBE_ROTATION = mat3(vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), vec3(0.0, -1.0, 0.0));
+      break;
+    case 3:
+      CUBE_ROTATION = mat3(vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, -1.0), vec3(0.0, 1.0, 0.0));
+      break;
+    case 4:
+      CUBE_ROTATION = mat3(vec3(1.0, 0.0, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0, 0.0, -1.0));
+      break;
+    case 5:
+      CUBE_ROTATION = mat3(vec3(-1.0, 0.0, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0, 0.0, 1.0));
+      break;
+  }
+
+  return normalize(CUBE_ROTATION * vec3(co * 2.0 - 1.0, 1.0));
 }
 
 float area_element(float x, float y)

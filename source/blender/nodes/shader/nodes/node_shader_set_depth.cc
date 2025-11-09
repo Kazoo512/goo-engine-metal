@@ -30,15 +30,19 @@ static int node_shader_gpu_add_shader(GPUMaterial *mat,
 } // blender::nodes::node_shader_set_depth_cc
 
 /* node type definition */
-void register_node_type_sh_set_depth(void)
+void register_node_type_sh_set_depth()
 {
- namespace file_ns = blender::nodes::node_shader_set_depth_cc;
- static blender::bke::bNodeType ntype;
+  namespace file_ns = blender::nodes::node_shader_set_depth_cc;
+  static blender::bke::bNodeType ntype;
 
- sh_node_type_base(&ntype, SH_NODE_SET_DEPTH, "Set Depth", NODE_CLASS_SHADER);
+  sh_node_type_base(&ntype, "ShaderNodeSetDepth", SH_NODE_SET_DEPTH);
+  ntype.ui_name = "Set Depth";
+  ntype.ui_description =
+      "Pixel depth offset";
+  ntype.enum_name_legacy = "SET_DEPTH";
+  ntype.nclass = NODE_CLASS_SHADER;
+  ntype.declare = file_ns::node_declare;
+  ntype.gpu_fn = file_ns::node_shader_gpu_add_shader;
 
- ntype.declare = file_ns::node_declare;
- ntype.gpu_fn = file_ns::node_shader_gpu_add_shader;
-
- blender::bke::node_register_type(&ntype);
+  blender::bke::node_register_type(&ntype);
 }

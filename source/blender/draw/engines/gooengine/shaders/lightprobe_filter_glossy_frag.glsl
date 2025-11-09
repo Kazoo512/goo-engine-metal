@@ -4,7 +4,7 @@
 
 #pragma BLENDER_REQUIRE(random_lib.glsl)
 #pragma BLENDER_REQUIRE(bsdf_sampling_lib.glsl)
-#pragma BLENDER_REQUIRE(common_math_geom_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_geom_lib.glsl)
 
 vec3 octahedral_to_cubemap_proj(vec2 co)
 {

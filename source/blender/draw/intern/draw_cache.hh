@@ -71,7 +71,11 @@ blender::gpu::Batch *DRW_cache_object_surface_get(Object *ob);
 blender::gpu::Batch *DRW_cache_object_loose_edges_get(Object *ob);
 blender::Span<blender::gpu::Batch *> DRW_cache_object_surface_material_get(
     Object *ob, blender::Span<const GPUMaterial *> materials);
+blender::gpu::Batch **GOO_cache_object_surface_material_get(Object *ob,
+                                                            GPUMaterial **gpumat_array,
+                                                            uint gpumat_array_len);
 blender::gpu::Batch *DRW_cache_object_face_wireframe_get(const Scene *scene, Object *ob);
+int DRW_cache_object_material_count_get(const Object *ob);
 
 /**
  * Returns the vertbuf used by shaded surface batch.
@@ -164,6 +168,9 @@ blender::gpu::Batch *DRW_cache_mesh_surface_edges_get(Object *ob);
  */
 blender::Span<blender::gpu::Batch *> DRW_cache_mesh_surface_shaded_get(
     Object *ob, blender::Span<const GPUMaterial *> materials);
+blender::gpu::Batch **GOO_cache_mesh_surface_shaded_get(Object *ob,
+                                                        GPUMaterial **gpumat_array,
+                                                        uint gpumat_array_len);
 /**
  * Return list of batches with length equal to `max(1, totcol)`.
  */

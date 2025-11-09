@@ -33,8 +33,6 @@
 
 #include "CLG_log.h"
 
-#include "CLG_log.h"
-
 #include "BLI_array.hh"
 #include "BLI_bit_group_vector.hh"
 #include "BLI_listbase.h"

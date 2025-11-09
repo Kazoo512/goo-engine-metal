@@ -287,8 +287,6 @@ void EEVEE_subsurface_compute(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)
   if ((effects->enabled_effects & EFFECT_SSS) != 0) {
     const float clear[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
-    DRW_stats_group_start("SSS");
-
     if (GPU_depth_blitting_workaround()) {
       /* Copy depth channel */
       GPU_framebuffer_blit(fbl->main_fb, 0, fbl->sss_blit_fb, 0, GPU_DEPTH_BIT);
@@ -323,7 +321,6 @@ void EEVEE_subsurface_compute(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)
     DRW_draw_pass(psl->sss_resolve_ps);
 
     GPU_framebuffer_bind(fbl->main_fb);
-    DRW_stats_group_end();
   }
 }
 

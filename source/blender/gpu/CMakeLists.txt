@@ -16,6 +16,8 @@ set(INC
 
   # For `*_info.hh` includes.
   ../compositor/shaders/infos
+  ../draw/engines/gooengine
+  ../draw/engines/gooengine/shaders/infos
   ../draw/engines/eevee_next
   ../draw/engines/eevee_next/shaders/infos
   ../draw/engines/gpencil
@@ -68,6 +70,7 @@ set(SRC
   intern/gpu_compute.cc
   intern/gpu_context.cc
   intern/gpu_debug.cc
+  intern/gpu_drawlist.cc
   intern/gpu_framebuffer.cc
   intern/gpu_immediate.cc
   intern/gpu_immediate_util.cc
@@ -106,6 +109,7 @@ set(SRC
   GPU_compute.hh
   GPU_context.hh
   GPU_debug.hh
+  GPU_drawlist.hh
   GPU_framebuffer.hh
   GPU_immediate.hh
   GPU_immediate_util.hh
@@ -133,6 +137,7 @@ set(SRC
   intern/gpu_codegen.hh
   intern/gpu_context_private.hh
   intern/gpu_debug_private.hh
+  intern/gpu_drawlist_private.hh
   intern/gpu_framebuffer_private.hh
   intern/gpu_immediate_private.hh
   intern/gpu_material_library.hh
@@ -169,6 +174,7 @@ set(OPENGL_SRC
   opengl/gl_context.cc
   opengl/gl_debug.cc
   opengl/gl_debug_layer.cc
+  opengl/gl_drawlist.cc
   opengl/gl_framebuffer.cc
   opengl/gl_immediate.cc
   opengl/gl_index_buffer.cc
@@ -189,6 +195,7 @@ set(OPENGL_SRC
   opengl/gl_compute.hh
   opengl/gl_context.hh
   opengl/gl_debug.hh
+  opengl/gl_drawlist.hh
   opengl/gl_framebuffer.hh
   opengl/gl_immediate.hh
   opengl/gl_index_buffer.hh
@@ -216,6 +223,7 @@ set(VULKAN_SRC
   vulkan/vk_descriptor_set.cc
   vulkan/vk_descriptor_set_layouts.cc
   vulkan/vk_device.cc
+  vulkan/vk_drawlist.cc
   vulkan/vk_fence.cc
   vulkan/vk_framebuffer.cc
   vulkan/vk_image_view.cc
@@ -263,6 +271,7 @@ set(VULKAN_SRC
   vulkan/vk_descriptor_set.hh
   vulkan/vk_descriptor_set_layouts.hh
   vulkan/vk_device.hh
+  vulkan/vk_drawlist.hh
   vulkan/vk_fence.hh
   vulkan/vk_framebuffer.hh
   vulkan/vk_ghost_api.hh
@@ -332,6 +341,7 @@ set(METAL_SRC
   metal/mtl_command_buffer.mm
   metal/mtl_context.mm
   metal/mtl_debug.mm
+  metal/mtl_drawlist.mm
   metal/mtl_framebuffer.mm
   metal/mtl_immediate.mm
   metal/mtl_index_buffer.mm
@@ -354,6 +364,7 @@ set(METAL_SRC
   metal/mtl_common.hh
   metal/mtl_context.hh
   metal/mtl_debug.hh
+  metal/mtl_drawlist.hh
   metal/mtl_framebuffer.hh
   metal/mtl_immediate.hh
   metal/mtl_index_buffer.hh
@@ -519,6 +530,7 @@ set(GLSL_SRC
   shaders/gpu_shader_sequencer_thumbs_vert.glsl
   shaders/gpu_shader_sequencer_thumbs_frag.glsl
 
+  shaders/goo_gpu_shader_codegen_lib.glsl
   shaders/gpu_shader_codegen_lib.glsl
 
   shaders/common/gpu_shader_attribute_load_lib.glsl

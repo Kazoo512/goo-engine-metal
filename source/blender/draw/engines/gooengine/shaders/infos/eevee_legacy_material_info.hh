@@ -20,16 +20,18 @@
 /*** EMPTY EEVEE STUB COMMON INCLUDES following 'eevee_empty.glsl' and
  * 'eevee_empty_volume.glsl'****/
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_empty_base)
-    .additional_info("eevee_legacy_closure_type_lib")
-    .additional_info("eevee_legacy_common_lib")
-    .additional_info("draw_modelmat")
-    .additional_info("draw_view");
+ADDITIONAL_INFO(eevee_legacy_closure_type_lib)
+ADDITIONAL_INFO(eevee_legacy_common_lib)
+ADDITIONAL_INFO(draw_modelmat)
+ADDITIONAL_INFO(draw_view)
+GPU_SHADER_CREATE_END()
 
 /* Volumetrics skips uniform bindings in `closure_type_lib`. */
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_empty_base_volume)
-    .additional_info("eevee_legacy_common_lib")
-    .additional_info("draw_modelmat")
-    .additional_info("draw_view");
+ADDITIONAL_INFO(eevee_legacy_common_lib)
+ADDITIONAL_INFO(draw_modelmat)
+ADDITIONAL_INFO(draw_view)
+GPU_SHADER_CREATE_END()
 
 /**** MATERIAL VERTEX SHADER PERMUTATIONS ****/
 
@@ -38,17 +40,19 @@ GPU_SHADER_CREATE_INFO(eevee_legacy_material_empty_base_volume)
  * \{ */
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_volumetric_vert)
-    .additional_info("eevee_legacy_material_empty_base_volume")
-    .vertex_out(legacy_volume_vert_geom_iface)
-    .additional_info("draw_resource_id_varying");
+ADDITIONAL_INFO(eevee_legacy_material_empty_base_volume)
+VERTEX_OUT(legacy_volume_vert_geom_iface)
+ADDITIONAL_INFO(draw_resource_id_varying)
+GPU_SHADER_CREATE_END()
 
 #ifdef WITH_METAL_BACKEND
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_volumetric_vert_no_geom)
-    .additional_info("eevee_legacy_material_empty_base_volume")
-    .builtins(BuiltinBits::LAYER)
-    .vertex_out(legacy_volume_vert_geom_iface)
-    .vertex_out(legacy_volume_geom_frag_iface)
-    .additional_info("draw_resource_id_varying");
+ADDITIONAL_INFO(eevee_legacy_material_empty_base_volume)
+BUILTINS(BuiltinBits::LAYER)
+VERTEX_OUT(legacy_volume_vert_geom_iface)
+VERTEX_OUT(legacy_volume_geom_frag_iface)
+ADDITIONAL_INFO(draw_resource_id_varying)
+GPU_SHADER_CREATE_END()
 #endif
 
 /** \} */
@@ -58,12 +62,13 @@ GPU_SHADER_CREATE_INFO(eevee_legacy_material_volumetric_vert_no_geom)
  * \{ */
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_world_vert)
-    .additional_info("eevee_legacy_material_empty_base")
-    .additional_info("eevee_legacy_common_utiltex_lib")
-    .additional_info("eevee_legacy_closure_eval_surface_lib")
-    .additional_info("eevee_legacy_surface_lib_common")
-    .additional_info("draw_resource_id_varying")
-    .vertex_in(0, Type::VEC2, "pos");
+ADDITIONAL_INFO(eevee_legacy_material_empty_base)
+ADDITIONAL_INFO(eevee_legacy_common_utiltex_lib)
+ADDITIONAL_INFO(eevee_legacy_closure_eval_surface_lib)
+ADDITIONAL_INFO(eevee_legacy_surface_lib_common)
+ADDITIONAL_INFO(draw_resource_id_varying)
+VERTEX_IN(0, VEC2, pos)
+GPU_SHADER_CREATE_END()
 
 /** \} */
 
@@ -72,29 +77,33 @@ GPU_SHADER_CREATE_INFO(eevee_legacy_material_world_vert)
  * \{ */
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_surface_vert_common)
-    .additional_info("eevee_legacy_material_empty_base")
-    .additional_info("draw_resource_id_varying")
-    .additional_info("eevee_legacy_common_utiltex_lib")
-    .additional_info("eevee_legacy_closure_eval_surface_lib")
-    /* Planar reflections assigns to gl_ClipDistance via surface_vert.glsl. */
-    .define("USE_CLIP_PLANES");
+ADDITIONAL_INFO(eevee_legacy_material_empty_base)
+ADDITIONAL_INFO(draw_resource_id_varying)
+ADDITIONAL_INFO(eevee_legacy_common_utiltex_lib)
+ADDITIONAL_INFO(eevee_legacy_closure_eval_surface_lib)
+/* Planar reflections assigns to gl_ClipDistance via surface_vert.glsl. */
+DEFINE("USE_CLIP_PLANES")
+GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_surface_vert)
-    .additional_info("eevee_legacy_material_surface_vert_common")
-    .additional_info("eevee_legacy_surface_lib_common")
-    .vertex_in(0, Type::VEC3, "pos")
-    .vertex_in(1, Type::VEC3, "nor");
+ADDITIONAL_INFO(eevee_legacy_material_surface_vert_common)
+ADDITIONAL_INFO(eevee_legacy_surface_lib_common)
+VERTEX_IN(0, VEC3, pos)
+VERTEX_IN(1, VEC3, nor)
+GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_mateiral_surface_vert_hair)
-    .additional_info("eevee_legacy_material_surface_vert_common")
-    .additional_info("eevee_legacy_surface_lib_hair")
-    .additional_info("eevee_legacy_hair_lib");
+ADDITIONAL_INFO(eevee_legacy_material_surface_vert_common)
+ADDITIONAL_INFO(eevee_legacy_surface_lib_hair)
+ADDITIONAL_INFO(eevee_legacy_hair_lib)
+GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_mateiral_surface_vert_pointcloud)
-    .additional_info("draw_pointcloud")
-    .additional_info("eevee_legacy_material_surface_vert_common")
-    .additional_info("eevee_legacy_surface_lib_pointcloud")
-    .auto_resource_location(true);
+ADDITIONAL_INFO(draw_pointcloud)
+ADDITIONAL_INFO(eevee_legacy_material_surface_vert_common)
+ADDITIONAL_INFO(eevee_legacy_surface_lib_pointcloud)
+AUTO_RESOURCE_LOCATION()
+GPU_SHADER_CREATE_END()
 
 /**** MATERIAL GEOMETRY SHADER PERMUTATIONS ****/
 
@@ -105,11 +114,12 @@ GPU_SHADER_CREATE_INFO(eevee_legacy_mateiral_surface_vert_pointcloud)
  * \{ */
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_volumetric_geom)
-    .additional_info("eevee_legacy_common_lib")
-    .additional_info("draw_view")
-    .geometry_out(legacy_volume_geom_frag_iface)
-    .geometry_layout(PrimitiveIn::TRIANGLES, PrimitiveOut::TRIANGLE_STRIP, 3)
-    .additional_info("draw_resource_id_varying");
+ADDITIONAL_INFO(eevee_legacy_common_lib)
+ADDITIONAL_INFO(draw_view)
+GEOMETRY_OUT(legacy_volume_geom_frag_iface)
+GEOMETRY_LAYOUT(PrimitiveIn::TRIANGLES, PrimitiveOut::TRIANGLE_STRIP, 3)
+ADDITIONAL_INFO(draw_resource_id_varying)
+GPU_SHADER_CREATE_END()
 
 /** \} */
 
@@ -120,14 +130,15 @@ GPU_SHADER_CREATE_INFO(eevee_legacy_material_volumetric_geom)
  * \{ */
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_volumetric_frag)
-    .additional_info("eevee_legacy_common_lib")
-    .additional_info("draw_view")
-    .additional_info("draw_resource_id_varying")
-    .additional_info("eevee_legacy_volumetric_lib")
-    .fragment_out(0, Type::VEC4, "volumeScattering")
-    .fragment_out(1, Type::VEC4, "volumeExtinction")
-    .fragment_out(2, Type::VEC4, "volumeEmissive")
-    .fragment_out(3, Type::VEC4, "volumePhase");
+ADDITIONAL_INFO(eevee_legacy_common_lib)
+ADDITIONAL_INFO(draw_view)
+ADDITIONAL_INFO(draw_resource_id_varying)
+ADDITIONAL_INFO(eevee_legacy_volumetric_lib)
+FRAGMENT_OUT(0, VEC4, volumeScattering)
+FRAGMENT_OUT(1, VEC4, volumeExtinction)
+FRAGMENT_OUT(2, VEC4, volumeEmissive)
+FRAGMENT_OUT(3, VEC4, volumePhase)
+GPU_SHADER_CREATE_END()
 
 /** \} */
 
@@ -137,48 +148,57 @@ GPU_SHADER_CREATE_INFO(eevee_legacy_material_volumetric_frag)
 
 /* Common info for all `prepass_frag` variants. */
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_prepass_frag_common)
-    .additional_info("eevee_legacy_common_lib")
-    .additional_info("eevee_legacy_common_utiltex_lib")
-    .additional_info("draw_view")
-    .fragment_out(1, Type::UINT, "resource_id_out")
-    .additional_info("eevee_legacy_closure_eval_surface_lib");
+ADDITIONAL_INFO(eevee_legacy_common_lib)
+ADDITIONAL_INFO(eevee_legacy_common_utiltex_lib)
+FRAGMENT_OUT(1, UINT, resource_id_out)
+ADDITIONAL_INFO(draw_view)
+ADDITIONAL_INFO(eevee_legacy_closure_eval_surface_lib)
+GPU_SHADER_CREATE_END()
 
 /* Common info for all `prepass_frag_opaque` variants. */
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_prepass_frag_opaque_common)
-    .additional_info("eevee_legacy_material_prepass_frag_common");
+ADDITIONAL_INFO(eevee_legacy_material_prepass_frag_common)
+GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_prepass_frag_opaque)
-    .additional_info("eevee_legacy_surface_lib_common")
-    .additional_info("eevee_legacy_material_prepass_frag_opaque_common");
+ADDITIONAL_INFO(eevee_legacy_surface_lib_common)
+ADDITIONAL_INFO(eevee_legacy_material_prepass_frag_opaque_common)
+GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_prepass_frag_opaque_hair)
-    .additional_info("eevee_legacy_surface_lib_hair")
-    .additional_info("eevee_legacy_material_prepass_frag_opaque_common")
-    .additional_info("draw_hair");
+ADDITIONAL_INFO(eevee_legacy_surface_lib_hair)
+ADDITIONAL_INFO(eevee_legacy_material_prepass_frag_opaque_common)
+ADDITIONAL_INFO(draw_hair)
+GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_prepass_frag_opaque_pointcloud)
-    .additional_info("eevee_legacy_material_prepass_frag_opaque_common")
-    .additional_info("draw_pointcloud");
+ADDITIONAL_INFO(eevee_legacy_material_prepass_frag_opaque_common)
+ADDITIONAL_INFO(draw_pointcloud)
+GPU_SHADER_CREATE_END()
 
 /* Common info for all `prepass_frag_alpha_hash` variants. */
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_prepass_frag_alpha_hash_common)
-    .define("USE_ALPHA_HASH")
-    .additional_info("eevee_legacy_material_prepass_frag_common")
-    .push_constant(Type::FLOAT, "alphaClipThreshold");
+DEFINE("USE_ALPHA_HASH")
+ADDITIONAL_INFO(eevee_legacy_material_prepass_frag_common)
+PUSH_CONSTANT(FLOAT, alphaClipThreshold)
+GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_prepass_frag_alpha_hash)
-    .additional_info("eevee_legacy_surface_lib_common")
-    .additional_info("eevee_legacy_material_prepass_frag_alpha_hash_common");
+ADDITIONAL_INFO(eevee_legacy_surface_lib_common)
+ADDITIONAL_INFO(eevee_legacy_material_prepass_frag_alpha_hash_common)
+GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_prepass_frag_alpha_hash_hair)
-    .additional_info("eevee_legacy_surface_lib_hair")
-    .additional_info("eevee_legacy_material_prepass_frag_alpha_hash_common")
-    .additional_info("draw_hair");
+ADDITIONAL_INFO(eevee_legacy_surface_lib_hair)
+ADDITIONAL_INFO(eevee_legacy_material_prepass_frag_alpha_hash_common)
+ADDITIONAL_INFO(draw_hair)
+GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_prepass_frag_alpha_hash_pointcloud)
-    .additional_info("eevee_legacy_surface_lib_pointcloud")
-    .additional_info("eevee_legacy_material_prepass_frag_alpha_hash_common")
-    .additional_info("draw_pointcloud");
+ADDITIONAL_INFO(eevee_legacy_surface_lib_pointcloud)
+ADDITIONAL_INFO(eevee_legacy_material_prepass_frag_alpha_hash_common)
+ADDITIONAL_INFO(draw_pointcloud)
+GPU_SHADER_CREATE_END()
 
 /** \} */
 
@@ -187,26 +207,29 @@ GPU_SHADER_CREATE_INFO(eevee_legacy_material_prepass_frag_alpha_hash_pointcloud)
  * \{ */
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_surface_frag_common)
-    .additional_info("eevee_legacy_common_lib")
-    .additional_info("eevee_legacy_common_utiltex_lib")
-    .additional_info("eevee_legacy_closure_eval_surface_lib")
-    .additional_info("eevee_legacy_renderpass_lib")
-    .additional_info("eevee_legacy_volumetric_lib")
-    .push_constant(Type::FLOAT, "backgroundAlpha");
+ADDITIONAL_INFO(eevee_legacy_common_lib)
+ADDITIONAL_INFO(eevee_legacy_common_utiltex_lib)
+ADDITIONAL_INFO(eevee_legacy_closure_eval_surface_lib)
+ADDITIONAL_INFO(eevee_legacy_renderpass_lib)
+ADDITIONAL_INFO(eevee_legacy_volumetric_lib)
+PUSH_CONSTANT(FLOAT, backgroundAlpha)
+GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_surface_frag_opaque)
-    .additional_info("eevee_legacy_material_surface_frag_common")
-    .fragment_out(0, Type::VEC4, "outRadiance")
-    .fragment_out(1, Type::VEC2, "ssrNormals")
-    .fragment_out(2, Type::VEC4, "ssrData")
-    .fragment_out(3, Type::VEC3, "sssIrradiance")
-    .fragment_out(4, Type::FLOAT, "sssRadius")
-    .fragment_out(5, Type::VEC3, "sssAlbedo");
+ADDITIONAL_INFO(eevee_legacy_material_surface_frag_common)
+FRAGMENT_OUT(0, VEC4, outRadiance)
+FRAGMENT_OUT(1, VEC2, ssrNormals)
+FRAGMENT_OUT(2, VEC4, ssrData)
+FRAGMENT_OUT(3, VEC3, sssIrradiance)
+FRAGMENT_OUT(4, FLOAT, sssRadius)
+FRAGMENT_OUT(5, VEC3, sssAlbedo)
+GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_surface_frag_alpha_blend)
-    .define("USE_ALPHA_BLEND")
-    .additional_info("eevee_legacy_material_surface_frag_common")
-    .fragment_out(0, Type::VEC4, "outRadiance", DualBlend::SRC_0)
-    .fragment_out(0, Type::VEC4, "outTransmittance", DualBlend::SRC_1);
+DEFINE("USE_ALPHA_BLEND")
+ADDITIONAL_INFO(eevee_legacy_material_surface_frag_common)
+FRAGMENT_OUT_DUAL(0, VEC4, outRadiance, SRC_0)
+FRAGMENT_OUT_DUAL(0, VEC4, outTransmittance, SRC_1)
+GPU_SHADER_CREATE_END()
 
 /** \} */

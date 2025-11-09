@@ -4,8 +4,8 @@
 
 #pragma BLENDER_REQUIRE(engine_eevee_shared_defines.h)
 #pragma BLENDER_REQUIRE(engine_eevee_legacy_shared.h)
-#pragma BLENDER_REQUIRE(common_math_lib.glsl)
-#pragma BLENDER_REQUIRE(common_math_geom_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_geom_lib.glsl)
 #pragma BLENDER_REQUIRE(raytrace_lib.glsl)
 #pragma BLENDER_REQUIRE(ltc_lib.glsl)
 
@@ -354,7 +354,7 @@ float light_contact_shadows(LightData ld, vec3 P, vec3 vP, vec3 vNg, float rand_
       }
       else {
         ray.direction = shadows_cube_data[int(sd.sh_data_index)].position.xyz - P;
-        ray.direction *= saturate(sd.sh_contact_dist * safe_rcp(length(ray.direction)));
+        ray.direction *= saturate(sd.sh_contact_dist * goo_safe_rcp(length(ray.direction)));
       }
 
       ray.direction = transform_direction(ViewMatrix, ray.direction);

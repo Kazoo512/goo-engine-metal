@@ -2,7 +2,7 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#pragma BLENDER_REQUIRE(common_math_geom_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_geom_lib.glsl)
 #pragma BLENDER_REQUIRE(bsdf_common_lib.glsl)
 #pragma BLENDER_REQUIRE(bsdf_sampling_lib.glsl)
 #pragma BLENDER_REQUIRE(raytrace_lib.glsl)

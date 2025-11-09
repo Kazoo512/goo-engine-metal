@@ -6,7 +6,7 @@
 /* Original implementation by Keijiro Takahashi (MIT license).
  * Blender integration by Clément Foucault. */
 
-#pragma BLENDER_REQUIRE(common_math_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_lib.glsl)
 
 /* -------------- Utils ------------- */
 

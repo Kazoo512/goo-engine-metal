@@ -2,8 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#pragma BLENDER_REQUIRE(common_math_lib.glsl)
-#pragma BLENDER_REQUIRE(common_view_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_view_lib.glsl)
 #pragma BLENDER_REQUIRE(lightprobe_lib.glsl)
 #pragma BLENDER_REQUIRE(surface_lib.glsl)
 
@@ -16,7 +16,7 @@ vec3 background_transform_to_world(vec3 viewvec)
   return (ViewMatrixInverse * co).xyz;
 }
 
-float hypot(float x, float y)
+float goo_hypot(float x, float y)
 {
   return sqrt(x * x + y * y);
 }
@@ -25,7 +25,7 @@ vec4 node_tex_environment_equirectangular(vec3 co, sampler2D ima)
 {
   vec3 nco = normalize(co);
   float u = -atan(nco.y, nco.x) / (2.0 * M_PI) + 0.5;
-  float v = atan(nco.z, hypot(nco.x, nco.y)) / M_PI + 0.5;
+  float v = atan(nco.z, goo_hypot(nco.x, nco.y)) / M_PI + 0.5;
   return textureLod(ima, vec2(u, v), 0.0);
 }
 

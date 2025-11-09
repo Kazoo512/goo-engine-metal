@@ -134,7 +134,7 @@ void main(void)
   CocTile coc_tile = dof_coc_tile_load(fgTileBuffer, bgTileBuffer, tile_co);
   CocTilePrediction prediction = dof_coc_tile_prediction_get(coc_tile);
 
-  fragColor = vec4(0.0);
+  FragColor = vec4(0.0);
   float weight = 0.0;
 
   vec4 layer_color;
@@ -142,27 +142,27 @@ void main(void)
 
   if (!no_holefill_pass && prediction.do_holefill) {
     dof_resolve_load_layer(holefillColorBuffer, holefillWeightBuffer, layer_color, layer_weight);
-    fragColor = layer_color * safe_rcp(layer_weight);
+    FragColor = layer_color * goo_safe_rcp(layer_weight);
     weight = float(layer_weight > 0.0);
   }
 
   if (!no_background_pass && prediction.do_background) {
     dof_resolve_load_layer(bgColorBuffer, bgWeightBuffer, layer_color, layer_weight);
     /* Always prefer background to holefill pass. */
-    layer_color *= safe_rcp(layer_weight);
+    layer_color *= goo_safe_rcp(layer_weight);
     layer_weight = float(layer_weight > 0.0);
     /* Composite background. */
-    fragColor = fragColor * (1.0 - layer_weight) + layer_color;
+    FragColor = FragColor * (1.0 - layer_weight) + layer_color;
     weight = weight * (1.0 - layer_weight) + layer_weight;
     /* Fill holes with the composited background. */
-    fragColor *= safe_rcp(weight);
+    FragColor *= goo_safe_rcp(weight);
     weight = float(weight > 0.0);
   }
 
   if (!no_slight_focus_pass && prediction.do_slight_focus) {
     dof_slight_focus_gather(coc_tile.fg_slight_focus_max_coc, layer_color, layer_weight);
     /* Composite slight defocus. */
-    fragColor = fragColor * (1.0 - layer_weight) + layer_color;
+    FragColor = FragColor * (1.0 - layer_weight) + layer_color;
     weight = weight * (1.0 - layer_weight) + layer_weight;
   }
 
@@ -170,24 +170,24 @@ void main(void)
     layer_color = safe_color(textureLod(fullResColorBuffer, uvcoordsvar.xy, 0.0));
     layer_weight = 1.0;
     /* Composite in focus. */
-    fragColor = fragColor * (1.0 - layer_weight) + layer_color;
+    FragColor = FragColor * (1.0 - layer_weight) + layer_color;
     weight = weight * (1.0 - layer_weight) + layer_weight;
   }
 
   if (!no_foreground_pass && prediction.do_foreground) {
     dof_resolve_load_layer(fgColorBuffer, fgWeightBuffer, layer_color, layer_weight);
     /* Composite foreground. */
-    fragColor = fragColor * (1.0 - layer_weight) + layer_color;
+    FragColor = FragColor * (1.0 - layer_weight) + layer_color;
   }
 
   /* Fix float precision issue in alpha compositing. */
-  if (fragColor.a > 0.99) {
-    fragColor.a = 1.0;
+  if (FragColor.a > 0.99) {
+    FragColor.a = 1.0;
   }
 
 #if 0 /* Debug */
   if (coc_tile.fg_slight_focus_max_coc >= 0.5) {
-    fragColor.rgb *= vec3(1.0, 0.1, 0.1);
+    FragColor.rgb *= vec3(1.0, 0.1, 0.1);
   }
 #endif
 }

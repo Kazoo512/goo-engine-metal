@@ -300,7 +300,7 @@ static std::optional<std::string> rna_ColorRampElement_path(const PointerRNA *pt
 
         for (node = static_cast<bNode *>(ntree->nodes.first); node; node = node->next) {
           if (ELEM(node->type_legacy, SH_NODE_VALTORGB, CMP_NODE_VALTORGB, TEX_NODE_VALTORGB, SH_NODE_OKLAB_COLOR_RAMP)) {
-            ramp_ptr = RNA_pointer_create(id, &RNA_ColorRamp, node->storage);
+            ramp_ptr = RNA_pointer_create_discrete(id, &RNA_ColorRamp, node->storage);
             COLRAMP_GETPATH;
           }
         }

@@ -103,7 +103,7 @@ static int node_shader_gpu_light_info(GPUMaterial *mat,
 }  // namespace blender::nodes::node_shader_light_info_cc
 
 /* node type definition */
-void register_node_type_sh_light_info(void)
+void register_node_type_sh_light_info()
 {
   namespace file_ns = blender::nodes::node_shader_light_info_cc;
 

@@ -25,17 +25,17 @@ namespace blender::nodes::node_shader_curvature_cc {
 
 static void node_declare(NodeDeclarationBuilder &b)
 {
-  b.add_input<decl::Float>(N_("Samples")).max(64.f)
-      .default_value(8.f);
-  b.add_input<decl::Float>(N_("Sample Radius"))
-      .default_value(1.f);
-  b.add_input<decl::Float>(N_("Thickness"))
-      .default_value(1.f);
-  b.add_input<decl::Vector>(N_("Scale"))
-      .default_value(float3(1.f, 1.f, 0.f));
+    b.add_input<decl::Float>(N_("Samples")).max(64.f)
+        .default_value(8.f);
+    b.add_input<decl::Float>(N_("Sample Radius"))
+        .default_value(1.f);
+    b.add_input<decl::Float>(N_("Thickness"))
+        .default_value(1.f);
+    b.add_input<decl::Vector>(N_("Scale"))
+        .default_value(float3(1.f, 1.f, 0.f));
 
-  b.add_output<decl::Float>(N_("Scene Curvature"));
-  b.add_output<decl::Float>(N_("Scene Rim"));
+    b.add_output<decl::Float>(N_("Scene Curvature"));
+    b.add_output<decl::Float>(N_("Scene Rim"));
 }
 
 }
@@ -47,22 +47,25 @@ static int node_shader_gpu_curvature(GPUMaterial *mat,
                                     GPUNodeStack *out)
 {
 
- // Set this to not break things.
- GPU_material_flag_set(mat, GPU_MATFLAG_DIFFUSE);
+    // Set this to not break things.
+    GPU_material_flag_set(mat, GPU_MATFLAG_DIFFUSE);
 
- return GPU_stack_link(mat, node, "node_screenspace_curvature", in, out);
+    return GPU_stack_link(mat, node, "node_screenspace_curvature", in, out);
 }
 
 /* node type definition */
 void register_node_type_sh_curvature(void)
 {
- namespace file_ns = blender::nodes::node_shader_curvature_cc;
+    namespace file_ns = blender::nodes::node_shader_curvature_cc;
 
- static blender::bke::bNodeType ntype;
+    static blender::bke::bNodeType ntype;
 
- sh_node_type_base(&ntype, SH_NODE_CURVATURE, "Curvature", NODE_CLASS_INPUT);
- ntype.declare = file_ns::node_declare;
- ntype.gpu_fn = node_shader_gpu_curvature;
+    sh_node_type_base(&ntype, "ShaderNodeCurvature", SH_NODE_CURVATURE);
+    ntype.ui_name = "Curvature";
+    ntype.enum_name_legacy = "CURVATURE";
+    ntype.nclass = NODE_CLASS_INPUT;
+    ntype.declare = file_ns::node_declare;
+    ntype.gpu_fn = node_shader_gpu_curvature;
 
- blender::bke::node_register_type(&ntype);
+    blender::bke::node_register_type(&ntype);
 }

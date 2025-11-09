@@ -211,10 +211,10 @@ void main()
   /* Balance accumulation for failed samples.
    * We replace the missing foreground by the background. */
   float blend_fac = saturate(1.0 - w_accum.y / w_accum.z);
-  fragColor = (accum / w_accum.z) + center_color * blend_fac;
+  FragColor = (accum / w_accum.z) + center_color * blend_fac;
 
 #if 0 /* For debugging. */
-  fragColor.rgb = fragColor.ggg;
-  fragColor.rg += max_motion.xy;
+  FragColor.rgb = FragColor.ggg;
+  FragColor.rg += max_motion.xy;
 #endif
 }

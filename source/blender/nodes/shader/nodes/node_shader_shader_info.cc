@@ -82,22 +82,26 @@ static int node_shader_gpu_shader_info(GPUMaterial *mat,
 }  // namespace blender::nodes::node_shader_shader_info_cc
 
 /* node type definition */
-void register_node_type_sh_shader_info(void)
+void register_node_type_sh_shader_info()
 {
- namespace file_ns = blender::nodes::node_shader_shader_info_cc;
+  namespace file_ns = blender::nodes::node_shader_shader_info_cc;
 
- static blender::bke::bNodeType ntype;
+  static blender::bke::bNodeType ntype;
 
- sh_node_type_base(&ntype, SH_NODE_SHADER_INFO, "Shader Info", NODE_CLASS_INPUT);
+  sh_node_type_base(&ntype, "ShaderNodeShaderInfo", SH_NODE_SHADER_INFO);
+  ntype.ui_name = "Shader Info";
+  ntype.ui_description =
+      "Separate internal lighting into multiple outputs, and allow for per-node light-groups.";
+  ntype.enum_name_legacy = "SHADERINFO";
+  ntype.nclass = NODE_CLASS_INPUT;
+  ntype.declare = file_ns::node_declare;
+  ntype.draw_buttons = file_ns::node_shader_buts_shader_info;
+  ntype.initfunc = file_ns::node_shader_init_shader_info;
 
- ntype.declare = file_ns::node_declare;
- ntype.draw_buttons = file_ns::node_shader_buts_shader_info;
- ntype.initfunc = file_ns::node_shader_init_shader_info;
+  blender::bke::node_type_storage(
+      &ntype, "NodeShaderInfo", node_free_standard_storage, node_copy_standard_storage);
 
- blender::bke::node_type_storage(
-     &ntype, "NodeShaderInfo", node_free_standard_storage, node_copy_standard_storage);
+  ntype.gpu_fn = file_ns::node_shader_gpu_shader_info;
 
- ntype.gpu_fn = file_ns::node_shader_gpu_shader_info;
-
- blender::bke::node_register_type(&ntype);
+  blender::bke::node_register_type(&ntype);
 }

@@ -267,7 +267,6 @@ classes = (
     MATERIAL_PT_gpencil_settings,
     MATERIAL_PT_gpencil_animation,
     MATERIAL_PT_gpencil_custom_props,
-    MATERIAL_PT_gpencil_preview,
 )
 
 if __name__ == "__main__":  # only for live edit.

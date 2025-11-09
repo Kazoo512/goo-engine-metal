@@ -5392,7 +5392,7 @@ static void def_colorramp(BlenderRNA * /*brna*/, StructRNA *srna)
   RNA_def_property_update(prop, NC_NODE | NA_EDITED, "rna_Node_update");
 }
 
-static void def_oklab_colorramp(BlenderRNA *brna, StructRNA *srna)
+static void def_oklab_colorramp(BlenderRNA * /*brna*/, StructRNA *srna)
 {
   PropertyRNA *prop;
 
@@ -6218,6 +6218,7 @@ static void def_sh_twirl(BlenderRNA *brna, StructRNA *srna)
   def_sh_tex(brna, srna);
 }
 
+
 static void def_sh_water_ripples(BlenderRNA *brna, StructRNA *srna)
 {
   PropertyRNA *prop;
@@ -6295,7 +6296,7 @@ static void def_sh_tex_hexagon(BlenderRNA *brna, StructRNA *srna)
   RNA_def_property_update(prop, 0, "rna_Node_update");
 }
 
-static void def_sh_light_info(BlenderRNA *brna, StructRNA *srna)
+static void def_sh_light_info(BlenderRNA * /*brna*/, StructRNA *srna)
 {
   PropertyRNA *prop;
 
@@ -12647,7 +12648,20 @@ static void rna_def_nodes(BlenderRNA *brna)
   define("ShaderNode", "ShaderNodeVolumeScatter", def_scatter);
   define("ShaderNode", "ShaderNodeWavelength");
   define("ShaderNode", "ShaderNodeWireframe", def_sh_tex_wireframe);
-
+  define("ShaderNode", "ShaderNodeSdfNoise");
+  define("ShaderNode", "ShaderNodeSdfOp", def_sh_sdf_op);
+  define("ShaderNode", "ShaderNodeSdfPrimitive", def_sh_sdf_primitive);
+  define("ShaderNode", "ShaderNodeSdfVectorOp", def_sh_sdf_vector_op);
+  define("ShaderNode", "ShaderNodeCurvature");
+  define("ShaderNode", "ShaderNodeScreenspaceInfo");
+  define("ShaderNode", "ShaderNodeSetDepth");
+  define("ShaderNode", "ShaderNodeShaderInfo", def_sh_shader_info);
+  define("ShaderNode", "ShaderNodeLightInfo", def_sh_light_info);
+  define("ShaderNode", "ShaderNodeTexHexagon", def_sh_tex_hexagon);
+  define("ShaderNode", "ShaderNodeTwirl", def_sh_twirl);
+  define("ShaderNode", "ShaderNodeWaterRipples", def_sh_water_ripples);
+  define("ShaderNode", "ShaderNodeOKLabColorRamp", def_oklab_colorramp);
+  
   define("CompositorNode", "CompositorNodeAlphaOver", def_cmp_alpha_over);
   define("CompositorNode", "CompositorNodeAntiAliasing", def_cmp_antialiasing);
   define("CompositorNode", "CompositorNodeBilateralblur", def_cmp_bilateral_blur);

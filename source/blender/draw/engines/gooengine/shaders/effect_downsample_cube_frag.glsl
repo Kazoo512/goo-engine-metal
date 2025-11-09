@@ -6,26 +6,26 @@
  * Simple down-sample shader. Takes the average of the 4 texels of lower mip.
  */
 
-#pragma BLENDER_REQUIRE(common_math_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_lib.glsl)
 
 void main()
 {
 
   /* Global scope arrays get allocated using local memory in Metal. Moving inside function scope to
    * reduce register pressure. */
-  const vec3 maj_axes[6] = vec3[6](vec3(1.0, 0.0, 0.0),
+  const vec3 maj_axes[6] = float3_array(vec3(1.0, 0.0, 0.0),
                                    vec3(-1.0, 0.0, 0.0),
                                    vec3(0.0, 1.0, 0.0),
                                    vec3(0.0, -1.0, 0.0),
                                    vec3(0.0, 0.0, 1.0),
                                    vec3(0.0, 0.0, -1.0));
-  const vec3 x_axis[6] = vec3[6](vec3(0.0, 0.0, -1.0),
+  const vec3 x_axis[6] = float3_array(vec3(0.0, 0.0, -1.0),
                                  vec3(0.0, 0.0, 1.0),
                                  vec3(1.0, 0.0, 0.0),
                                  vec3(1.0, 0.0, 0.0),
                                  vec3(1.0, 0.0, 0.0),
                                  vec3(-1.0, 0.0, 0.0));
-  const vec3 y_axis[6] = vec3[6](vec3(0.0, -1.0, 0.0),
+  const vec3 y_axis[6] = float3_array(vec3(0.0, -1.0, 0.0),
                                  vec3(0.0, -1.0, 0.0),
                                  vec3(0.0, 0.0, 1.0),
                                  vec3(0.0, 0.0, -1.0),

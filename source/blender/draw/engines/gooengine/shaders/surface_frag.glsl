@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
 /* Required by some nodes. */
-#pragma BLENDER_REQUIRE(common_hair_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_hair_lib.glsl)
 #pragma BLENDER_REQUIRE(common_utiltex_lib.glsl)
-#pragma BLENDER_REQUIRE(common_math_lib.glsl)
-#pragma BLENDER_REQUIRE(common_math_geom_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_geom_lib.glsl)
 
 #pragma BLENDER_REQUIRE(closure_eval_surface_lib.glsl)
 
@@ -142,7 +142,7 @@ void main()
   }
 
 #ifndef USE_ALPHA_BLEND
-  float alpha_div = safe_rcp(alpha);
+  float alpha_div = goo_safe_rcp(alpha);
   outRadiance.rgb *= alpha_div;
   ssrData.rgb *= alpha_div;
   sssAlbedo.rgb *= alpha_div;

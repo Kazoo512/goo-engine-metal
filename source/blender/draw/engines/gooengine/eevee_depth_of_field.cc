@@ -989,8 +989,6 @@ void EEVEE_depth_of_field_draw(EEVEE_Data *vedata)
 
   /* Depth Of Field */
   if ((effects->enabled_effects & EFFECT_DOF) != 0) {
-    DRW_stats_group_start("Depth of Field");
-
     if (fx->dof_bokeh_gather_lut_tx != nullptr) {
       GPU_framebuffer_bind(fbl->dof_bokeh_fb);
       DRW_draw_pass(psl->dof_bokeh);
@@ -1054,7 +1052,5 @@ void EEVEE_depth_of_field_draw(EEVEE_Data *vedata)
     DRW_draw_pass(psl->dof_resolve);
 
     SWAP_BUFFERS();
-
-    DRW_stats_group_end();
   }
 }

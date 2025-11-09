@@ -4,5 +4,5 @@
 
 void main()
 {
-  fragColor = cryptohash;
+  FragColor = cryptohash;
 }

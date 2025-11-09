@@ -57,18 +57,18 @@ void main(void)
      * using a VSM like chebychev test (slide 85). */
     float mean = occlusion_data.x;
     float variance = occlusion_data.y;
-    shapes *= variance * safe_rcp(variance + sqr(max(cocs * correction_fac - mean, 0.0)));
+    shapes *= variance * goo_safe_rcp(variance + sqr(max(cocs * correction_fac - mean, 0.0)));
   }
 
-  fragColor = color1 * shapes.x;
-  fragColor += color2 * shapes.y;
-  fragColor += color3 * shapes.z;
-  fragColor += color4 * shapes.w;
+  FragColor = color1 * shapes.x;
+  FragColor += color2 * shapes.y;
+  FragColor += color3 * shapes.z;
+  FragColor += color4 * shapes.w;
 
   /* Do not accumulate alpha. This has already been accumulated by the gather pass. */
-  fragColor.a = 0.0;
+  FragColor.a = 0.0;
 
 #ifdef DOF_DEBUG_SCATTER_PERF
-  fragColor.rgb = avg(fragColor.rgb) * vec3(1.0, 0.0, 0.0);
+  FragColor.rgb = avg(FragColor.rgb) * vec3(1.0, 0.0, 0.0);
 #endif
 }

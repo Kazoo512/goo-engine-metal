@@ -13,6 +13,7 @@
 #include "ED_screen.hh"
 
 #include "BLI_rand.h"
+#include "BLI_math_geom.h"
 
 #include "DEG_depsgraph_query.hh"
 

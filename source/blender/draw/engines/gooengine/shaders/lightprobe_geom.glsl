@@ -2,19 +2,19 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-const vec3 maj_axes[6] = vec3[6](vec3(1.0, 0.0, 0.0),
+const vec3 maj_axes[6] = float3_array(vec3(1.0, 0.0, 0.0),
                                  vec3(-1.0, 0.0, 0.0),
                                  vec3(0.0, 1.0, 0.0),
                                  vec3(0.0, -1.0, 0.0),
                                  vec3(0.0, 0.0, 1.0),
                                  vec3(0.0, 0.0, -1.0));
-const vec3 x_axis[6] = vec3[6](vec3(0.0, 0.0, -1.0),
+const vec3 x_axis[6] = float3_array(vec3(0.0, 0.0, -1.0),
                                vec3(0.0, 0.0, 1.0),
                                vec3(1.0, 0.0, 0.0),
                                vec3(1.0, 0.0, 0.0),
                                vec3(1.0, 0.0, 0.0),
                                vec3(-1.0, 0.0, 0.0));
-const vec3 y_axis[6] = vec3[6](vec3(0.0, -1.0, 0.0),
+const vec3 y_axis[6] = float3_array(vec3(0.0, -1.0, 0.0),
                                vec3(0.0, -1.0, 0.0),
                                vec3(0.0, 0.0, 1.0),
                                vec3(0.0, 0.0, -1.0),

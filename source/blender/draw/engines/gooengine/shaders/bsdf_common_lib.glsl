@@ -2,7 +2,7 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#pragma BLENDER_REQUIRE(common_math_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_lib.glsl)
 
 vec3 diffuse_dominant_dir(vec3 bent_normal)
 {
@@ -168,11 +168,11 @@ vec3 ensure_valid_specular_reflection(vec3 Ng, vec3 I, vec3 N)
   float b = 2.0 * (a + Iz * threshold);
   float c = sqr(threshold + Iz);
 
-  float Nz2 = (Ix < 0.0) ? 0.25 * (b + safe_sqrt(sqr(b) - 4.0 * a * c)) / a :
-                           0.25 * (b - safe_sqrt(sqr(b) - 4.0 * a * c)) / a;
+  float Nz2 = (Ix < 0.0) ? 0.25 * (b + goo_safe_sqrt(sqr(b) - 4.0 * a * c)) / a :
+                           0.25 * (b - goo_safe_sqrt(sqr(b) - 4.0 * a * c)) / a;
 
-  float Nx = safe_sqrt(1.0 - Nz2);
-  float Nz = safe_sqrt(Nz2);
+  float Nx = goo_safe_sqrt(1.0 - Nz2);
+  float Nz = goo_safe_sqrt(Nz2);
 
   return Nx * X + Nz * Ng;
 }

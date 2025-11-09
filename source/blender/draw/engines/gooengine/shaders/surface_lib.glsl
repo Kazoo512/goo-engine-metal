@@ -4,8 +4,7 @@
 
 /** This describe the entire interface of the shader. */
 
-#pragma BLENDER_REQUIRE(common_math_lib.glsl)
-#pragma BLENDER_REQUIRE(common_math_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_lib.glsl)
 
 /* Global interface for SSR.
  * SSR will set these global variables itself.
@@ -222,11 +221,11 @@ vec3 coordinate_screen(vec3 P)
   /* Unsupported. It would make the probe camera-dependent. */
   window.xy = vec2(0.5);
 
-#elif defined(WORLD_BACKGROUND) && defined(COMMON_UNIFORMS_LIB)
+#elif defined(WORLD_BACKGROUND) && defined(common_UNIFORMS_LIB)
   window.xy = project_point(ProjectionMatrix, viewPosition).xy * 0.5 + 0.5;
   window.xy = window.xy * cameraUvScaleBias.xy + cameraUvScaleBias.zw;
 
-#elif defined(COMMON_UNIFORMS_LIB) /* MESH */
+#elif defined(common_UNIFORMS_LIB) /* MESH */
   window.xy = project_point(ProjectionMatrix, transform_point(ViewMatrix, P)).xy * 0.5 + 0.5;
   window.xy = window.xy * cameraUvScaleBias.xy + cameraUvScaleBias.zw;
 #endif

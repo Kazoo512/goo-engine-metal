@@ -7,7 +7,7 @@
  * Do a gaussian filter using 4 bilinear texture samples.
  */
 
-#pragma BLENDER_REQUIRE(common_math_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_lib.glsl)
 
 void main()
 {

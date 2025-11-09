@@ -107,15 +107,7 @@ static void applyTrackballValue(TransInfo *t, const float axis[3], const float a
   float mat_final[3][3];
   int i;
 
-  /* Hack: Use otherwise-unused matrix storage for this */
-  float (*mat_temp)[3] = t->orient[0].matrix;
-
   axis_angle_normalized_to_mat3(mat_final, axis, angle);
-
-  if (U.uiflag & USER_ACCUMULATE_TRACKBALL) {
-    mul_m3_m3_post(mat_final, mat_temp);
-    copy_m3_m3(mat_temp, mat_final);
-  }
 
   FOREACH_TRANS_DATA_CONTAINER (t, tc) {
     if (tc->data_len < TRANSDATA_THREAD_LIMIT) {
@@ -148,16 +140,7 @@ static void applyTrackball(TransInfo *t)
   size_t ofs = 0;
   float phi[2];
 
-  /* Store previous mouse coordinates as (z,w) in the xyzw vector */
-  float* phi_prev = t->values + 2;
-
   copy_v2_v2(phi, t->values);
-
-  /* Get mouse delta only since phi_prev */
-  if (U.uiflag & USER_ACCUMULATE_TRACKBALL) {
-    sub_v2_v2(phi, phi_prev);
-    copy_v2_v2(phi_prev, t->values);
-  }
 
   transform_snap_increment(t, phi);
 
@@ -227,9 +210,6 @@ static void initTrackball(TransInfo *t, wmOperator * /*op*/)
   else {
     initMouseInputMode(t, &t->mouse, INPUT_TRACKBALL);
   }
-
-  /* Initialize re-used matrix storage to I */
-  unit_m3(t->orient[0].matrix);
 
   t->idx_max = 1;
   t->num.idx_max = 1;

@@ -97,16 +97,6 @@ vec3 wrap(vec3 a, vec3 b, vec3 c)
   return vec3(wrap(a.x, b.x, c.x), wrap(a.y, b.y, c.y), wrap(a.z, b.z, c.z));
 }
 
-/* WORKAROUND: To be removed once we port all code to use gpu_shader_math_base_lib.glsl. */
-#ifndef GPU_SHADER_MATH_BASE_LIB_GLSL
-
-float hypot(float x, float y)
-{
-  return sqrt(x * x + y * y);
-}
-
-#endif
-
 int floor_to_int(float x)
 {
   return int(floor(x));

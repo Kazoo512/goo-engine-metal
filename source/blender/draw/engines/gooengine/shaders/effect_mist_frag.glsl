@@ -2,8 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#pragma BLENDER_REQUIRE(common_math_lib.glsl)
-#pragma BLENDER_REQUIRE(common_view_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_view_lib.glsl)
 
 #define mistStart mistSettings.x
 #define mistInvDistance mistSettings.y
@@ -25,9 +25,9 @@ void main()
   /* falloff */
   mist = pow(mist, mistFalloff);
 
-  fragColor = vec4(mist);
+  FragColor = vec4(mist);
 
-  // if (mist > 0.999) fragColor = vec4(1.0);
-  // else if (mist > 0.0001) fragColor = vec4(0.5);
-  // else fragColor = vec4(0.0);
+  // if (mist > 0.999) FragColor = vec4(1.0);
+  // else if (mist > 0.0001) FragColor = vec4(0.5);
+  // else FragColor = vec4(0.0);
 }

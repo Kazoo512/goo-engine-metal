@@ -36,6 +36,8 @@
 #  define PyUnicode_CompareWithASCIIString _PyUnicode_EqualToASCIIString
 #endif
 
+#include "float.h" /* FLT_MAX */
+
 /* -------------------------------------------------------------------- */
 /** \name Fast Python to C Array Conversion for Primitive Types
  * \{ */

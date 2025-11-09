@@ -80,12 +80,12 @@ void min_max(vec4 vector, inout vec4 min, inout vec4 max);
  * Safe divide `a` by `b`.
  * If `b` equal 0 the result will be 0.
  */
-vec2 safe_divide(vec2 a, vec2 b);
-vec3 safe_divide(vec3 a, vec3 b);
-vec4 safe_divide(vec4 a, vec4 b);
-vec2 safe_divide(vec2 a, float b);
-vec3 safe_divide(vec3 a, float b);
-vec4 safe_divide(vec4 a, float b);
+vec2 safe_divide_new(vec2 a, vec2 b);
+vec3 safe_divide_new(vec3 a, vec3 b);
+vec4 safe_divide_new(vec4 a, vec4 b);
+vec2 safe_divide_new(vec2 a, float b);
+vec3 safe_divide_new(vec3 a, float b);
+vec4 safe_divide_new(vec4 a, float b);
 
 /**
  * Return the manhattan length of `a`.
@@ -388,28 +388,28 @@ void min_max(vec4 vector, inout vec4 min_v, inout vec4 max_v)
   max_v = max(vector, max_v);
 }
 
-vec2 safe_divide(vec2 a, vec2 b)
+vec2 safe_divide_new(vec2 a, vec2 b)
 {
   return select(vec2(0), a / b, notEqual(b, vec2(0)));
 }
-vec3 safe_divide(vec3 a, vec3 b)
+vec3 safe_divide_new(vec3 a, vec3 b)
 {
   return select(vec3(0), a / b, notEqual(b, vec3(0)));
 }
-vec4 safe_divide(vec4 a, vec4 b)
+vec4 safe_divide_new(vec4 a, vec4 b)
 {
   return select(vec4(0), a / b, notEqual(b, vec4(0)));
 }
 
-vec2 safe_divide(vec2 a, float b)
+vec2 safe_divide_new(vec2 a, float b)
 {
   return (b != 0.0) ? (a / b) : vec2(0);
 }
-vec3 safe_divide(vec3 a, float b)
+vec3 safe_divide_new(vec3 a, float b)
 {
   return (b != 0.0) ? (a / b) : vec3(0);
 }
-vec4 safe_divide(vec4 a, float b)
+vec4 safe_divide_new(vec4 a, float b)
 {
   return (b != 0.0) ? (a / b) : vec4(0);
 }

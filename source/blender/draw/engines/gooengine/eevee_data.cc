@@ -198,8 +198,8 @@ void EEVEE_view_layer_data_free(void *storage)
 
   /* Lights */
   MEM_SAFE_FREE(sldata->lights);
-  DRW_UBO_FREE_SAFE(sldata->light_ubo);
-  DRW_UBO_FREE_SAFE(sldata->shadow_ubo);
+  GPU_UBO_FREE_SAFE(sldata->light_ubo);
+  GPU_UBO_FREE_SAFE(sldata->shadow_ubo);
   GPU_FRAMEBUFFER_FREE_SAFE(sldata->shadow_fb);
   DRW_TEXTURE_FREE_SAFE(sldata->shadow_cube_pool);
   DRW_TEXTURE_FREE_SAFE(sldata->shadow_cascade_pool);
@@ -217,20 +217,20 @@ void EEVEE_view_layer_data_free(void *storage)
 
   /* Probes */
   MEM_SAFE_FREE(sldata->probes);
-  DRW_UBO_FREE_SAFE(sldata->probe_ubo);
-  DRW_UBO_FREE_SAFE(sldata->grid_ubo);
-  DRW_UBO_FREE_SAFE(sldata->planar_ubo);
-  DRW_UBO_FREE_SAFE(sldata->common_ubo);
+  GPU_UBO_FREE_SAFE(sldata->probe_ubo);
+  GPU_UBO_FREE_SAFE(sldata->grid_ubo);
+  GPU_UBO_FREE_SAFE(sldata->planar_ubo);
+  GPU_UBO_FREE_SAFE(sldata->common_ubo);
 
-  DRW_UBO_FREE_SAFE(sldata->renderpass_ubo.combined);
-  DRW_UBO_FREE_SAFE(sldata->renderpass_ubo.diff_color);
-  DRW_UBO_FREE_SAFE(sldata->renderpass_ubo.diff_light);
-  DRW_UBO_FREE_SAFE(sldata->renderpass_ubo.spec_color);
-  DRW_UBO_FREE_SAFE(sldata->renderpass_ubo.spec_light);
-  DRW_UBO_FREE_SAFE(sldata->renderpass_ubo.emit);
-  DRW_UBO_FREE_SAFE(sldata->renderpass_ubo.environment);
+  GPU_UBO_FREE_SAFE(sldata->renderpass_ubo.combined);
+  GPU_UBO_FREE_SAFE(sldata->renderpass_ubo.diff_color);
+  GPU_UBO_FREE_SAFE(sldata->renderpass_ubo.diff_light);
+  GPU_UBO_FREE_SAFE(sldata->renderpass_ubo.spec_color);
+  GPU_UBO_FREE_SAFE(sldata->renderpass_ubo.spec_light);
+  GPU_UBO_FREE_SAFE(sldata->renderpass_ubo.emit);
+  GPU_UBO_FREE_SAFE(sldata->renderpass_ubo.environment);
   for (int aov_index = 0; aov_index < MAX_AOVS; aov_index++) {
-    DRW_UBO_FREE_SAFE(sldata->renderpass_ubo.aovs[aov_index]);
+    GPU_UBO_FREE_SAFE(sldata->renderpass_ubo.aovs[aov_index]);
   }
 
   if (sldata->material_cache) {

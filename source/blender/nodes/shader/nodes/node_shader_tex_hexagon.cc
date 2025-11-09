@@ -48,7 +48,7 @@ static void node_layout(uiLayout *layout, bContext * /*C*/, PointerRNA *ptr)
   uiItemR(col, ptr, "coord_mode", UI_ITEM_R_SPLIT_EMPTY_NAME, "", ICON_NONE);
 
   col = uiLayoutColumn(layout, true);
-  uiItemR(col, ptr, "use_clamp", UI_ITEM_R_SPLIT_EMPTY_NAME, nullptr, ICON_NONE);
+  uiItemR(col, ptr, "use_clamp", UI_ITEM_R_SPLIT_EMPTY_NAME, std::nullopt, ICON_NONE);
 }
 
 static void node_init(bNodeTree * /*ntree*/, bNode *node)
@@ -441,7 +441,10 @@ void register_node_type_sh_tex_hexagon()
 
   static blender::bke::bNodeType ntype;
 
-  sh_fn_node_type_base(&ntype, SH_NODE_TEX_HEXAGON, "Hex Grid Texture", NODE_CLASS_TEXTURE);
+  sh_fn_node_type_base(&ntype, "ShaderNodeTexHexagon", SH_NODE_TEX_HEXAGON);
+  ntype.ui_name = "Hex Grid Texture";
+  ntype.enum_name_legacy = "TEX_HEXAGON";
+  ntype.nclass = NODE_CLASS_TEXTURE;
   ntype.declare = file_ns::node_declare;
   ntype.draw_buttons = file_ns::node_layout;
   ntype.initfunc = file_ns::node_init;

@@ -344,8 +344,6 @@ void EEVEE_lookdev_draw(EEVEE_Data *vedata)
     GPUFrameBuffer *fb = (effects->target_buffer == fbl->effect_color_fb) ? fbl->main_fb :
                                                                             fbl->effect_fb;
 
-    DRW_stats_group_start("Look Dev");
-
     GPU_framebuffer_bind(fb);
 
     const int sphere_margin = effects->sphere_size / 6.0f;
@@ -371,8 +369,6 @@ void EEVEE_lookdev_draw(EEVEE_Data *vedata)
     DRW_draw_pass(psl->lookdev_glossy_pass);
 
     GPU_framebuffer_viewport_reset(fb);
-
-    DRW_stats_group_end();
 
     DRW_view_set_active(nullptr);
   }

@@ -28,6 +28,9 @@
 #include "eevee_engine.h"
 #include "eevee_private.hh"
 
+#include "BKE_node_legacy_types.hh"
+
+
 static struct {
   /* Lookdev */
   GPUShader *studiolight_probe_sh;
@@ -164,11 +167,11 @@ static struct {
 } e_data = {nullptr}; /* Engine data */
 
 extern "C" char datatoc_engine_eevee_legacy_shared_h[];
-extern "C" char datatoc_common_hair_lib_glsl[];
-extern "C" char datatoc_common_math_lib_glsl[];
-extern "C" char datatoc_common_math_geom_lib_glsl[];
-extern "C" char datatoc_common_view_lib_glsl[];
-extern "C" char datatoc_gpu_shader_codegen_lib_glsl[];
+extern "C" char datatoc_goo_common_hair_lib_glsl[];
+extern "C" char datatoc_goo_common_math_lib_glsl[];
+extern "C" char datatoc_goo_common_math_geom_lib_glsl[];
+extern "C" char datatoc_goo_common_view_lib_glsl[];
+extern "C" char datatoc_goo_gpu_shader_codegen_lib_glsl[];
 
 extern "C" char datatoc_ambient_occlusion_lib_glsl[];
 extern "C" char datatoc_bsdf_common_lib_glsl[];
@@ -213,12 +216,12 @@ static void eevee_shader_library_ensure()
     e_data.lib = DRW_shader_library_create();
     /* NOTE: These need to be ordered by dependencies. */
     DRW_SHADER_LIB_ADD_SHARED(e_data.lib, engine_eevee_legacy_shared);
-    DRW_SHADER_LIB_ADD(e_data.lib, common_math_lib);
-    DRW_SHADER_LIB_ADD(e_data.lib, common_math_geom_lib);
-    DRW_SHADER_LIB_ADD(e_data.lib, common_hair_lib);
-    DRW_SHADER_LIB_ADD(e_data.lib, common_view_lib);
+    DRW_SHADER_LIB_ADD(e_data.lib, goo_common_math_lib);
+    DRW_SHADER_LIB_ADD(e_data.lib, goo_common_math_geom_lib);
+    DRW_SHADER_LIB_ADD(e_data.lib, goo_common_hair_lib);
+    DRW_SHADER_LIB_ADD(e_data.lib, goo_common_view_lib);
     DRW_SHADER_LIB_ADD(e_data.lib, common_uniforms_lib);
-    DRW_SHADER_LIB_ADD(e_data.lib, gpu_shader_codegen_lib);
+    DRW_SHADER_LIB_ADD(e_data.lib, goo_gpu_shader_codegen_lib);
     DRW_SHADER_LIB_ADD(e_data.lib, random_lib);
     DRW_SHADER_LIB_ADD(e_data.lib, renderpass_lib);
     DRW_SHADER_LIB_ADD(e_data.lib, bsdf_common_lib);
@@ -1346,6 +1349,9 @@ static char *eevee_get_defines(int options)
   if ((options & VAR_MAT_SHADOW_ID) != 0) {
     BLI_dynstr_append(ds, "#define USE_SHADOW_ID\n");
   }
+  if ((options & VAR_MAT_SHADOW_ID) != 0) {
+    BLI_dynstr_append(ds, "#define USE_SHADOW_ID\n");
+  }
 
   str = BLI_dynstr_get_cstring(ds);
   BLI_dynstr_free(ds);
@@ -1413,7 +1419,7 @@ GPUMaterial *EEVEE_material_get(
   if ((ma && (!ma->use_nodes || !ma->nodetree)) || (wo && (!wo->use_nodes || !wo->nodetree))) {
     options |= VAR_DEFAULT;
   }
-  
+
   if ((ma && ma->check_shadow_id)) {
     options |= VAR_MAT_SHADOW_ID;
   }
@@ -1463,92 +1469,92 @@ void EEVEE_shaders_free()
   MEM_SAFE_FREE(e_data.surface_prepass_frag);
   MEM_SAFE_FREE(e_data.surface_lit_frag);
   MEM_SAFE_FREE(e_data.surface_geom_barycentric);
-  DRW_SHADER_FREE_SAFE(e_data.lookdev_background);
-  DRW_SHADER_FREE_SAFE(e_data.update_noise_sh);
-  DRW_SHADER_FREE_SAFE(e_data.color_copy_sh);
-  DRW_SHADER_FREE_SAFE(e_data.downsample_sh);
-  DRW_SHADER_FREE_SAFE(e_data.downsample_cube_sh);
-  DRW_SHADER_FREE_SAFE(e_data.minz_downlevel_sh);
-  DRW_SHADER_FREE_SAFE(e_data.maxz_downlevel_sh);
-  DRW_SHADER_FREE_SAFE(e_data.minz_downdepth_sh);
-  DRW_SHADER_FREE_SAFE(e_data.maxz_downdepth_sh);
-  DRW_SHADER_FREE_SAFE(e_data.minz_downdepth_layer_sh);
-  DRW_SHADER_FREE_SAFE(e_data.maxz_downdepth_layer_sh);
-  DRW_SHADER_FREE_SAFE(e_data.maxz_copydepth_layer_sh);
-  DRW_SHADER_FREE_SAFE(e_data.minz_copydepth_sh);
-  DRW_SHADER_FREE_SAFE(e_data.maxz_copydepth_sh);
-  DRW_SHADER_FREE_SAFE(e_data.ggx_lut_sh);
-  DRW_SHADER_FREE_SAFE(e_data.ggx_refraction_lut_sh);
-  DRW_SHADER_FREE_SAFE(e_data.mist_sh);
-  DRW_SHADER_FREE_SAFE(e_data.motion_blur_sh);
-  DRW_SHADER_FREE_SAFE(e_data.motion_blur_object_sh);
-  DRW_SHADER_FREE_SAFE(e_data.motion_blur_hair_sh);
-  DRW_SHADER_FREE_SAFE(e_data.velocity_tiles_sh);
-  DRW_SHADER_FREE_SAFE(e_data.velocity_tiles_expand_sh);
-  DRW_SHADER_FREE_SAFE(e_data.gtao_sh);
-  DRW_SHADER_FREE_SAFE(e_data.gtao_layer_sh);
-  DRW_SHADER_FREE_SAFE(e_data.gtao_debug_sh);
-  DRW_SHADER_FREE_SAFE(e_data.velocity_resolve_sh);
-  DRW_SHADER_FREE_SAFE(e_data.rpass_accumulate_sh);
-  DRW_SHADER_FREE_SAFE(e_data.postprocess_sh);
-  DRW_SHADER_FREE_SAFE(e_data.shadow_sh);
-  DRW_SHADER_FREE_SAFE(e_data.shadow_accum_sh);
-  DRW_SHADER_FREE_SAFE(e_data.sss_sh[0]);
-  DRW_SHADER_FREE_SAFE(e_data.sss_sh[1]);
-  DRW_SHADER_FREE_SAFE(e_data.sss_sh[2]);
-  DRW_SHADER_FREE_SAFE(e_data.volumetric_clear_sh);
-  DRW_SHADER_FREE_SAFE(e_data.scatter_sh);
-  DRW_SHADER_FREE_SAFE(e_data.scatter_with_lights_sh);
-  DRW_SHADER_FREE_SAFE(e_data.volumetric_integration_sh);
-  DRW_SHADER_FREE_SAFE(e_data.volumetric_resolve_sh[0]);
-  DRW_SHADER_FREE_SAFE(e_data.volumetric_resolve_sh[1]);
-  DRW_SHADER_FREE_SAFE(e_data.volumetric_accum_sh);
-  DRW_SHADER_FREE_SAFE(e_data.probe_filter_glossy_sh);
-  DRW_SHADER_FREE_SAFE(e_data.probe_filter_diffuse_sh);
-  DRW_SHADER_FREE_SAFE(e_data.probe_filter_visibility_sh);
-  DRW_SHADER_FREE_SAFE(e_data.probe_grid_fill_sh);
-  DRW_SHADER_FREE_SAFE(e_data.probe_planar_downsample_sh);
-  DRW_SHADER_FREE_SAFE(e_data.studiolight_probe_sh);
-  DRW_SHADER_FREE_SAFE(e_data.studiolight_background_sh);
-  DRW_SHADER_FREE_SAFE(e_data.probe_grid_display_sh);
-  DRW_SHADER_FREE_SAFE(e_data.probe_cube_display_sh);
-  DRW_SHADER_FREE_SAFE(e_data.probe_planar_display_sh);
-  DRW_SHADER_FREE_SAFE(e_data.velocity_resolve_sh);
-  DRW_SHADER_FREE_SAFE(e_data.taa_resolve_sh);
-  DRW_SHADER_FREE_SAFE(e_data.taa_resolve_reproject_sh);
-  DRW_SHADER_FREE_SAFE(e_data.dof_bokeh_sh);
-  DRW_SHADER_FREE_SAFE(e_data.dof_setup_sh);
-  DRW_SHADER_FREE_SAFE(e_data.dof_flatten_tiles_sh);
-  DRW_SHADER_FREE_SAFE(e_data.dof_dilate_tiles_sh[0]);
-  DRW_SHADER_FREE_SAFE(e_data.dof_dilate_tiles_sh[1]);
-  DRW_SHADER_FREE_SAFE(e_data.dof_downsample_sh);
-  DRW_SHADER_FREE_SAFE(e_data.dof_reduce_sh[0]);
-  DRW_SHADER_FREE_SAFE(e_data.dof_reduce_sh[1]);
+  GPU_SHADER_FREE_SAFE(e_data.lookdev_background);
+  GPU_SHADER_FREE_SAFE(e_data.update_noise_sh);
+  GPU_SHADER_FREE_SAFE(e_data.color_copy_sh);
+  GPU_SHADER_FREE_SAFE(e_data.downsample_sh);
+  GPU_SHADER_FREE_SAFE(e_data.downsample_cube_sh);
+  GPU_SHADER_FREE_SAFE(e_data.minz_downlevel_sh);
+  GPU_SHADER_FREE_SAFE(e_data.maxz_downlevel_sh);
+  GPU_SHADER_FREE_SAFE(e_data.minz_downdepth_sh);
+  GPU_SHADER_FREE_SAFE(e_data.maxz_downdepth_sh);
+  GPU_SHADER_FREE_SAFE(e_data.minz_downdepth_layer_sh);
+  GPU_SHADER_FREE_SAFE(e_data.maxz_downdepth_layer_sh);
+  GPU_SHADER_FREE_SAFE(e_data.maxz_copydepth_layer_sh);
+  GPU_SHADER_FREE_SAFE(e_data.minz_copydepth_sh);
+  GPU_SHADER_FREE_SAFE(e_data.maxz_copydepth_sh);
+  GPU_SHADER_FREE_SAFE(e_data.ggx_lut_sh);
+  GPU_SHADER_FREE_SAFE(e_data.ggx_refraction_lut_sh);
+  GPU_SHADER_FREE_SAFE(e_data.mist_sh);
+  GPU_SHADER_FREE_SAFE(e_data.motion_blur_sh);
+  GPU_SHADER_FREE_SAFE(e_data.motion_blur_object_sh);
+  GPU_SHADER_FREE_SAFE(e_data.motion_blur_hair_sh);
+  GPU_SHADER_FREE_SAFE(e_data.velocity_tiles_sh);
+  GPU_SHADER_FREE_SAFE(e_data.velocity_tiles_expand_sh);
+  GPU_SHADER_FREE_SAFE(e_data.gtao_sh);
+  GPU_SHADER_FREE_SAFE(e_data.gtao_layer_sh);
+  GPU_SHADER_FREE_SAFE(e_data.gtao_debug_sh);
+  GPU_SHADER_FREE_SAFE(e_data.velocity_resolve_sh);
+  GPU_SHADER_FREE_SAFE(e_data.rpass_accumulate_sh);
+  GPU_SHADER_FREE_SAFE(e_data.postprocess_sh);
+  GPU_SHADER_FREE_SAFE(e_data.shadow_sh);
+  GPU_SHADER_FREE_SAFE(e_data.shadow_accum_sh);
+  GPU_SHADER_FREE_SAFE(e_data.sss_sh[0]);
+  GPU_SHADER_FREE_SAFE(e_data.sss_sh[1]);
+  GPU_SHADER_FREE_SAFE(e_data.sss_sh[2]);
+  GPU_SHADER_FREE_SAFE(e_data.volumetric_clear_sh);
+  GPU_SHADER_FREE_SAFE(e_data.scatter_sh);
+  GPU_SHADER_FREE_SAFE(e_data.scatter_with_lights_sh);
+  GPU_SHADER_FREE_SAFE(e_data.volumetric_integration_sh);
+  GPU_SHADER_FREE_SAFE(e_data.volumetric_resolve_sh[0]);
+  GPU_SHADER_FREE_SAFE(e_data.volumetric_resolve_sh[1]);
+  GPU_SHADER_FREE_SAFE(e_data.volumetric_accum_sh);
+  GPU_SHADER_FREE_SAFE(e_data.probe_filter_glossy_sh);
+  GPU_SHADER_FREE_SAFE(e_data.probe_filter_diffuse_sh);
+  GPU_SHADER_FREE_SAFE(e_data.probe_filter_visibility_sh);
+  GPU_SHADER_FREE_SAFE(e_data.probe_grid_fill_sh);
+  GPU_SHADER_FREE_SAFE(e_data.probe_planar_downsample_sh);
+  GPU_SHADER_FREE_SAFE(e_data.studiolight_probe_sh);
+  GPU_SHADER_FREE_SAFE(e_data.studiolight_background_sh);
+  GPU_SHADER_FREE_SAFE(e_data.probe_grid_display_sh);
+  GPU_SHADER_FREE_SAFE(e_data.probe_cube_display_sh);
+  GPU_SHADER_FREE_SAFE(e_data.probe_planar_display_sh);
+  GPU_SHADER_FREE_SAFE(e_data.velocity_resolve_sh);
+  GPU_SHADER_FREE_SAFE(e_data.taa_resolve_sh);
+  GPU_SHADER_FREE_SAFE(e_data.taa_resolve_reproject_sh);
+  GPU_SHADER_FREE_SAFE(e_data.dof_bokeh_sh);
+  GPU_SHADER_FREE_SAFE(e_data.dof_setup_sh);
+  GPU_SHADER_FREE_SAFE(e_data.dof_flatten_tiles_sh);
+  GPU_SHADER_FREE_SAFE(e_data.dof_dilate_tiles_sh[0]);
+  GPU_SHADER_FREE_SAFE(e_data.dof_dilate_tiles_sh[1]);
+  GPU_SHADER_FREE_SAFE(e_data.dof_downsample_sh);
+  GPU_SHADER_FREE_SAFE(e_data.dof_reduce_sh[0]);
+  GPU_SHADER_FREE_SAFE(e_data.dof_reduce_sh[1]);
   for (int i = 0; i < DOF_GATHER_MAX_PASS; i++) {
-    DRW_SHADER_FREE_SAFE(e_data.dof_gather_sh[i][0]);
-    DRW_SHADER_FREE_SAFE(e_data.dof_gather_sh[i][1]);
+    GPU_SHADER_FREE_SAFE(e_data.dof_gather_sh[i][0]);
+    GPU_SHADER_FREE_SAFE(e_data.dof_gather_sh[i][1]);
   }
-  DRW_SHADER_FREE_SAFE(e_data.dof_filter_sh);
-  DRW_SHADER_FREE_SAFE(e_data.dof_scatter_sh[0][0]);
-  DRW_SHADER_FREE_SAFE(e_data.dof_scatter_sh[0][1]);
-  DRW_SHADER_FREE_SAFE(e_data.dof_scatter_sh[1][0]);
-  DRW_SHADER_FREE_SAFE(e_data.dof_scatter_sh[1][1]);
-  DRW_SHADER_FREE_SAFE(e_data.dof_resolve_sh[0][0]);
-  DRW_SHADER_FREE_SAFE(e_data.dof_resolve_sh[0][1]);
-  DRW_SHADER_FREE_SAFE(e_data.dof_resolve_sh[1][0]);
-  DRW_SHADER_FREE_SAFE(e_data.dof_resolve_sh[1][1]);
-  DRW_SHADER_FREE_SAFE(e_data.cryptomatte_sh[0]);
-  DRW_SHADER_FREE_SAFE(e_data.cryptomatte_sh[1]);
+  GPU_SHADER_FREE_SAFE(e_data.dof_filter_sh);
+  GPU_SHADER_FREE_SAFE(e_data.dof_scatter_sh[0][0]);
+  GPU_SHADER_FREE_SAFE(e_data.dof_scatter_sh[0][1]);
+  GPU_SHADER_FREE_SAFE(e_data.dof_scatter_sh[1][0]);
+  GPU_SHADER_FREE_SAFE(e_data.dof_scatter_sh[1][1]);
+  GPU_SHADER_FREE_SAFE(e_data.dof_resolve_sh[0][0]);
+  GPU_SHADER_FREE_SAFE(e_data.dof_resolve_sh[0][1]);
+  GPU_SHADER_FREE_SAFE(e_data.dof_resolve_sh[1][0]);
+  GPU_SHADER_FREE_SAFE(e_data.dof_resolve_sh[1][1]);
+  GPU_SHADER_FREE_SAFE(e_data.cryptomatte_sh[0]);
+  GPU_SHADER_FREE_SAFE(e_data.cryptomatte_sh[1]);
   for (int i = 0; i < 2; i++) {
-    DRW_SHADER_FREE_SAFE(e_data.bloom_blit_sh[i]);
-    DRW_SHADER_FREE_SAFE(e_data.bloom_downsample_sh[i]);
-    DRW_SHADER_FREE_SAFE(e_data.bloom_upsample_sh[i]);
-    DRW_SHADER_FREE_SAFE(e_data.bloom_resolve_sh[i]);
+    GPU_SHADER_FREE_SAFE(e_data.bloom_blit_sh[i]);
+    GPU_SHADER_FREE_SAFE(e_data.bloom_downsample_sh[i]);
+    GPU_SHADER_FREE_SAFE(e_data.bloom_upsample_sh[i]);
+    GPU_SHADER_FREE_SAFE(e_data.bloom_resolve_sh[i]);
   }
-  DRW_SHADER_FREE_SAFE(e_data.reflection_trace);
-  DRW_SHADER_FREE_SAFE(e_data.reflection_resolve);
-  DRW_SHADER_FREE_SAFE(e_data.reflection_resolve_probe);
-  DRW_SHADER_FREE_SAFE(e_data.reflection_resolve_raytrace);
+  GPU_SHADER_FREE_SAFE(e_data.reflection_trace);
+  GPU_SHADER_FREE_SAFE(e_data.reflection_resolve);
+  GPU_SHADER_FREE_SAFE(e_data.reflection_resolve_probe);
+  GPU_SHADER_FREE_SAFE(e_data.reflection_resolve_raytrace);
   DRW_SHADER_LIB_FREE_SAFE(e_data.lib);
 
   if (e_data.default_world) {

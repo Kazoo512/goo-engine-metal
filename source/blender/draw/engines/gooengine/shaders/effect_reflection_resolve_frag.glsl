@@ -2,8 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#pragma BLENDER_REQUIRE(common_math_lib.glsl)
-#pragma BLENDER_REQUIRE(common_math_geom_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_math_geom_lib.glsl)
 #pragma BLENDER_REQUIRE(closure_eval_glossy_lib.glsl)
 #pragma BLENDER_REQUIRE(closure_eval_lib.glsl)
 #pragma BLENDER_REQUIRE(lightprobe_lib.glsl)
@@ -53,7 +53,7 @@ vec4 ssr_get_scene_color_and_mask(vec3 hit_vP, int planar_index, float mip)
 
   /* Clamped brightness. */
   float luma = max_v3(color);
-  color *= 1.0 - max(0.0, luma - ssrFireflyFac) * safe_rcp(luma);
+  color *= 1.0 - max(0.0, luma - ssrFireflyFac) * goo_safe_rcp(luma);
 
   float mask = screen_border_mask(uv);
   return vec4(color, mask);
@@ -113,9 +113,9 @@ void resolve_reflection_sample(int planar_index,
 #ifdef GPU_METAL
 #  define SAMPLE_STORAGE_TYPE uchar
 #  define pack_sample(x, y) uchar(((uchar(x + 2)) << uchar(3)) + (uchar(y + 2)))
-#  define unpack_sample(x) vec2((char(x) >> 3) - 2, (char(x) & 7) - 2)
+#  define unpack_sample(x) ivec2((char(x) >> 3) - 2, (char(x) & 7) - 2)
 #else
-#  define SAMPLE_STORAGE_TYPE vec2
+#  define SAMPLE_STORAGE_TYPE ivec2
 #  define pack_sample(x, y) SAMPLE_STORAGE_TYPE(x, y)
 #  define unpack_sample(x) x
 #endif
@@ -127,7 +127,7 @@ void raytrace_resolve(ClosureInputGlossy cl_in,
 {
   /* NOTE: Reflection samples declared in function scope to avoid per-thread memory pressure on
    * tile-based GPUs e.g. Apple Silicon. */
-  const SAMPLE_STORAGE_TYPE resolve_sample_offsets[36] = SAMPLE_STORAGE_TYPE[36](
+  const SAMPLE_STORAGE_TYPE resolve_sample_offsets[36] = int2_array(
       /* Set 1. */
       /* First Ring (2x2). */
       pack_sample(0, 0),
@@ -234,7 +234,7 @@ void raytrace_resolve(ClosureInputGlossy cl_in,
   }
 
   /* Compute SSR contribution */
-  ssr_accum *= safe_rcp(weight_acc);
+  ssr_accum *= goo_safe_rcp(weight_acc);
   /* fade between 0.5 and 1.0 roughness */
   ssr_accum.a *= smoothstep(ssrMaxRoughness + 0.2, ssrMaxRoughness, roughness);
 
@@ -307,10 +307,10 @@ void main()
   CLOSURE_EVAL_FUNCTION_1(ssr_resolve, Glossy);
 
   /* Default single pass resolve */
-  fragColor = vec4(out_Glossy_0.radiance * brdf, 1.0);
+  FragColor = vec4(out_Glossy_0.radiance * brdf, 1.0);
 #if defined(GPU_INTEL) && defined(GPU_METAL)
   /* Due to non-uniform control flow with discard, Intel on macOS requires blending factor
    * to discard unwanted fragments. */
-  fragColor *= factor;
+  FragColor *= factor;
 #endif
 }

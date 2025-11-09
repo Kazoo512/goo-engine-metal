@@ -227,10 +227,11 @@ typedef struct Material {
   /* Goo-engine */
   int light_group_bits[4];
   int light_group_shadow_bits[4];
+  
+  char _pad3[3];
 
   /* Volume. */
   char volume_intersection_method;
-  char _pad3[3];
 
   /* Displacement. */
   float inflate_bounds;

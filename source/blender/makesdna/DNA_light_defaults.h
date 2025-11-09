@@ -26,6 +26,7 @@
     .mode = LA_SHADOW | LA_USE_SOFT_FALLOFF, \
     .clipsta = 0.05f, \
     .clip_end = 40.0f, \
+    .bias = 1.0f, \
     .area_size = 0.25f, \
     .area_sizey = 0.25f, \
     .area_sizez = 0.25f, \

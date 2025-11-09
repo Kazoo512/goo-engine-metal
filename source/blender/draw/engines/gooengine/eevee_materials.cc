@@ -18,6 +18,7 @@
 
 #include "BKE_global.hh"
 #include "BKE_paint.hh"
+#include "BKE_paint_bvh.hh"
 #include "BKE_particle.h"
 
 #include "DNA_curves_types.h"
@@ -351,7 +352,7 @@ void EEVEE_materials_init(EEVEE_ViewLayerData *sldata,
       }
       /* Free AOV UBO's that are not in use. */
       for (int aov_index = g_data->num_aovs_used; aov_index < MAX_AOVS; aov_index++) {
-        DRW_UBO_FREE_SAFE(sldata->renderpass_ubo.aovs[aov_index]);
+        GPU_UBO_FREE_SAFE(sldata->renderpass_ubo.aovs[aov_index]);
       }
     }
 
@@ -363,12 +364,6 @@ void EEVEE_materials_init(EEVEE_ViewLayerData *sldata,
     if (g_data->render_passes & EEVEE_RENDER_PASS_ENVIRONMENT) {
       Scene *scene = draw_ctx->scene;
       World *wo = scene->world;
-
-      World *world_override = draw_ctx->view_layer->world_override;
-      if (world_override) {
-        wo = world_override;
-      }
-
       if (wo && wo->use_nodes) {
         EEVEE_material_get(vedata, scene, nullptr, wo, VAR_WORLD_BACKGROUND);
       }
@@ -403,11 +398,6 @@ void EEVEE_materials_cache_init(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)
     if (grp == nullptr) {
       Scene *scene = draw_ctx->scene;
       World *world = (scene->world) ? scene->world : EEVEE_world_default_get();
-
-      World *world_override = draw_ctx->view_layer->world_override;
-      if (world_override) {
-        world = world_override;
-      }
 
       const int options = VAR_WORLD_BACKGROUND;
       GPUMaterial *gpumat = EEVEE_material_get(vedata, scene, nullptr, world, options);
@@ -776,9 +766,7 @@ static EeveeMaterialCache material_transparent(EEVEE_Data *vedata,
 /* Return correct material or empty default material if slot is empty. */
 BLI_INLINE Material *eevee_object_material_get(Object *ob, int slot, bool holdout)
 {
-  const DRWContextState *draw_ctx = DRW_context_state_get();
-  Material *material_override = draw_ctx->view_layer->mat_override;
-  Material *ma = (material_override) ? material_override : BKE_object_material_get_eval(ob, slot + 1);
+  Material *ma = BKE_object_material_get_eval(ob, slot + 1);
   bool use_custom = BKE_material_use_custom_holdout(ma);
   if (holdout && !use_custom) {
     return BKE_material_default_holdout();
@@ -895,7 +883,7 @@ void EEVEE_materials_cache_populate(EEVEE_Data *vedata,
         GPUMaterial **gpumat_array = BLI_array_alloca(gpumat_array, materials_len);
         MATCACHE_AS_ARRAY(matcache, shading_gpumat, materials_len, gpumat_array);
         /* Get per-material split surface */
-        blender::gpu::Batch **mat_geom = DRW_cache_object_surface_material_get(
+        blender::gpu::Batch **mat_geom = GOO_cache_object_surface_material_get(
             ob, gpumat_array, materials_len);
 
         if (mat_geom) {
@@ -928,12 +916,6 @@ void EEVEE_materials_cache_populate(EEVEE_Data *vedata,
           }
         }
 
-        if (G.debug_value == 889 && ob->sculpt && blender::bke::object::pbvh_get(*ob)) {
-          int debug_node_nr = 0;
-          DRW_debug_modelmat(ob->object_to_world().ptr());
-          BKE_pbvh_draw_debug_cb(
-              *blender::bke::object::pbvh_get(*ob), DRW_sculpt_debug_cb, &debug_node_nr);
-        }
       }
 
       /* Motion Blur Vectors. */

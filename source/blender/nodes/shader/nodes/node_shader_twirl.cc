@@ -21,13 +21,17 @@ static int gpu_shader_twirl(GPUMaterial *mat,
 
 } // namespace blender::nodes::node_shader_twirl_cc
 
-void register_node_type_sh_twirl(void)
+void register_node_type_sh_twirl()
 {
   namespace file_ns = blender::nodes::node_shader_twirl_cc;
   
   static blender::bke::bNodeType ntype;
 
-  sh_node_type_base(&ntype, SH_NODE_TWIRL, "Twirl", NODE_CLASS_OP_VECTOR);
+  sh_node_type_base(&ntype, "ShaderNodeTwirl", SH_NODE_TWIRL);
+  ntype.ui_name = "Twirl";
+  ntype.ui_description = "Twirl the input vector around a center point by a specified amount";
+  ntype.enum_name_legacy = "TWIRL";
+  ntype.nclass = NODE_CLASS_OP_VECTOR;
   ntype.declare = file_ns::node_declare;
   ntype.gpu_fn = file_ns::gpu_shader_twirl;
   

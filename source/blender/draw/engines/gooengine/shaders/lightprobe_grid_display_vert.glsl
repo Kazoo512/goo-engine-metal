@@ -2,13 +2,13 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#pragma BLENDER_REQUIRE(common_view_lib.glsl)
+#pragma BLENDER_REQUIRE(goo_common_view_lib.glsl)
 
 void main()
 {
   /* Constant array moved inside function scope.
    * Minimizes local register allocation in MSL. */
-  const vec2 pos[6] = vec2[6](vec2(-1.0, -1.0),
+  const vec2 pos[6] = float2_array(vec2(-1.0, -1.0),
                               vec2(1.0, -1.0),
                               vec2(-1.0, 1.0),
 
