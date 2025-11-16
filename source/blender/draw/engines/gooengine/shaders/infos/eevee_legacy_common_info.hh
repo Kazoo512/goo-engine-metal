@@ -72,8 +72,8 @@ PUSH_CONSTANT(IVEC4, light_group_shadows_in)
 SAMPLER(8, SHADOW_2D_ARRAY, shadowCubeTexture)
 SAMPLER(9, SHADOW_2D_ARRAY, shadowCascadeTexture)
 /* GooEngine: Use slots 23, 24 as others are already taken. */
-SAMPLER(23, SHADOW_2D_ARRAY, shadowCubeIDTexture)
-SAMPLER(24, SHADOW_2D_ARRAY, shadowCascadeIDTexture)
+SAMPLER(23, UINT_2D_ARRAY, shadowCubeIDTexture)
+SAMPLER(24, UINT_2D_ARRAY, shadowCascadeIDTexture)
 GPU_SHADER_CREATE_END()
 
 /* Hair lib. */
