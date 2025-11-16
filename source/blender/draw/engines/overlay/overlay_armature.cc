@@ -3123,7 +3123,7 @@ void Armatures::draw_armature_pose(Armatures::DrawContext *ctx)
       if (!is_pose_select || draw_strat.culling_test(view, ob, pchan)) {
         draw_strat.draw_bone(ctx, bone_ptr, boneflag, select_id);
       }
-  }
+    }
 
     /* Below this point nothing is used for selection queries. */
     if (is_pose_select) {
