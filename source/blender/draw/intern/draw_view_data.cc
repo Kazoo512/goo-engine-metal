@@ -110,14 +110,18 @@ static void draw_viewport_engines_data_clear(ViewportEngineData *data, bool clea
   DrawEngineType *engine_type = data->draw_engine;
   const DrawEngineDataSize *data_size = engine_type->vedata_size;
 
-  for (int i = 0; data->fbl && i < data_size->fbl_len; i++) {
-    GPU_FRAMEBUFFER_FREE_SAFE(data->fbl->framebuffers[i]);
-  }
-  for (int i = 0; data->txl && i < data_size->txl_len; i++) {
-    GPU_TEXTURE_FREE_SAFE(data->txl->textures[i]);
-  }
-  for (int i = 0; data->stl && i < data_size->stl_len; i++) {
-    MEM_SAFE_FREE(data->stl->storage[i]);
+  printf("\n\n %s\n\n", engine_type->idname);
+  if (STREQ(engine_type->idname, "BLENDER_EEVEE")) {
+    printf("\n\n FREE THEM \n\n");
+    for (int i = 0; data->fbl && i < data_size->fbl_len; i++) {
+      GPU_FRAMEBUFFER_FREE_SAFE(data->fbl->framebuffers[i]);
+    }
+    for (int i = 0; data->txl && i < data_size->txl_len; i++) {
+      GPU_TEXTURE_FREE_SAFE(data->txl->textures[i]);
+    }
+    for (int i = 0; data->stl && i < data_size->stl_len; i++) {
+      MEM_SAFE_FREE(data->stl->storage[i]);
+    }
   }
 
   if (clear_instance_data && data->instance_data) {
@@ -126,10 +130,13 @@ static void draw_viewport_engines_data_clear(ViewportEngineData *data, bool clea
     data->instance_data = nullptr;
   }
 
-  MEM_SAFE_FREE(data->fbl);
-  MEM_SAFE_FREE(data->txl);
-  MEM_SAFE_FREE(data->psl);
-  MEM_SAFE_FREE(data->stl);
+  if (STREQ(engine_type->idname, "BLENDER_EEVEE")) {
+    printf("\n\n FREE IT \n\n");
+    MEM_SAFE_FREE(data->fbl);
+    MEM_SAFE_FREE(data->txl);
+    MEM_SAFE_FREE(data->psl);
+    MEM_SAFE_FREE(data->stl);
+  }
 
   if (data->text_draw_cache) {
     DRW_text_cache_destroy(data->text_draw_cache);

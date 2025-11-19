@@ -648,7 +648,7 @@ static const DrawEngineDataSize eevee_data_size = DRW_VIEWPORT_DATA_SIZE(EEVEE_D
 DrawEngineType draw_engine_eevee_type = {
     /*next*/ nullptr,
     /*prev*/ nullptr,
-    /*idname*/ N_("EEVEE"),
+    /*idname*/ N_("BLENDER_EEVEE"),
     /*vedata_size*/ &eevee_data_size,
     /*engine_init*/ &eevee_engine_init,
     /*engine_free*/ &eevee_engine_free,
