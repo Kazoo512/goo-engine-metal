@@ -22,9 +22,15 @@ void node_output_material_displacement(vec3 displacement, out vec3 out_displacem
 void node_output_material_thickness(float thickness, out float out_thickness)
 {
   vec3 ob_scale;
+#ifdef GPU_SHADER_EEVEE_LEGACY_DEFINES
+  ob_scale.x = length(ModelMatrixGoo[0].xyz);
+  ob_scale.y = length(ModelMatrixGoo[1].xyz);
+  ob_scale.z = length(ModelMatrixGoo[2].xyz);
+#else
   ob_scale.x = length(drw_modelmat()[0].xyz);
   ob_scale.y = length(drw_modelmat()[1].xyz);
   ob_scale.z = length(drw_modelmat()[2].xyz);
+#endif
 
   vec3 thickness_vec = abs(max(thickness, 0.0) * ob_scale);
   /* Contrary to displacement we need to output a scalar quantity.

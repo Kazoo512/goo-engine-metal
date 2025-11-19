@@ -15,9 +15,16 @@
 /* Define stub defines for C++ test compilation. */
 #  define DRAW_VIEW_CREATE_INFO
 #  define DRW_VIEW_CULLING_INFO
+#  define DRW_LEGACY_MODEL_MATRIX
 #  define USE_WORLD_CLIP_PLANES
 
+#  define drw_ModelMatrix drw_matrix_buf[drw_resource_id()].model
+#  define drw_ModelMatrixInverse drw_matrix_buf[drw_resource_id()].model_inverse
+#  define drw_view_goo drw_view_[drw_view_id]
+#  define drw_view_culling_goo drw_view_culling_[drw_view_id]
 #  define DRW_VIEW_LEN DRW_VIEW_MAX
+#  define ModelMatrixGoo drw_ModelMatrix
+#  define ModelMatrixInverseGoo drw_ModelMatrixInverse
 #endif
 
 #include "gpu_shader_create_info.hh"
@@ -39,28 +46,47 @@ GPU_SHADER_CREATE_INFO(draw_resource_id_varying)
 VERTEX_OUT(draw_resource_id_iface)
 GEOMETRY_OUT(draw_resource_id_iface)
 GPU_SHADER_CREATE_END()
+ 
+/* Variation used when drawing multiple instances for one object. */
+GPU_SHADER_CREATE_INFO(draw_resource_id_uniform)
+DEFINE("UNIFORM_RESOURCE_ID")
+PUSH_CONSTANT(INT, drw_ResourceID)
+GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(draw_resource_id)
 STORAGE_BUF(DRW_RESOURCE_ID_SLOT, READ, uint, resource_id_buf[])
 GPU_SHADER_CREATE_END()
 
+GPU_SHADER_CREATE_INFO(draw_resource_id_goo)
+DEFINE("UNIFORM_RESOURCE_ID_NEW")
+/* TODO (Miguel Pozo): This is an int for compatibility.
+ * It should become uint once the "Next" ports are complete. */
+STORAGE_BUF(DRW_RESOURCE_ID_SLOT, READ, int, resource_id_buf[])
+DEFINE_VALUE("drw_ResourceID", "resource_id_buf[gpu_BaseInstance + gl_InstanceID]")
+GPU_SHADER_CREATE_END()
+
 GPU_SHADER_CREATE_INFO(draw_resource_with_custom_id)
+DEFINE("UNIFORM_RESOURCE_ID_NEW")
 DEFINE("WITH_CUSTOM_IDS")
 STORAGE_BUF(DRW_RESOURCE_ID_SLOT, READ, uint2, resource_id_buf[])
+DEFINE_VALUE("drw_ResourceID", "resource_id_buf[gpu_BaseInstance + gl_InstanceID].x")
 GPU_SHADER_CREATE_END()
 
 /**
  * Workaround the lack of gl_BaseInstance by binding the resource_id_buf as vertex buf.
  */
 GPU_SHADER_CREATE_INFO(draw_resource_id_fallback)
+DEFINE("UNIFORM_RESOURCE_ID_NEW")
 DEFINE("RESOURCE_ID_FALLBACK")
 VERTEX_IN(15, UINT, in_resource_id)
 GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(draw_resource_with_custom_id_fallback)
+DEFINE("UNIFORM_RESOURCE_ID_NEW")
 DEFINE("RESOURCE_ID_FALLBACK")
 DEFINE("WITH_CUSTOM_IDS")
 VERTEX_IN(15, UVEC2, in_resource_id)
+DEFINE_VALUE("drw_ResourceID", "vertex_in_drw_ResourceID.x")
 GPU_SHADER_CREATE_END()
 
 /** \} */
@@ -74,6 +100,13 @@ TYPEDEF_SOURCE("draw_shader_shared.hh")
 STORAGE_BUF(DRW_OBJ_MAT_SLOT, READ, ObjectMatrices, drw_matrix_buf[])
 DEFINE("DRAW_MODELMAT_CREATE_INFO")
 GPU_SHADER_CREATE_END()
+ 
+GPU_SHADER_CREATE_INFO(draw_modelmat_goo)
+UNIFORM_BUF_FREQ(DRW_OBJ_MAT_UBO_SLOT, ObjectMatrices, drw_matrices[DRW_RESOURCE_CHUNK_LEN], BATCH)
+DEFINE_VALUE("ModelMatrixGoo", "(drw_matrices[resource_id].model)")
+DEFINE_VALUE("ModelMatrixInverseGoo", "(drw_matrices[resource_id].model_inverse)")
+ADDITIONAL_INFO(draw_view_goo)
+GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(draw_modelmat)
 ADDITIONAL_INFO(draw_modelmat_common)
@@ -84,6 +117,23 @@ GPU_SHADER_CREATE_INFO(draw_modelmat_with_custom_id)
 ADDITIONAL_INFO(draw_modelmat_common)
 ADDITIONAL_INFO(draw_resource_with_custom_id)
 GPU_SHADER_CREATE_END()
+
+#ifndef GPU_SHADER /* Conflicts with define for C++ shader test. */
+
+GPU_SHADER_CREATE_INFO(draw_modelmat_legacy)
+DEFINE("DRW_LEGACY_MODEL_MATRIX")
+PUSH_CONSTANT(MAT4, ModelMatrixGoo)
+PUSH_CONSTANT(MAT4, ModelMatrixInverseGoo)
+ADDITIONAL_INFO(draw_view_goo)
+GPU_SHADER_CREATE_END()
+
+GPU_SHADER_CREATE_INFO(draw_modelmat_instanced_attr)
+PUSH_CONSTANT(MAT4, ModelMatrixGoo)
+PUSH_CONSTANT(MAT4, ModelMatrixInverseGoo)
+ADDITIONAL_INFO(draw_view_goo)
+GPU_SHADER_CREATE_END()
+
+#endif
 
 /** \} */
 
@@ -100,6 +150,13 @@ GPU_SHADER_CREATE_END()
 GPU_SHADER_CREATE_INFO(draw_view_culling)
 UNIFORM_BUF(DRW_VIEW_CULLING_UBO_SLOT, ViewCullingData, drw_view_culling_buf[DRW_VIEW_LEN])
 DEFINE("DRW_VIEW_CULLING_INFO")
+TYPEDEF_SOURCE("draw_shader_shared.hh")
+GPU_SHADER_CREATE_END()
+
+GPU_SHADER_CREATE_INFO(draw_view_goo)
+UNIFORM_BUF_FREQ(DRW_VIEW_UBO_SLOT, ViewMatrices, drw_view_[DRW_VIEW_LEN], PASS)
+DEFINE("DRAW_VIEW_CREATE_INFO")
+DEFINE_VALUE("drw_view_goo", "drw_view_[drw_view_id]")
 TYPEDEF_SOURCE("draw_shader_shared.hh")
 GPU_SHADER_CREATE_END()
 
@@ -180,4 +237,5 @@ GPU_SHADER_CREATE_END()
 #ifdef GPU_SHADER
 /* Make it work for both draw_resource_id and draw_resource_with_custom_id. */
 #  define resource_id_buf vec2(0)
+#  define drw_ResourceID vec2(resource_id_buf[gpu_BaseInstance + gl_InstanceID]).x
 #endif

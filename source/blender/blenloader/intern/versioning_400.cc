@@ -1510,13 +1510,13 @@ void do_versions_after_linking_400(FileData *fd, Main *bmain)
     }
   }
 
-  if (!MAIN_VERSION_FILE_ATLEAST(bmain, 402, 52)) {
-    LISTBASE_FOREACH (Scene *, scene, &bmain->scenes) {
-      if (STREQ(scene->r.engine, RE_engine_id_BLENDER_EEVEE)) {
-        STRNCPY(scene->r.engine, RE_engine_id_BLENDER_EEVEE_NEXT);
-      }
-    }
-  }
+  // if (!MAIN_VERSION_FILE_ATLEAST(bmain, 402, 52)) {
+  //   LISTBASE_FOREACH (Scene *, scene, &bmain->scenes) {
+  //     if (STREQ(scene->r.engine, RE_engine_id_BLENDER_EEVEE)) {
+  //       STRNCPY(scene->r.engine, RE_engine_id_BLENDER_EEVEE_NEXT);
+  //     }
+  //   }
+  // }
 
   if (!MAIN_VERSION_FILE_ATLEAST(bmain, 403, 6)) {
     /* Shift animation data to accommodate the new Diffuse Roughness input. */
@@ -5104,7 +5104,7 @@ void blo_do_versions_400(FileData *fd, Library * /*lib*/, Main *bmain)
     bool shadow_resolution_absolute = false;
     /* Try to get default resolution from scene setting. */
     LISTBASE_FOREACH (Scene *, scene, &bmain->scenes) {
-      shadow_max_res_local = (2.0f * M_SQRT2) / scene->eevee.shadow_cube_size_deprecated;
+      shadow_max_res_local = (2.0f * M_SQRT2) / scene->eevee.shadow_cube_size;
       /* Round to avoid weird numbers in the UI. */
       shadow_max_res_local = ceil(shadow_max_res_local * 1000.0f) / 1000.0f;
       shadow_resolution_absolute = true;

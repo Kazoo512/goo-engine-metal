@@ -9,6 +9,18 @@ void node_normal_map(vec4 tangent, float strength, vec3 texnormal, out vec3 outn
     outnormal = g_data.Ni;
     return;
   }
+
+
+#ifdef GPU_SHADER_EEVEE_LEGACY_DEFINES
+#  ifdef OBINFO_NEW
+  B *= (floatBitsToUint(ObjectInfo.w) & OBJECT_NEGATIVE_SCALE) != 0 ? -1.0 : 1.0;
+#  else
+  B *= sign(ObjectInfo.w);
+#  endif
+#else
+  B *= (drw_object_infos().flag & OBJECT_NEGATIVE_SCALE) != 0 ? -1.0 : 1.0;
+#endif
+
   tangent *= (FrontFacing ? 1.0 : -1.0);
   vec3 B = tangent.w * cross(g_data.Ni, tangent.xyz);
   B *= (drw_object_infos().flag & OBJECT_NEGATIVE_SCALE) != 0 ? -1.0 : 1.0;

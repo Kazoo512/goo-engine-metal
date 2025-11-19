@@ -175,6 +175,7 @@ float safe_divide(float a, float b)
   return (b != 0.0) ? (a / b) : 0.0;
 }
 
+#ifndef GOO_COMMON_MATH_LIB_GLSL
 /**
  * Safe reciprocal function. Returns `1/a`.
  * If `a` equal 0 the result will be 0.
@@ -208,6 +209,7 @@ float safe_acos(float a)
   }
   return acos(a);
 }
+#endif
 
 /**
  * Return true if the difference between`a` and `b` is below the `epsilon` value.

@@ -24,6 +24,7 @@
 #include "draw_view_data.hh"
 
 #include "engines/compositor/compositor_engine.h"
+#include "engines/gooengine/eevee_engine.h"
 #include "engines/eevee_next/eevee_engine.h"
 #include "engines/external/external_engine.h"
 #include "engines/gpencil/gpencil_engine.h"
@@ -35,7 +36,8 @@
 using namespace blender;
 
 DRWViewData::DRWViewData()
-    : eevee(DRW_engine_viewport_eevee_next_type.draw_engine),
+    : gooengine(DRW_engine_viewport_eevee_type.draw_engine),
+      eevee(DRW_engine_viewport_eevee_next_type.draw_engine),
       workbench(DRW_engine_viewport_workbench_type.draw_engine),
       external(&draw_engine_external_type),
       image(&draw_engine_image_type),
@@ -106,12 +108,28 @@ void DRW_view_data_default_lists_from_viewport(DRWViewData *view_data, GPUViewpo
 static void draw_viewport_engines_data_clear(ViewportEngineData *data, bool clear_instance_data)
 {
   DrawEngineType *engine_type = data->draw_engine;
+  const DrawEngineDataSize *data_size = engine_type->vedata_size;
+
+  for (int i = 0; data->fbl && i < data_size->fbl_len; i++) {
+    GPU_FRAMEBUFFER_FREE_SAFE(data->fbl->framebuffers[i]);
+  }
+  for (int i = 0; data->txl && i < data_size->txl_len; i++) {
+    GPU_TEXTURE_FREE_SAFE(data->txl->textures[i]);
+  }
+  for (int i = 0; data->stl && i < data_size->stl_len; i++) {
+    MEM_SAFE_FREE(data->stl->storage[i]);
+  }
 
   if (clear_instance_data && data->instance_data) {
     BLI_assert(engine_type->instance_free != nullptr);
     engine_type->instance_free(data->instance_data);
     data->instance_data = nullptr;
   }
+
+  MEM_SAFE_FREE(data->fbl);
+  MEM_SAFE_FREE(data->txl);
+  MEM_SAFE_FREE(data->psl);
+  MEM_SAFE_FREE(data->stl);
 
   if (data->text_draw_cache) {
     DRW_text_cache_destroy(data->text_draw_cache);
@@ -143,8 +161,11 @@ void DRWViewData::clear(bool free_instance_data)
 void DRWViewData::texture_list_size_validate(const blender::int2 &size)
 {
   if (this->texture_list_size != size) {
+    printf("\n WE NEED TO CLEAR \n");
     this->clear(false);
+    printf("\n CLEAR DONE \n");
     copy_v2_v2_int(this->texture_list_size, size);
+    printf("\n COPY DONE \n");
   }
 }
 
@@ -154,6 +175,18 @@ ViewportEngineData *DRW_view_data_engine_data_get_ensure(DRWViewData *view_data,
   ViewportEngineData *result = nullptr;
   view_data->foreach_engine([&](ViewportEngineData *data, DrawEngineType *engine) {
     if (engine_type == engine) {
+      if (data->fbl == nullptr) {
+        printf("\n\n ENSURE IT \n\n");
+        const DrawEngineDataSize *data_size = engine_type->vedata_size;
+        data->fbl = (FramebufferList *)MEM_calloc_arrayN(
+            data_size->fbl_len, sizeof(GPUFrameBuffer *), "FramebufferList");
+        data->txl = (TextureList *)MEM_calloc_arrayN(
+            data_size->txl_len, sizeof(GPUTexture *), "TextureList");
+        data->psl = (PassList *)MEM_calloc_arrayN(
+            data_size->psl_len, sizeof(DRWPass *), "PassList");
+        data->stl = (StorageList *)MEM_calloc_arrayN(
+            data_size->stl_len, sizeof(void *), "StorageList");
+      }
       result = data;
     }
   });

@@ -617,6 +617,7 @@ vec4 safe_normalize_and_get_length(vec4 vector, out float out_length)
   return vec4(1.0, 0.0, 0.0, 0.0);
 }
 
+#ifndef GOO_COMMON_MATH_LIB_GLSL
 vec2 safe_normalize(vec2 vector)
 {
   float unused_length = 0.0;
@@ -645,6 +646,7 @@ vec4 safe_rcp(vec4 a)
 {
   return select(vec4(0.0), (1.0 / a), notEqual(a, vec4(0.0)));
 }
+#endif
 
 vec2 fallback_pow(vec2 a, float b, vec2 fallback)
 {

@@ -9,8 +9,11 @@
 #include "DNA_material_types.h"
 #include "DNA_world_types.h"
 
+#include "BLI_dynstr.h"
+#include "BLI_string_utils.hh"
 #include "BLI_threads.h"
 #include "BLI_time.h"
+#include "BLI_listbase.h"
 
 #include "DEG_depsgraph_query.hh"
 
@@ -21,6 +24,10 @@
 #include "WM_api.hh"
 
 #include "draw_manager_c.hh"
+
+#include "CLG_log.h"
+
+static CLG_LogRef LOG = {"draw.manager.shader"};
 
 #include <atomic>
 #include <condition_variable>
@@ -286,6 +293,42 @@ static void drw_deferred_shader_add(GPUMaterial *mat, bool deferred)
   drw_deferred_queue_append(mat, false);
 }
 
+static void drw_register_shader_vlattrs(GPUMaterial *mat)
+{
+  const ListBase *attrs = GPU_material_layer_attributes(mat);
+
+  if (!attrs) {
+    return;
+  }
+
+  GHash *hash = drw_get().data->vlattrs_name_cache;
+  ListBase *list = &drw_get().data->vlattrs_name_list;
+
+  LISTBASE_FOREACH (GPULayerAttr *, attr, attrs) {
+    GPULayerAttr **p_val;
+
+    /* Add to the table and list if newly seen. */
+    if (!BLI_ghash_ensure_p(hash, POINTER_FROM_UINT(attr->hash_code), (void ***)&p_val)) {
+      drw_get().data->vlattrs_ubo_ready = false;
+
+      GPULayerAttr *new_link = *p_val = static_cast<GPULayerAttr *>(MEM_dupallocN(attr));
+
+      /* Insert into the list ensuring sorted order. */
+      GPULayerAttr *link = static_cast<GPULayerAttr *>(list->first);
+
+      while (link && link->hash_code <= attr->hash_code) {
+        link = link->next;
+      }
+
+      new_link->prev = new_link->next = nullptr;
+      BLI_insertlinkbefore(list, link, new_link);
+    }
+
+    /* Reset the unused frames counter. */
+    (*p_val)->users = 0;
+  }
+}
+
 void DRW_deferred_shader_remove(GPUMaterial *mat)
 {
   if (GPU_use_main_context_workaround()) {
@@ -352,6 +395,8 @@ GPUMaterial *DRW_shader_from_world(World *wo,
                                                 callback,
                                                 thunk);
 
+  drw_register_shader_vlattrs(mat);
+  
   if (DRW_state_is_image_render()) {
     /* Do not deferred if doing render. */
     deferred = false;
@@ -384,7 +429,13 @@ GPUMaterial *DRW_shader_from_material(Material *ma,
                                                 false,
                                                 callback,
                                                 thunk,
-                                                pass_replacement_cb);
+                                                 pass_replacement_cb);
+  if (DRW_state_is_image_render()) {
+    /* Do not deferred if doing render. */
+    deferred = false;
+  }
+
+  drw_register_shader_vlattrs(mat);
 
   drw_deferred_shader_add(mat, deferred);
   DRW_shader_queue_optimize_material(mat);
@@ -432,6 +483,231 @@ void DRW_shader_queue_optimize_material(GPUMaterial *mat)
 
   /* Add deferred shader compilation to queue. */
   drw_deferred_queue_append(mat, true);
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+
+/** \{ */
+
+GPUShader *DRW_shader_create_from_info_name(const char *info_name)
+{
+  return GPU_shader_create_from_info_name(info_name);
+}
+
+GPUShader *DRW_shader_create_ex(
+    const char *vert, const char *geom, const char *frag, const char *defines, const char *name)
+{
+  return GPU_shader_create(vert, frag, geom, std::nullopt, defines, name);
+}
+
+GPUShader *DRW_shader_create_with_lib_ex(const char *vert,
+                                         const char *geom,
+                                         const char *frag,
+                                         const char *lib,
+                                         const char *defines,
+                                         const char *name)
+{
+  GPUShader *sh;
+  char *vert_with_lib = nullptr;
+  char *frag_with_lib = nullptr;
+  char *geom_with_lib = nullptr;
+
+  vert_with_lib = BLI_string_joinN(lib, vert);
+  frag_with_lib = BLI_string_joinN(lib, frag);
+  if (geom) {
+    geom_with_lib = BLI_string_joinN(lib, geom);
+  }
+
+  sh = GPU_shader_create(vert_with_lib, frag_with_lib, geom_with_lib, std::nullopt, defines, name);
+
+  MEM_freeN(vert_with_lib);
+  MEM_freeN(frag_with_lib);
+  if (geom) {
+    MEM_freeN(geom_with_lib);
+  }
+
+  return sh;
+}
+
+GPUShader *DRW_shader_create_with_shaderlib_ex(const char *vert,
+                                               const char *geom,
+                                               const char *frag,
+                                               const DRWShaderLibrary *lib,
+                                               const char *defines,
+                                               const char *name)
+{
+  GPUShader *sh;
+  char *vert_with_lib = DRW_shader_library_create_shader_string(lib, vert);
+  char *frag_with_lib = DRW_shader_library_create_shader_string(lib, frag);
+  char *geom_with_lib = (geom) ? DRW_shader_library_create_shader_string(lib, geom) : nullptr;
+
+  sh = GPU_shader_create(vert_with_lib, frag_with_lib, geom_with_lib, std::nullopt, defines, name);
+
+  MEM_SAFE_FREE(vert_with_lib);
+  MEM_SAFE_FREE(frag_with_lib);
+  MEM_SAFE_FREE(geom_with_lib);
+
+  return sh;
+}
+
+GPUShader *DRW_shader_create_fullscreen_ex(const char *frag, const char *defines, const char *name)
+{
+  return GPU_shader_create(
+      datatoc_common_fullscreen_vert_glsl, frag, std::nullopt, std::nullopt, defines, name);
+}
+
+GPUShader *DRW_shader_create_fullscreen_with_shaderlib_ex(const char *frag,
+                                                          const DRWShaderLibrary *lib,
+                                                          const char *defines,
+                                                          const char *name)
+{
+
+  GPUShader *sh;
+  char *vert = datatoc_common_fullscreen_vert_glsl;
+  char *frag_with_lib = DRW_shader_library_create_shader_string(lib, frag);
+
+  sh = GPU_shader_create(vert, frag_with_lib, std::nullopt, std::nullopt, defines, name);
+
+  MEM_SAFE_FREE(frag_with_lib);
+
+  return sh;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Shader Library
+ *
+ * Simple include system for glsl files.
+ *
+ * Usage: Create a DRWShaderLibrary and add the library in the right order.
+ * You can have nested dependencies but each new library needs to have all its dependencies already
+ * added to the DRWShaderLibrary.
+ * Finally you can use DRW_shader_library_create_shader_string to get a shader string that also
+ * contains the needed libraries for this shader.
+ * \{ */
+
+/* 64 because we use a 64bit bitmap. */
+#define MAX_LIB 64
+#define MAX_LIB_NAME 64
+#define MAX_LIB_DEPS 8
+
+struct DRWShaderLibrary {
+  const char *libs[MAX_LIB];
+  char libs_name[MAX_LIB][MAX_LIB_NAME];
+  uint64_t libs_deps[MAX_LIB];
+};
+
+DRWShaderLibrary *DRW_shader_library_create()
+{
+  return static_cast<DRWShaderLibrary *>(
+      MEM_callocN(sizeof(DRWShaderLibrary), "DRWShaderLibrary"));
+}
+
+void DRW_shader_library_free(DRWShaderLibrary *lib)
+{
+  MEM_SAFE_FREE(lib);
+}
+
+static int drw_shader_library_search(const DRWShaderLibrary *lib, const char *name)
+{
+  for (int i = 0; i < MAX_LIB; i++) {
+    if (lib->libs[i]) {
+      if (!strncmp(lib->libs_name[i], name, strlen(lib->libs_name[i]))) {
+        return i;
+      }
+    }
+    else {
+      break;
+    }
+  }
+  return -1;
+}
+
+/* Return bitmap of dependencies. */
+static uint64_t drw_shader_dependencies_get(const DRWShaderLibrary *lib,
+                                            const char *pragma_str,
+                                            const char *lib_code,
+                                            const char * /*lib_name*/)
+{
+  /* Search dependencies. */
+  uint pragma_len = strlen(pragma_str);
+  uint64_t deps = 0;
+  const char *haystack = lib_code;
+  while ((haystack = strstr(haystack, pragma_str))) {
+    haystack += pragma_len;
+    int dep = drw_shader_library_search(lib, haystack);
+    if (dep == -1) {
+      char dbg_name[MAX_NAME];
+      int i = 0;
+      while ((*haystack != ')') && (i < (sizeof(dbg_name) - 2))) {
+        dbg_name[i] = *haystack;
+        haystack++;
+        i++;
+      }
+      dbg_name[i] = '\0';
+
+      CLOG_INFO(&LOG,
+                0,
+                "Dependency '%s' not found\n"
+                "This might be due to bad lib ordering or overriding a builtin shader.\n",
+                dbg_name);
+    }
+    else {
+      deps |= 1llu << uint64_t(dep);
+    }
+  }
+  return deps;
+}
+
+void DRW_shader_library_add_file(DRWShaderLibrary *lib, const char *lib_code, const char *lib_name)
+{
+  int index = -1;
+  for (int i = 0; i < MAX_LIB; i++) {
+    if (lib->libs[i] == nullptr) {
+      index = i;
+      break;
+    }
+  }
+
+  if (index > -1) {
+    lib->libs[index] = lib_code;
+    STRNCPY(lib->libs_name[index], lib_name);
+    lib->libs_deps[index] = drw_shader_dependencies_get(
+        lib, "BLENDER_REQUIRE(", lib_code, lib_name);
+  }
+  else {
+    printf("Error: Too many libraries. Cannot add %s.\n", lib_name);
+    BLI_assert(0);
+  }
+}
+
+char *DRW_shader_library_create_shader_string(const DRWShaderLibrary *lib, const char *shader_code)
+{
+  uint64_t deps = drw_shader_dependencies_get(lib, "BLENDER_REQUIRE(", shader_code, "shader code");
+
+  DynStr *ds = BLI_dynstr_new();
+  /* Add all dependencies recursively. */
+  for (int i = MAX_LIB - 1; i > -1; i--) {
+    if (lib->libs[i] && (deps & (1llu << uint64_t(i)))) {
+      deps |= lib->libs_deps[i];
+    }
+  }
+  /* Concatenate all needed libs into one string. */
+  for (int i = 0; i < MAX_LIB && deps != 0llu; i++, deps >>= 1llu) {
+    if (deps & 1llu) {
+      BLI_dynstr_append(ds, lib->libs[i]);
+    }
+  }
+
+  BLI_dynstr_append(ds, shader_code);
+
+  char *str = BLI_dynstr_get_cstring(ds);
+  BLI_dynstr_free(ds);
+
+  return str;
 }
 
 /** \} */

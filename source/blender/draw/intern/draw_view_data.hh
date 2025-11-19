@@ -24,6 +24,7 @@ class TextureFromPool;
 class Manager;
 }  // namespace blender::draw
 
+struct DRWPass;
 struct DrawEngineType;
 struct DRWTextStore;
 struct GPUFrameBuffer;
@@ -31,9 +32,33 @@ struct GPUTexture;
 struct GPUViewport;
 struct ListBase;
 
+/* NOTE: these structs are only here for reading the actual lists from the engine.
+ * The actual length of them is stored in a ViewportEngineData_Info.
+ * The length of 1 is just here to avoid compiler warning. */
+struct FramebufferList {
+  GPUFrameBuffer *framebuffers[1];
+};
+
+struct TextureList {
+  GPUTexture *textures[1];
+};
+
+struct PassList {
+  DRWPass *passes[1];
+};
+
+/* Stores custom structs from the engine that have been MEM_(m/c)allocN'ed. */
+struct StorageList {
+  void *storage[1];
+};
+
 struct ViewportEngineData {
   /* Not owning pointer to the draw engine. */
   DrawEngineType *draw_engine;
+  FramebufferList *fbl;
+  TextureList *txl;
+  PassList *psl;
+  StorageList *stl;
 
   /**
    * \brief Memory block that can be freely used by the draw engine.
@@ -87,6 +112,7 @@ struct DRWViewData {
 
   /* Engines running for this viewport. nullptr if not enabled. */
   /* TODO(fclem): Directly use each engine class. */
+  ViewportEngineData gooengine;
   ViewportEngineData eevee;
   ViewportEngineData workbench;
   ViewportEngineData external;
@@ -121,6 +147,7 @@ struct DRWViewData {
     /* IMPORTANT: Order here defines the draw order. */
 
     /* Render engines. Output to the render result framebuffer. Mutually exclusive. */
+    callback(&gooengine, gooengine.draw_engine);
     callback(&eevee, eevee.draw_engine);
     callback(&workbench, workbench.draw_engine);
     callback(&external, external.draw_engine);

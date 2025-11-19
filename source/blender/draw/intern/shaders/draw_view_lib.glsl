@@ -21,19 +21,32 @@ ViewMatrices drw_view()
 /* Returns true if the current view has a perspective projection matrix. */
 bool drw_view_is_perspective()
 {
+
+#ifdef GPU_SHADER_EEVEE_LEGACY_DEFINES
+  return drw_view_goo.winmat[3][3] == 0.0;
+#else
   return drw_view().winmat[3][3] == 0.0;
+#endif
 }
 
 /* Returns the view forward vector, going towards the viewer. */
 vec3 drw_view_forward()
 {
+#ifdef GPU_SHADER_EEVEE_LEGACY_DEFINES
+  return drw_view_goo.viewinv[2].xyz;
+#else
   return drw_view().viewinv[2].xyz;
+#endif
 }
 
 /* Returns the view origin. */
 vec3 drw_view_position()
 {
+#ifdef GPU_SHADER_EEVEE_LEGACY_DEFINES
+  return drw_view_goo.viewinv[3].xyz;
+#else
   return drw_view().viewinv[3].xyz;
+#endif
 }
 
 /* Positive Z distance from the view origin. Faster than using `drw_point_world_to_view`. */
@@ -45,19 +58,34 @@ float drw_view_z_distance(vec3 P)
 /* Returns the projection matrix far clip distance. */
 float drw_view_far()
 {
+#ifdef GPU_SHADER_EEVEE_LEGACY_DEFINES
+  if (drw_view_is_perspective()) {
+    return -drw_view_goo.winmat[3][2] / (drw_view_goo.winmat[2][2] + 1.0);
+  }
+  return -(drw_view_goo.winmat[3][2] - 1.0) / drw_view_goo.winmat[2][2];
+#else
   if (drw_view_is_perspective()) {
     return -drw_view().winmat[3][2] / (drw_view().winmat[2][2] + 1.0);
   }
   return -(drw_view().winmat[3][2] - 1.0) / drw_view().winmat[2][2];
+#endif
 }
 
 /* Returns the projection matrix near clip distance. */
 float drw_view_near()
 {
+
+#ifdef GPU_SHADER_EEVEE_LEGACY_DEFINES
+  if (drw_view_is_perspective()) {
+    return -drw_view_goo.winmat[3][2] / (drw_view_goo.winmat[2][2] - 1.0);
+  }
+  return -(drw_view_goo.winmat[3][2] + 1.0) / drw_view_goo.winmat[2][2];
+#else
   if (drw_view_is_perspective()) {
     return -drw_view().winmat[3][2] / (drw_view().winmat[2][2] - 1.0);
   }
   return -(drw_view().winmat[3][2] + 1.0) / drw_view().winmat[2][2];
+#endif
 }
 
 /**
@@ -116,12 +144,21 @@ float drw_ndc_to_screen(float ndc_P)
 
 vec3 drw_normal_view_to_world(vec3 vN)
 {
+
+#ifdef GPU_SHADER_EEVEE_LEGACY_DEFINES
+  return (to_float3x3(drw_view_goo.viewinv) * vN);
+#else
   return (to_float3x3(drw_view().viewinv) * vN);
+#endif
 }
 
 vec3 drw_normal_world_to_view(vec3 N)
 {
+#ifdef GPU_SHADER_EEVEE_LEGACY_DEFINES
+  return (to_float3x3(drw_view_goo.viewmat) * N);
+#else
   return (to_float3x3(drw_view().viewmat) * N);
+#endif
 }
 
 /** \} */
@@ -137,11 +174,19 @@ vec3 drw_perspective_divide(vec4 hs_P)
 
 vec3 drw_point_view_to_world(vec3 vP)
 {
+#ifdef GPU_SHADER_EEVEE_LEGACY_DEFINES
+  return (drw_view_goo.viewinv * vec4(vP, 1.0)).xyz;
+#else
   return (drw_view().viewinv * vec4(vP, 1.0)).xyz;
+#endif
 }
 vec4 drw_point_view_to_homogenous(vec3 vP)
 {
+#ifdef GPU_SHADER_EEVEE_LEGACY_DEFINES
+  return (drw_view_goo.winmat * vec4(vP, 1.0));
+#else
   return (drw_view().winmat * vec4(vP, 1.0));
+#endif
 }
 vec3 drw_point_view_to_ndc(vec3 vP)
 {
@@ -150,11 +195,19 @@ vec3 drw_point_view_to_ndc(vec3 vP)
 
 vec3 drw_point_world_to_view(vec3 P)
 {
+#ifdef GPU_SHADER_EEVEE_LEGACY_DEFINES
+  return (drw_view_goo.viewmat * vec4(P, 1.0)).xyz;
+#else
   return (drw_view().viewmat * vec4(P, 1.0)).xyz;
+#endif
 }
 vec4 drw_point_world_to_homogenous(vec3 P)
 {
+#ifdef GPU_SHADER_EEVEE_LEGACY_DEFINES
+  return (drw_view_goo.winmat * (drw_view_goo.viewmat * vec4(P, 1.0)));
+#else
   return (drw_view().winmat * (drw_view().viewmat * vec4(P, 1.0)));
+#endif
 }
 vec3 drw_point_world_to_ndc(vec3 P)
 {
@@ -163,7 +216,11 @@ vec3 drw_point_world_to_ndc(vec3 P)
 
 vec3 drw_point_ndc_to_view(vec3 ssP)
 {
+#ifdef GPU_SHADER_EEVEE_LEGACY_DEFINES
+  return drw_perspective_divide(drw_view_goo.wininv * vec4(ssP, 1.0));
+#else
   return drw_perspective_divide(drw_view().wininv * vec4(ssP, 1.0));
+#endif
 }
 vec3 drw_point_ndc_to_world(vec3 ssP)
 {

@@ -13,10 +13,25 @@
 
 #  define HAIR_SHADER
 #  define DRW_GPENCIL_INFO
+#  define OrcoTexCoFactors (drw_infos[drw_resource_id()].orco_mul_bias)
+#  define ObjectInfo (drw_infos[drw_resource_id()].infos)
+#  define ObjectColor (drw_infos[drw_resource_id()].ob_color)
+
+#  define ObjectAttributeStart (drw_infos[drw_resource_id()].orco_mul_bias[0].w)
+#  define ObjectAttributeLen (drw_infos[drw_resource_id()].orco_mul_bias[1].w)
 #endif
 
 #include "draw_defines.hh"
 #include "gpu_shader_create_info.hh"
+
+GPU_SHADER_CREATE_INFO(draw_object_infos_goo)
+TYPEDEF_SOURCE("draw_shader_shared.hh")
+DEFINE("OBINFO_LIB")
+DEFINE_VALUE("OrcoTexCoFactors", "(drw_infos[resource_id].orco_mul_bias)")
+DEFINE_VALUE("ObjectInfo", "(drw_infos[resource_id].infos)")
+DEFINE_VALUE("ObjectColor", "(drw_infos[resource_id].ob_color)")
+UNIFORM_BUF_FREQ(DRW_OBJ_INFOS_UBO_SLOT, ObjectInfos, drw_infos[DRW_RESOURCE_CHUNK_LEN], BATCH)
+GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(draw_volume_infos)
 TYPEDEF_SOURCE("draw_shader_shared.hh")
@@ -41,12 +56,18 @@ GPU_SHADER_CREATE_END()
 GPU_SHADER_CREATE_INFO(draw_object_infos)
 TYPEDEF_SOURCE("draw_shader_shared.hh")
 DEFINE("OBINFO_LIB")
+DEFINE("OBINFO_NEW")
+DEFINE_VALUE("OrcoTexCoFactors", "(drw_infos[drw_resource_id()].orco_mul_bias)")
+DEFINE_VALUE("ObjectInfo", "(drw_infos[drw_resource_id()].infos)")
+DEFINE_VALUE("ObjectColor", "(drw_infos[drw_resource_id()].ob_color)")
 STORAGE_BUF(DRW_OBJ_INFOS_SLOT, READ, ObjectInfos, drw_infos[])
 GPU_SHADER_CREATE_END()
 
 /** \note Requires draw_object_infos. */
 GPU_SHADER_CREATE_INFO(draw_object_attributes)
 DEFINE("OBATTR_LIB")
+DEFINE_VALUE("ObjectAttributeStart", "(drw_infos[drw_resource_id()].orco_mul_bias[0].w)")
+DEFINE_VALUE("ObjectAttributeLen", "(drw_infos[drw_resource_id()].orco_mul_bias[1].w)")
 STORAGE_BUF(DRW_OBJ_ATTR_SLOT, READ, ObjectAttribute, drw_attrs[])
 ADDITIONAL_INFO(draw_object_infos)
 GPU_SHADER_CREATE_END()
@@ -55,8 +76,31 @@ GPU_SHADER_CREATE_END()
 /** \name Geometry Type
  * \{ */
 
+GPU_SHADER_CREATE_INFO(draw_mesh_goo)
+ADDITIONAL_INFO(draw_modelmat_goo)
+ADDITIONAL_INFO(draw_resource_id_goo)
+GPU_SHADER_CREATE_END()
+
 GPU_SHADER_CREATE_INFO(draw_mesh)
 ADDITIONAL_INFO(draw_modelmat)
+ADDITIONAL_INFO(draw_resource_id)
+GPU_SHADER_CREATE_END()
+
+GPU_SHADER_CREATE_INFO(draw_hair_goo)
+DEFINE("HAIR_SHADER")
+DEFINE("DRW_HAIR_INFO")
+SAMPLER(15, FLOAT_BUFFER, hairPointBuffer)
+/* TODO(@fclem): Pack these into one UBO. */
+PUSH_CONSTANT(INT, hairStrandsRes)
+PUSH_CONSTANT(INT, hairThicknessRes)
+PUSH_CONSTANT(FLOAT, hairRadRoot)
+PUSH_CONSTANT(FLOAT, hairRadTip)
+PUSH_CONSTANT(FLOAT, hairRadShape)
+PUSH_CONSTANT(BOOL, hairCloseTip)
+PUSH_CONSTANT(INT, hairStrandOffset)
+PUSH_CONSTANT(MAT4, hairDupliMatrix)
+ADDITIONAL_INFO(draw_modelmat_goo)
+ADDITIONAL_INFO(draw_resource_id_goo)
 GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(draw_hair)
@@ -88,10 +132,25 @@ PUSH_CONSTANT(INT, hairStrandOffset)
 PUSH_CONSTANT(MAT4, hairDupliMatrix)
 GPU_SHADER_CREATE_END()
 
+#ifndef GPU_SHADER /* Conflicts with define for C++ shader test. */
+GPU_SHADER_CREATE_INFO(draw_pointcloud_goo)
+SAMPLER_FREQ(0, FLOAT_BUFFER, ptcloud_pos_rad_tx, BATCH)
+DEFINE("POINTCLOUD_SHADER")
+DEFINE("DRW_POINTCLOUD_INFO")
+ADDITIONAL_INFO(draw_modelmat_instanced_attr)
+ADDITIONAL_INFO(draw_resource_id_uniform)
+GPU_SHADER_CREATE_END()
+#endif
+
 GPU_SHADER_CREATE_INFO(draw_pointcloud)
 SAMPLER_FREQ(0, FLOAT_BUFFER, ptcloud_pos_rad_tx, BATCH)
 DEFINE("POINTCLOUD_SHADER")
 DEFINE("DRW_POINTCLOUD_INFO")
+GPU_SHADER_CREATE_END()
+
+GPU_SHADER_CREATE_INFO(draw_volume_goo)
+ADDITIONAL_INFO(draw_modelmat_goo)
+ADDITIONAL_INFO(draw_resource_id_uniform)
 GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(draw_volume)

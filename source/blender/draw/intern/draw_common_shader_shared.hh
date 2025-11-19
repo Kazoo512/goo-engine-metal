@@ -25,6 +25,8 @@ typedef struct GlobalsUboStorage GlobalsUboStorage;
 /* \note Also keep all color as vec4 and between #UBO_FIRST_COLOR and #UBO_LAST_COLOR. */
 struct GlobalsUboStorage {
   /* UBOs data needs to be 16 byte aligned (size of vec4) */
+  float4 clip_planes[6];
+
   float4 color_wire;
   float4 color_wire_edit;
   float4 color_active;
@@ -141,7 +143,9 @@ struct GlobalsUboStorage {
   float size_checker;
   float size_vertex_gpencil;
   float fresnel_mix_edit;
-  float _pad1, _pad2, _pad3;
+  float size_viewport_line;
+
+  float _pad1, _pad2;
 };
 BLI_STATIC_ASSERT_ALIGN(GlobalsUboStorage, 16)
 
@@ -256,6 +260,7 @@ BLI_STATIC_ASSERT_ALIGN(GlobalsUboStorage, 16)
 #  define sizeFaceDot globalsBlock.size_face_dot
 #  define sizeChecker globalsBlock.size_checker
 #  define sizeVertexGpencil globalsBlock.size_vertex_gpencil
+#  define sizeLine globalsBlock.size_viewport_line
 #  define fresnelMixEdit globalsBlock.fresnel_mix_edit
 #endif
 
