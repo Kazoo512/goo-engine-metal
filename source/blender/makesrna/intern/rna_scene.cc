@@ -2465,11 +2465,15 @@ static void rna_SceneCamera_update(Main * /*bmain*/, Scene * /*scene*/, PointerR
 {
   Scene *scene = (Scene *)ptr->owner_id;
   Object *camera = scene->camera;
+  Object *gn_camera = scene->gn_camera_override;
 
   SEQ_cache_cleanup(scene);
 
   if (camera && (camera->type == OB_CAMERA)) {
     DEG_id_tag_update(&camera->id, ID_RECALC_GEOMETRY);
+  }
+  if (gn_camera && (gn_camera->type == OB_CAMERA)) {
+    DEG_id_tag_update(&gn_camera->id, ID_RECALC_GEOMETRY);
   }
 }
 
@@ -8799,6 +8803,14 @@ void RNA_def_scene(BlenderRNA *brna)
   RNA_def_property_pointer_funcs(prop, nullptr, nullptr, nullptr, "rna_Camera_object_poll");
   RNA_def_property_ui_text(prop, "Camera", "Active camera, used for rendering the scene");
   RNA_def_property_update(prop, NC_SCENE | NA_EDITED, "rna_Scene_camera_update");
+
+  prop = RNA_def_property(srna, "gn_camera_override", PROP_POINTER, PROP_NONE);
+  RNA_def_property_flag(prop, PROP_EDITABLE | PROP_ID_SELF_CHECK);
+  RNA_def_property_struct_type(prop, "Object");
+  RNA_def_property_override_flag(prop, PROPOVERRIDE_OVERRIDABLE_LIBRARY);
+  RNA_def_property_pointer_funcs(prop, nullptr, nullptr, nullptr, "rna_Camera_object_poll");
+  RNA_def_property_ui_text(prop, "GeoNodes Active Camera Override", "Active camera, used for calculating geometry nodes active camera node");
+  RNA_def_property_update(prop, NC_SCENE | NA_EDITED, "rna_Scene_frame_update");
 
   prop = RNA_def_property(srna, "background_set", PROP_POINTER, PROP_NONE);
   RNA_def_property_pointer_sdna(prop, nullptr, "set");
