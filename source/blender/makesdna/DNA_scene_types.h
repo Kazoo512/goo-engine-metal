@@ -2027,6 +2027,7 @@ typedef struct Scene {
   DrawDataList drawdata;
 
   struct Object *camera;
+  struct Object *gn_camera_override;
   struct World *world;
 
   struct Scene *set;
@@ -2034,7 +2035,6 @@ typedef struct Scene {
   ListBase base DNA_DEPRECATED;
   /** Active base. */
   struct Base *basact DNA_DEPRECATED;
-  void *_pad1;
 
   /** 3d cursor location. */
   View3DCursor cursor;
