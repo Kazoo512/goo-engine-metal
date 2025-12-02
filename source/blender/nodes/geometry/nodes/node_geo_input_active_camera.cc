@@ -12,16 +12,21 @@ static void node_declare(NodeDeclarationBuilder &b)
 {
   b.add_output<decl::Object>("Active Camera")
       .description("The camera used for rendering the scene");
+  b.add_input<decl::Bool>("Ignore Scene Override")
+      .field_on({0})
+      .description(
+          "Ignores the Goo Engine geometry nodes override scene setting and uses the original active camera");
 }
 
 static void node_exec(GeoNodeExecParams params)
 {
   const Scene *scene = DEG_get_evaluated_scene(params.depsgraph());
-  if (scene->gn_camera_override == nullptr) {
-    Object *camera = DEG_get_evaluated_object(params.depsgraph(), scene->camera);
+
+  if (!(scene->gn_camera_override == nullptr) && !(params.get_input<bool>("Ignore Scene Override"))) {
+    Object *camera = DEG_get_evaluated_object(params.depsgraph(), scene->gn_camera_override);
     params.set_output("Active Camera", camera);
   } else {
-    Object *camera = DEG_get_evaluated_object(params.depsgraph(), scene->gn_camera_override);
+    Object *camera = DEG_get_evaluated_object(params.depsgraph(), scene->camera);
     params.set_output("Active Camera", camera);
   }
 }
