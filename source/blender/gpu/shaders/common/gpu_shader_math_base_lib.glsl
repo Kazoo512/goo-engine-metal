@@ -94,10 +94,15 @@ float cube_f(float v)
   return v * v * v;
 }
 
+/* WORKAROUND: To be removed once we port all code to use gpu_shader_math_base_lib.glsl. */
+#ifndef GPU_SHADER_MATH_COMMON_UTILS_GLSL
+
 float hypot(float x, float y)
 {
   return sqrt(x * x + y * y);
 }
+
+#endif
 
 /* Declared as _atan2 to prevent errors with `WITH_GPU_SHADER_CPP_COMPILATION` on VS2019 due
  * to `corecrt_math` conflicting functions. */

@@ -513,7 +513,7 @@ float sdf_2d_star_x(vec2 p, float r, float sides, float inset)
   vec2 acs = vec2(cos(an), sin(an));
   vec2 ecs = vec2(cos(en), sin(en));  // ecs=vec2(0,1) for regular polygon,
 
-  float bn = safe_mod(atan(p.x, p.y), 2.0 * an) - an;
+  float bn = sdf_safe_mod(atan(p.x, p.y), 2.0 * an) - an;
   p = length(p) * vec2(cos(bn), abs(sin(bn)));
   p -= r * acs;
   p += ecs * clamp(-dot(p, ecs), 0.0, safe_divide(r * acs.y, ecs.y));
@@ -557,7 +557,7 @@ float sdf_2d_star(vec2 p, float r, float sides, float inset, float inradius)  //
   vec2 ecs = vec2(cos(en), sin(en));  // ecs=vec2(0,1) and simplify, for regular polygon,
 
   // reduce to first sector
-  float bn = safe_mod(atan(p.x, p.y) * sign(p.x), 2.0 * an) - an;
+  float bn = sdf_safe_mod(atan(p.x, p.y) * sign(p.x), 2.0 * an) - an;
   p = length(p) * vec2(cos(bn), abs(sin(bn)));
 
   // line sdf

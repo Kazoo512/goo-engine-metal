@@ -28,31 +28,31 @@ float sdf_safe_sqrt(float a)
   return sqrt(max(0.0, a));
 }
 
-float safe_mod(float a, float b)
+float sdf_safe_mod(float a, float b)
 {
   return (b != 0.0) ? a - b * floor(a / b) : 0.0;
 }
 
-vec3 safe_mod(vec3 a, float b)
+vec3 sdf_safe_mod(vec3 a, float b)
 {
-  a.x = safe_mod(a.x, b);
-  a.y = safe_mod(a.y, b);
-  a.z = safe_mod(a.z, b);
+  a.x = sdf_safe_mod(a.x, b);
+  a.y = sdf_safe_mod(a.y, b);
+  a.z = sdf_safe_mod(a.z, b);
   return a;
 }
 
-vec3 safe_mod(vec3 a, vec3 b)
+vec3 sdf_safe_mod(vec3 a, vec3 b)
 {
-  a.x = safe_mod(a.x, b.x);
-  a.y = safe_mod(a.y, b.y);
-  a.z = safe_mod(a.z, b.z);
+  a.x = sdf_safe_mod(a.x, b.x);
+  a.y = sdf_safe_mod(a.y, b.y);
+  a.z = sdf_safe_mod(a.z, b.z);
   return a;
 }
 
-vec2 safe_mod(vec2 a, vec2 b)
+vec2 sdf_safe_mod(vec2 a, vec2 b)
 {
-  a.x = safe_mod(a.x, b.x);
-  a.y = safe_mod(a.y, b.y);
+  a.x = sdf_safe_mod(a.x, b.x);
+  a.y = sdf_safe_mod(a.y, b.y);
   return a;
 }
 
@@ -170,7 +170,7 @@ float p_mod1(inout float p, float size)
 {
   float halfsize = size * 0.5;
   float c = floor((p + halfsize) / size);
-  p = safe_mod(p + halfsize, size) - halfsize;
+  p = sdf_safe_mod(p + halfsize, size) - halfsize;
   return c;
 }
 
@@ -185,16 +185,16 @@ vec3 p_mod_mirror3(inout vec3 p, vec3 size)
 {
   vec3 halfsize = size * 0.5;
   vec3 c = floor(safe_divide((p + halfsize), size));
-  p = safe_mod(p + halfsize, size) - halfsize;
-  p = p * (safe_mod(c, vec3(2.0)) * 2.0 - vec3(1.0));
+  p = sdf_safe_mod(p + halfsize, size) - halfsize;
+  p = p * (sdf_safe_mod(c, vec3(2.0)) * 2.0 - vec3(1.0));
   return c;
 }
 
 vec2 p_mod_grid2(inout vec2 p, vec2 size)
 {
   vec2 c = floor(safe_divide((p + size * 0.5), size));
-  p = safe_mod(p + size * 0.5, size) - size * 0.5;
-  p = p * (safe_mod(c, vec2(2.0)) * 2.0 - vec2(1.0));
+  p = sdf_safe_mod(p + size * 0.5, size) - size * 0.5;
+  p = p * (sdf_safe_mod(c, vec2(2.0)) * 2.0 - vec2(1.0));
   p -= size / 2.0;
   if (p.x > p.y) {
     p.xy = p.yx;
@@ -283,7 +283,7 @@ float sdf_op_union_columns(float a, float b, float r, float n)
     p = rotate_45(p);
     p.x -= M_SQRT2 / 2.0 * r;
     p.x += columnradius * M_SQRT2;
-    if (safe_mod(n, 2.0) == 1.0) {
+    if (sdf_safe_mod(n, 2.0) == 1.0) {
       p.y += columnradius;
     }
     // At this point, we have turned 45 degrees and moved at a point on the
@@ -313,7 +313,7 @@ float sdf_op_diff_columns(float a, float b, float r, float n)
     p.x -= M_SQRT2 / 2.0 * r;
     p.x += -columnradius * M_SQRT2 / 2.0;
 
-    if (safe_mod(n, 2.0) == 1.0) {
+    if (sdf_safe_mod(n, 2.0) == 1.0) {
       p.y += columnradius;
     }
     p_mod1(p.y, columnradius * 2.0);
@@ -404,7 +404,7 @@ float sdf_op_union_stairs(float a, float b, float r, float n)
 {
   float s = r / n;
   float u = b - r;
-  return min(min(a, b), 0.5 * (u + a + abs((safe_mod(u - a + s, 2.0 * s)) - s)));
+  return min(min(a, b), 0.5 * (u + a + abs((sdf_safe_mod(u - a + s, 2.0 * s)) - s)));
 }
 
 float sdf_op_intersect_stairs(float a, float b, float r, float n)
@@ -480,7 +480,7 @@ float sdf_op_polar(inout vec2 p, float repetitions)
   float a = atan(p.y, p.x) + angle / 2.0;
   float r = length(p);
   float c = floor(a / angle);
-  a = safe_mod(a, angle) - angle / 2.0;
+  a = sdf_safe_mod(a, angle) - angle / 2.0;
   p = vec2(cos(a), sin(a)) * r;
   // For an odd number of repetitions, fix cell index of the cell in -x direction
   // (cell index would be e.g. -5 and 5 in the two halves of the cell):

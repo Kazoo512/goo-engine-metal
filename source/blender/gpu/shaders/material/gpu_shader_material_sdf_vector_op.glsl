@@ -336,7 +336,7 @@ void node_sdf_vector_op_repeat_inf(vec3 p,
                                    out vec3 pos,
                                    out float d)
 {
-  vout = safe_mod(p + 0.5 * p2, p2) - 0.5 * p2;
+  vout = sdf_safe_mod(p + 0.5 * p2, p2) - 0.5 * p2;
 }
 
 void node_sdf_vector_op_repeat(vec3 p,
