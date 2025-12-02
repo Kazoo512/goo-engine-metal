@@ -23,7 +23,7 @@
  * Safe square root function. Returns `sqrt(a)`.
  * If `a` is less or equal to 0 then the result will be 0.
  */
-float safe_sqrt(float a)
+float sdf_safe_sqrt(float a)
 {
   return sqrt(max(0.0, a));
 }

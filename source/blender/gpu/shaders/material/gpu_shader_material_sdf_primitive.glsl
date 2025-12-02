@@ -118,7 +118,7 @@ float sdf_2d_isosceles(vec2 p, vec2 q)
   vec2 b = p - q * vec2(clamp(p.x / q.x, 0.0, 1.0), 1.0);
   float s = -sign(q.y);
   vec2 d = min(vec2(dot(a, a), s * (p.x * q.y - p.y * q.x)), vec2(dot(b, b), s * (p.y - q.y)));
-  return -safe_sqrt(d.x) * sign(d.y);
+  return -sdf_safe_sqrt(d.x) * sign(d.y);
 }
 
 float sdf_2d_hexagon(vec2 p, float r)
@@ -153,7 +153,7 @@ float sdf_2d_trapezoid(vec2 p, float w2, float h, float w1)
   vec2 ca = vec2(p.x - min(p.x, (p.y < 0.0) ? r1 : r2), abs(p.y) - he);
   vec2 cb = p - k1 + k2 * clamp(dot(k1 - p, k2) / dot2(k2), 0.0, 1.0);
   float s = ((cb.x < 0.0) && (ca.y < 0.0)) ? -1.0 : 1.0;
-  return s * safe_sqrt(min(dot2(ca), dot2(cb)));
+  return s * sdf_safe_sqrt(min(dot2(ca), dot2(cb)));
 }
 
 float sdf_2d_rounded_x(vec2 p, float w)
@@ -176,11 +176,11 @@ float sdf_2d_blobby_cross(vec2 pos, float he)
 
   float x;
   if (h > 0.0) {
-    float r = safe_sqrt(h);
+    float r = sdf_safe_sqrt(h);
     x = pow(q + r, 1.0 / 3.0) - pow(abs(q - r), 1.0 / 3.0) * sign(r - q);
   }
   else {
-    float r = safe_sqrt(p);
+    float r = sdf_safe_sqrt(p);
     x = 2.0 * r * cos(acos(safe_divide(q, (p * r))) / 3.0);
   }
   x = min(x, M_SQRT2 / 2.0);
@@ -199,17 +199,17 @@ float sdf_2d_uneven_capsule(vec2 p, vec2 pa, vec2 pb, float ra, float rb)
   q.x = abs(q.x);
 
   float b = ra - rb;
-  vec2 c = vec2(safe_sqrt(h - b * b), b);
+  vec2 c = vec2(sdf_safe_sqrt(h - b * b), b);
 
   float k = cross2(c, q);
   float m = dot(c, q);
   float n = dot(q, q);
 
   if (k < 0.0) {
-    return safe_sqrt(h * (n)) - ra;
+    return sdf_safe_sqrt(h * (n)) - ra;
   }
   else if (k > c.x) {
-    return safe_sqrt(h * (n + 1.0 - 2.0 * q.y)) - rb;
+    return sdf_safe_sqrt(h * (n + 1.0 - 2.0 * q.y)) - rb;
   }
   return m - ra;
 }
@@ -225,10 +225,10 @@ float sdf_2d_parabola(vec2 pos, float k)
     float q = -abs(pos.x) / (4.0 * k * k);
 
     float h = q * q + p * p * p;
-    float r = safe_sqrt(abs(h));
+    float r = sdf_safe_sqrt(abs(h));
 
     float x = (h > 0.0) ? pow(-q + r, 1.0 / 3.0) - pow(abs(-q - r), 1.0 / 3.0) * sgn(q + r) :
-                          2.0 * cos(atan(r, -q) / 3.0) * safe_sqrt(-p);
+                          2.0 * cos(atan(r, -q) / 3.0) * sdf_safe_sqrt(-p);
 
     d = length(pos - vec2(x, k * x * x)) * sgn(pos.x - x);
   }
@@ -249,12 +249,12 @@ float sdf_2d_parabola_segment(vec2 pos, float wi, float he)
   float x;
   if (h > 0.0)  // 1 root
   {
-    float r = safe_sqrt(h);
+    float r = sdf_safe_sqrt(h);
     x = pow(q + r, 1.0 / 3.0) - pow(abs(q - r), 1.0 / 3.0) * sign(r - q);
   }
   else  // 3 roots
   {
-    float r = safe_sqrt(p);
+    float r = sdf_safe_sqrt(p);
     x = 2.0 * r * cos(acos(q / (p * r)) / 3.0);
   }
 
@@ -281,21 +281,21 @@ float sdf_2d_bezier(vec2 pos, vec2 A, vec2 C, vec2 B)
   float q = kx * (2.0 * kx * kx - 3.0 * ky) + kz;
   float h = q * q + 4.0 * p3;
   if (h >= 0.0) {
-    h = safe_sqrt(h);
+    h = sdf_safe_sqrt(h);
     vec2 x = (vec2(h, -h) - q) / 2.0;
     vec2 uv = sign(x) * pow(abs(x), vec2(1.0 / 3.0));
     float t = clamp(uv.x + uv.y - kx, 0.0, 1.0);
     res = dot2(d + (c + b * t) * t);
   }
   else {
-    float z = safe_sqrt(-p);
+    float z = sdf_safe_sqrt(-p);
     float v = acos(q / (p * z * 2.0)) / 3.0;
     float m = cos(v);
     float n = sin(v) * M_SQRT3;
     vec3 t = clamp(vec3(m + m, -n - m, n - m) * z - kx, 0.0, 1.0);
     res = min(dot2(d + (c + b * t.x) * t.x), dot2(d + (c + b * t.y) * t.y));
   }
-  return safe_sqrt(res);
+  return sdf_safe_sqrt(res);
 }
 
 float sdf_2d_ellipse(vec2 p, vec2 ab)
@@ -327,20 +327,20 @@ float sdf_2d_ellipse(vec2 p, vec2 ab)
     float h = acos(q / c3) / 3.0;
     float s = cos(h);
     float t = sin(h) * M_SQRT3;
-    float rx = safe_sqrt(-c * (s + t + 2.0) + m2);
-    float ry = safe_sqrt(-c * (s - t + 2.0) + m2);
+    float rx = sdf_safe_sqrt(-c * (s + t + 2.0) + m2);
+    float ry = sdf_safe_sqrt(-c * (s - t + 2.0) + m2);
     co = (ry + sign(l) * rx + abs(g) / (rx * ry) - m) / 2.0;
   }
   else {
-    float h = 2.0 * m * n * safe_sqrt(d);
+    float h = 2.0 * m * n * sdf_safe_sqrt(d);
     float s = sign(q + h) * pow(abs(q + h), 1.0 / 3.0);
     float u = sign(q - h) * pow(abs(q - h), 1.0 / 3.0);
     float rx = -s - u - c * 4.0 + 2.0 * m2;
     float ry = (s - u) * M_SQRT3;
-    float rm = safe_sqrt(rx * rx + ry * ry);
-    co = (ry / safe_sqrt(rm - rx) + 2.0 * g / rm - m) / 2.0;
+    float rm = sdf_safe_sqrt(rx * rx + ry * ry);
+    co = (ry / sdf_safe_sqrt(rm - rx) + 2.0 * g / rm - m) / 2.0;
   }
-  vec2 r = ab * vec2(co, safe_sqrt(1.0 - co * co));
+  vec2 r = ab * vec2(co, sdf_safe_sqrt(1.0 - co * co));
   return length(r - p) * sign(p.y - r.y);
 }
 
@@ -352,10 +352,10 @@ float sdf_2d_heart(vec2 p, float r)
   p.x = abs(p.x);
 
   if (p.y + p.x > r) {
-    return safe_sqrt(dot2(p - vec2(0.25, 0.75) * r)) - M_SQRT2 / 4.0 * r;
+    return sdf_safe_sqrt(dot2(p - vec2(0.25, 0.75) * r)) - M_SQRT2 / 4.0 * r;
   }
   else {
-    return safe_sqrt(min(dot2(p - vec2(0.0, 1.0) * r), dot2(p - 0.5 * max(p.x + p.y, 0.0)))) *
+    return sdf_safe_sqrt(min(dot2(p - vec2(0.0, 1.0) * r), dot2(p - 0.5 * max(p.x + p.y, 0.0)))) *
            sign(p.x - p.y);
   }
 }
@@ -381,7 +381,7 @@ float sdf_2d_quad(vec2 p, vec2 p0, vec2 p1, vec2 p2, vec2 p3)
                 min(vec2(dot(pq2, pq2), v2.x * e2.y - v2.y * e2.x),
                     vec2(dot(pq3, pq3), v3.x * e3.y - v3.y * e3.x)));
 
-  float d = safe_sqrt(ds.x);
+  float d = sdf_safe_sqrt(ds.x);
 
   return (ds.y > 0.0) ? -d : d;
 }
@@ -390,7 +390,7 @@ float sdf_2d_vesica(vec2 p, float r, float d)
 {
   p = abs(p);
 
-  float b = safe_sqrt(r * r - d * d);
+  float b = sdf_safe_sqrt(r * r - d * d);
   if ((p.y - b) * d > p.x * b) {
     return length(vec2(p.x, p.y - b)) * sign(d);
   }
@@ -404,7 +404,7 @@ float sdf_2d_moon(vec2 p, float d, float ra, float rb)
   p.y = abs(p.y);
 
   float a = (ra * ra - rb * rb + d * d) / (2.0 * d);
-  float b = safe_sqrt(ra * ra - a * a);
+  float b = sdf_safe_sqrt(ra * ra - a * a);
   float m = d * (p.x * b - p.y * a);
   float n = d * d * max(b - p.y, 0.0);
   if (m > n) {
@@ -469,7 +469,7 @@ float sdf_2d_arc(vec2 p, float a, float ra)
   vec2 sc = sincos(clamp(a * 0.5, 0.0, M_PI));
   p.x = abs(p.x);
   float k = (sc.y * p.x > sc.x * p.y) ? dot(p.xy, sc) : length(p.xy);
-  return safe_sqrt(dot(p, p) + ra * ra - 2.0 * ra * k);
+  return sdf_safe_sqrt(dot(p, p) + ra * ra - 2.0 * ra * k);
 }
 
 float sdf_2d_horseshoe(vec2 p, float r, float a, float overshoot, float lw)
@@ -500,7 +500,7 @@ float sdf_2d_point_triangle(vec2 p, vec2 p0, vec2 p1, vec2 p2)
   vec2 d = min(min(vec2(dot(pq0, pq0), s * (v0.x * e0.y - v0.y * e0.x)),
                    vec2(dot(pq1, pq1), s * (v1.x * e1.y - v1.y * e1.x))),
                vec2(dot(pq2, pq2), s * (v2.x * e2.y - v2.y * e2.x)));
-  return -safe_sqrt(d.x) * sgn(d.y);
+  return -sdf_safe_sqrt(d.x) * sgn(d.y);
 }
 
 float sdf_2d_star_x(vec2 p, float r, float sides, float inset)
@@ -680,7 +680,7 @@ float sdf_3d_point_cone(vec3 p, vec3 a, vec3 b, float ra, float rb)
   float papa = dot(p - a, p - a);
   float paba = safe_divide(dot(p - a, b - a), baba);
 
-  float x = safe_sqrt(papa - paba * paba * baba);
+  float x = sdf_safe_sqrt(papa - paba * paba * baba);
 
   float cax = max(0.0, x - ((paba < 0.5) ? ra : rb));
   float cay = abs(paba - 0.5) - 0.5;
@@ -693,7 +693,7 @@ float sdf_3d_point_cone(vec3 p, vec3 a, vec3 b, float ra, float rb)
 
   float s = (cbx < 0.0 && cay < 0.0) ? -1.0 : 1.0;
 
-  return s * safe_sqrt(min(cax * cax + cay * cay * baba, cbx * cbx + cby * cby * baba));
+  return s * sdf_safe_sqrt(min(cax * cax + cay * cay * baba, cbx * cbx + cby * cby * baba));
 }
 
 float sdf_3d_capsule(vec3 p, vec3 a, vec3 b, float r)
@@ -726,7 +726,7 @@ float sdf_3d_cylinder(vec3 p, vec3 a, vec3 b, float r)
   float x2 = x * x;
   float y2 = y * y * baba;
   float d = (max(x, y) < 0.0) ? -min(x2, y2) : (((x > 0.0) ? x2 : 0.0) + ((y > 0.0) ? y2 : 0.0));
-  return sign(d) * safe_sqrt(abs(d)) / baba;
+  return sign(d) * sdf_safe_sqrt(abs(d)) / baba;
 }
 
 float sdf_3d_solid_angle(vec3 p, float a, float ra)
@@ -764,7 +764,7 @@ float sdf_3d_pyramid(vec3 p, float w, float h)
   float d2 = min(q.y, -q.x * m2 - q.y * 0.5) > 0.0 ? 0.0 : min(a, b);
 
   /* recover 3D and scale, and add sign */
-  float d = safe_sqrt((d2 + q.z * q.z) / m2) * sign(max(q.z, -p.y));
+  float d = sdf_safe_sqrt((d2 + q.z * q.z) / m2) * sign(max(q.z, -p.y));
 
   return d * w;
 }
@@ -2124,7 +2124,7 @@ float sdCrescent(vec2 p, float d, float r0, float r1)
 
   if (a < r0) {
     p.y = abs(p.y);
-    float b = safe_sqrt(r0 * r0 - a * a);
+    float b = sdf_safe_sqrt(r0 * r0 - a * a);
     float k = p.y * a - p.x * b;
     float h = min(sign0 * (d * (p.y - b) - k), sign1 * k);
     if (h > 0.0) {
