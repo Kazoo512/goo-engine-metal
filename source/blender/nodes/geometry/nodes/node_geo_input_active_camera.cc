@@ -13,7 +13,7 @@ static void node_declare(NodeDeclarationBuilder &b)
   b.add_output<decl::Object>("Active Camera")
       .description("The camera used for rendering the scene");
   b.add_input<decl::Bool>("Ignore Scene Override")
-      .field_on({0})
+      .default_value(true)
       .description(
           "Ignores the Goo Engine geometry nodes override scene setting and uses the original active camera");
 }
