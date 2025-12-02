@@ -581,7 +581,7 @@ void dof_gather_accumulate_resolve(int total_sample_count,
                                    out float out_weight,
                                    out vec2 out_occlusion)
 {
-  float weight_inv = goo_safe_rcp(accum_data.weight);
+  float weight_inv = safe_rcp(accum_data.weight);
   out_col = accum_data.color * weight_inv;
   out_occlusion = vec2(abs(accum_data.coc), accum_data.coc_sqr) * weight_inv;
 

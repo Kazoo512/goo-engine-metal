@@ -57,7 +57,7 @@ void main(void)
      * using a VSM like chebychev test (slide 85). */
     float mean = occlusion_data.x;
     float variance = occlusion_data.y;
-    shapes *= variance * goo_safe_rcp(variance + sqr(max(cocs * correction_fac - mean, 0.0)));
+    shapes *= variance * safe_rcp(variance + sqr(max(cocs * correction_fac - mean, 0.0)));
   }
 
   FragColor = color1 * shapes.x;

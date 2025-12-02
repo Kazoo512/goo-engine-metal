@@ -354,7 +354,7 @@ float light_contact_shadows(LightData ld, vec3 P, vec3 vP, vec3 vNg, float rand_
       }
       else {
         ray.direction = shadows_cube_data[int(sd.sh_data_index)].position.xyz - P;
-        ray.direction *= saturate(sd.sh_contact_dist * goo_safe_rcp(length(ray.direction)));
+        ray.direction *= saturate(sd.sh_contact_dist * safe_rcp(length(ray.direction)));
       }
 
       ray.direction = transform_direction(ViewMatrix, ray.direction);

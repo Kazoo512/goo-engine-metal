@@ -407,7 +407,7 @@ float specular_occlusion(
   occlusion_eval(data, V, N, N, 0.0, visibility, visibility_error, visibility_dir);
 
   /* Correct visibility error for very sharp surfaces. */
-  visibility *= mix(goo_safe_rcp(visibility_error), 1.0, roughness);
+  visibility *= mix(safe_rcp(visibility_error), 1.0, roughness);
 
   specular_dir = normalize(mix(specular_dir, visibility_dir, roughness * (1.0 - visibility)));
 

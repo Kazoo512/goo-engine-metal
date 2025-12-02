@@ -136,7 +136,7 @@ void main()
   else {
     data.is_hit = raytrace(ray, params, true, false, hit_sP);
   }
-  data.ray_pdf_inv = goo_safe_rcp(pdf);
+  data.ray_pdf_inv = safe_rcp(pdf);
 
   encode_hit_data(data, hit_sP, ray.origin, hitData, hitDepth);
 }

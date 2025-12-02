@@ -97,7 +97,7 @@ vec3 dof_neighborhood_clamping(vec3 color)
 
   float clamped_luma = min(upper_bound, c11);
 
-  return color * clamped_luma * goo_safe_rcp(c11);
+  return color * clamped_luma * safe_rcp(c11);
 }
 
 /* Simple copy pass where we select what pixels to scatter. Also the resolution might change.
@@ -152,7 +152,7 @@ void main()
   vec4 weights = dof_downsample_bilateral_coc_weights(cocs);
   weights *= dof_downsample_bilateral_color_weights(colors);
   /* Normalize so that the sum is 1. */
-  weights *= goo_safe_rcp(sum(weights));
+  weights *= safe_rcp(sum(weights));
 
   outColor = weighted_sum_array(colors, weights);
   outCoc = dot(cocs, weights);

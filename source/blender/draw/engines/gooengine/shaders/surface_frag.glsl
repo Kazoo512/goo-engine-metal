@@ -142,7 +142,7 @@ void main()
   }
 
 #ifndef USE_ALPHA_BLEND
-  float alpha_div = goo_safe_rcp(alpha);
+  float alpha_div = safe_rcp(alpha);
   outRadiance.rgb *= alpha_div;
   ssrData.rgb *= alpha_div;
   sssAlbedo.rgb *= alpha_div;

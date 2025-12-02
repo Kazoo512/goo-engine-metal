@@ -33,7 +33,7 @@ void main()
   vec4 weights = dof_downsample_bilateral_coc_weights(cocs);
   weights *= dof_downsample_bilateral_color_weights(colors);
   /* Normalize so that the sum is 1. */
-  weights *= goo_safe_rcp(sum(weights));
+  weights *= safe_rcp(sum(weights));
 
   outColor = weighted_sum_array(colors, weights);
   outCoc.x = dot(cocs, weights);

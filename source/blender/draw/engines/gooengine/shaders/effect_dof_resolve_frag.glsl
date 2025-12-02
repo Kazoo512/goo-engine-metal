@@ -142,20 +142,20 @@ void main(void)
 
   if (!no_holefill_pass && prediction.do_holefill) {
     dof_resolve_load_layer(holefillColorBuffer, holefillWeightBuffer, layer_color, layer_weight);
-    FragColor = layer_color * goo_safe_rcp(layer_weight);
+    FragColor = layer_color * safe_rcp(layer_weight);
     weight = float(layer_weight > 0.0);
   }
 
   if (!no_background_pass && prediction.do_background) {
     dof_resolve_load_layer(bgColorBuffer, bgWeightBuffer, layer_color, layer_weight);
     /* Always prefer background to holefill pass. */
-    layer_color *= goo_safe_rcp(layer_weight);
+    layer_color *= safe_rcp(layer_weight);
     layer_weight = float(layer_weight > 0.0);
     /* Composite background. */
     FragColor = FragColor * (1.0 - layer_weight) + layer_color;
     weight = weight * (1.0 - layer_weight) + layer_weight;
     /* Fill holes with the composited background. */
-    FragColor *= goo_safe_rcp(weight);
+    FragColor *= safe_rcp(weight);
     weight = float(weight > 0.0);
   }
 

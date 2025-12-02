@@ -172,7 +172,7 @@ vec4 attr_load_color_post(vec4 attr)
 {
 #ifdef MESH_SHADER
   /* Density is premultiplied for interpolation, divide it out here. */
-  attr.rgb *= goo_safe_rcp(attr.a);
+  attr.rgb *= safe_rcp(attr.a);
   attr.rgb *= drw_volume.color_mul.rgb;
   attr.a = 1.0;
 #endif

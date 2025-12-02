@@ -53,7 +53,7 @@ vec4 ssr_get_scene_color_and_mask(vec3 hit_vP, int planar_index, float mip)
 
   /* Clamped brightness. */
   float luma = max_v3(color);
-  color *= 1.0 - max(0.0, luma - ssrFireflyFac) * goo_safe_rcp(luma);
+  color *= 1.0 - max(0.0, luma - ssrFireflyFac) * safe_rcp(luma);
 
   float mask = screen_border_mask(uv);
   return vec4(color, mask);
@@ -234,7 +234,7 @@ void raytrace_resolve(ClosureInputGlossy cl_in,
   }
 
   /* Compute SSR contribution */
-  ssr_accum *= goo_safe_rcp(weight_acc);
+  ssr_accum *= safe_rcp(weight_acc);
   /* fade between 0.5 and 1.0 roughness */
   ssr_accum.a *= smoothstep(ssrMaxRoughness + 0.2, ssrMaxRoughness, roughness);
 

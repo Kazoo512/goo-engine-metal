@@ -61,7 +61,7 @@ void raytrace_screenspace_ray_finalize(inout ScreenSpaceRay ray)
   ray.direction /= (is_more_vertical) ? abs(ray.direction.y) : abs(ray.direction.x);
   ray.direction *= (is_more_vertical) ? ssrPixelSize.y : ssrPixelSize.x;
   /* Clip to segment's end. */
-  ray.max_time = sqrt(ray_len_sqr * goo_safe_rcp(len_squared(ray.direction.xyz)));
+  ray.max_time = sqrt(ray_len_sqr * safe_rcp(len_squared(ray.direction.xyz)));
   /* Clipping to frustum sides. */
   float clip_dist = line_unit_box_intersect_dist_safe(ray.origin.xyz, ray.direction.xyz);
   ray.max_time = min(ray.max_time, clip_dist);

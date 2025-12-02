@@ -82,7 +82,7 @@ void main()
     }
   }
   else {
-    uv *= goo_safe_rcp(length(uv));
+    uv *= safe_rcp(length(uv));
   }
 
   /* For gather store the normalized UV. */

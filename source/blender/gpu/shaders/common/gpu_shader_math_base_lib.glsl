@@ -153,11 +153,12 @@ void min_max(float value, inout float min_v, inout float max_v)
   max_v = max(value, max_v);
 }
 
+#ifndef GOO_COMMON_MATH_LIB_GLSL
 /**
  * Safe divide `a` by `b`.
  * If `b` equal 0 the result will be 0.
  */
-float safe_divide_new(float a, float b)
+float safe_divide(float a, float b)
 {
   return (b != 0.0) ? (a / b) : 0.0;
 }
@@ -195,6 +196,7 @@ float safe_acos(float a)
   }
   return acos(a);
 }
+#endif
 
 /**
  * Return true if the difference between`a` and `b` is below the `epsilon` value.
