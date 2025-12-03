@@ -388,6 +388,7 @@ void min_max(vec4 vector, inout vec4 min_v, inout vec4 max_v)
   max_v = max(vector, max_v);
 }
 
+#ifndef GPU_SHADER_MATH_COMMON_UTILS_GLSL
 vec2 safe_divide(vec2 a, vec2 b)
 {
   return select(vec2(0), a / b, notEqual(b, vec2(0)));
@@ -413,6 +414,7 @@ vec4 safe_divide(vec4 a, float b)
 {
   return (b != 0.0) ? (a / b) : vec4(0);
 }
+#endif
 
 float length_manhattan(vec2 a)
 {
@@ -453,6 +455,7 @@ float distance_manhattan(vec4 a, vec4 b)
   return length_manhattan(a - b);
 }
 
+#ifndef GOO_COMMON_MATH_LIB_GLSL
 float distance_squared(vec2 a, vec2 b)
 {
   return length_squared(a - b);
@@ -465,6 +468,7 @@ float distance_squared(vec4 a, vec4 b)
 {
   return length_squared(a - b);
 }
+#endif
 
 vec3 project(vec3 p, vec3 v_proj)
 {
