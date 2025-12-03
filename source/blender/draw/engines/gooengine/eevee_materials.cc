@@ -848,7 +848,7 @@ void EEVEE_materials_cache_populate(EEVEE_Data *vedata,
 
   /* First get materials for this mesh. */
   if (ELEM(ob->type, OB_MESH, OB_SURF)) {
-    const int materials_len = DRW_cache_object_material_count_get(ob);
+    const int materials_len = BKE_object_material_used_with_fallback_eval(*ob);
 
     EeveeMaterialCache *matcache = BLI_array_alloca(matcache, materials_len);
     for (int i = 0; i < materials_len; i++) {
