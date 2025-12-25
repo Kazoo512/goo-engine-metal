@@ -28,9 +28,12 @@ vec3 displacement_bump()
   /* Not supported. */
   return normalize(g_data.N);
 #  else
+  /* This is the filter width for automatic displacement + bump mapping, which is fixed.
+   * NOTE: keep the same as default bump node filter width. */
+  const float bump_filter_width = 0.1;
 
   vec2 dHd;
-  dF_branch(dot(displacement_exec(), g_data.N + dF_impl(g_data.N)), dHd);
+  dF_branch(dot(displacement_exec(), g_data.N + dF_impl(g_data.N)), bump_filter_width, dHd);
 
   vec3 dPdx = dFdx(g_data.P);
   vec3 dPdy = dFdy(g_data.P);
@@ -45,7 +48,7 @@ vec3 displacement_bump()
   vec3 surfgrad = dHd.x * Rx + dHd.y * Ry;
 
   float facing = FrontFacing ? 1.0 : -1.0;
-  return normalize(abs(det) * g_data.N - facing * sign(det) * surfgrad);
+  return normalize(bump_filter_width * abs(det) * g_data.N - facing * sign(det) * surfgrad);
 #  endif
 }
 
