@@ -236,43 +236,6 @@ void DRW_texture_free(GPUTexture *tex);
 
 /* Shaders */
 GPUShader *DRW_shader_create_from_info_name(const char *info_name);
-GPUShader *DRW_shader_create_ex(
-    const char *vert, const char *geom, const char *frag, const char *defines, const char *name);
-GPUShader *DRW_shader_create_with_lib_ex(const char *vert,
-                                         const char *geom,
-                                         const char *frag,
-                                         const char *lib,
-                                         const char *defines,
-                                         const char *name);
-GPUShader *DRW_shader_create_with_shaderlib_ex(const char *vert,
-                                               const char *geom,
-                                               const char *frag,
-                                               const DRWShaderLibrary *lib,
-                                               const char *defines,
-                                               const char *name);
-GPUShader *DRW_shader_create_with_transform_feedback(const char *vert,
-                                                     const char *geom,
-                                                     const char *defines,
-                                                     eGPUShaderTFBType prim_type,
-                                                     const char **varying_names,
-                                                     int varying_count);
-GPUShader *DRW_shader_create_fullscreen_ex(const char *frag,
-                                           const char *defines,
-                                           const char *name);
-GPUShader *DRW_shader_create_fullscreen_with_shaderlib_ex(const char *frag,
-                                                          const DRWShaderLibrary *lib,
-                                                          const char *defines,
-                                                          const char *name);
-#define DRW_shader_create(vert, geom, frag, defines) \
-  DRW_shader_create_ex(vert, geom, frag, defines, __func__)
-#define DRW_shader_create_with_lib(vert, geom, frag, lib, defines) \
-  DRW_shader_create_with_lib_ex(vert, geom, frag, lib, defines, __func__)
-#define DRW_shader_create_with_shaderlib(vert, geom, frag, lib, defines) \
-  DRW_shader_create_with_shaderlib_ex(vert, geom, frag, lib, defines, __func__)
-#define DRW_shader_create_fullscreen(frag, defines) \
-  DRW_shader_create_fullscreen_ex(frag, defines, __func__)
-#define DRW_shader_create_fullscreen_with_shaderlib(frag, lib, defines) \
-  DRW_shader_create_fullscreen_with_shaderlib_ex(frag, lib, defines, __func__)
 void DRW_shader_init();
 void DRW_shader_exit();
 
