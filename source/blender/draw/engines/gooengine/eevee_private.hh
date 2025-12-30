@@ -1196,7 +1196,6 @@ void EEVEE_random_rotation_m4(int sample_ofs, float scale, float r_mat[4][4]);
 /* `eevee_shaders.cc` */
 
 void EEVEE_shaders_material_shaders_init();
-DRWShaderLibrary *EEVEE_shader_lib_get();
 GPUShader *EEVEE_shaders_bloom_blit_get(bool high_quality);
 GPUShader *EEVEE_shaders_bloom_downsample_get(bool high_quality);
 GPUShader *EEVEE_shaders_bloom_upsample_get(bool high_quality);

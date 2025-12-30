@@ -265,12 +265,6 @@ void EEVEE_shaders_material_shaders_init()
   eevee_shader_library_ensure();
 }
 
-DRWShaderLibrary *EEVEE_shader_lib_get()
-{
-  eevee_shader_library_ensure();
-  return e_data.lib;
-}
-
 GPUShader *EEVEE_shaders_probe_filter_glossy_sh_get()
 {
   if (e_data.probe_filter_glossy_sh == nullptr) {
