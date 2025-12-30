@@ -120,6 +120,12 @@ vec3 point_world_to_view(vec3 p)
 #  define GPU_INTEL_VERTEX_SHADER_WORKAROUND
 #endif
 
+#define DRW_BASE_SELECTED (1 << 1)
+#define DRW_BASE_FROM_DUPLI (1 << 2)
+#define DRW_BASE_FROM_SET (1 << 3)
+#define DRW_BASE_ACTIVE (1 << 4)
+#define DRW_BASE_HOLDOUT (1 << 5)
+
 /* ---- Opengl Depth conversion ---- */
 
 float linear_depth(bool is_persp, float z, float zf, float zn)
