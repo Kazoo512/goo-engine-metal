@@ -6,7 +6,7 @@
  * Random numbers and low discrepancy sequences utilities.
  */
 
-#pragma BLENDER_REQUIRE(goo_common_math_lib.glsl)
+#include "goo_common_math_lib.glsl"
 
 /* From: http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html */
 float van_der_corput_radical_inverse(uint bits)

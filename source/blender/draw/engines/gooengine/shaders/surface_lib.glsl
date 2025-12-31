@@ -4,7 +4,7 @@
 
 /** This describe the entire interface of the shader. */
 
-#pragma BLENDER_REQUIRE(goo_common_math_lib.glsl)
+#include "goo_common_math_lib.glsl"
 
 /* Global interface for SSR.
  * SSR will set these global variables itself.

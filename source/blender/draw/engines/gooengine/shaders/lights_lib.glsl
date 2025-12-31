@@ -2,12 +2,12 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#pragma BLENDER_REQUIRE(engine_eevee_shared_defines.h)
-#pragma BLENDER_REQUIRE(engine_eevee_legacy_shared.h)
-#pragma BLENDER_REQUIRE(goo_common_math_lib.glsl)
-#pragma BLENDER_REQUIRE(goo_common_math_geom_lib.glsl)
-#pragma BLENDER_REQUIRE(raytrace_lib.glsl)
-#pragma BLENDER_REQUIRE(ltc_lib.glsl)
+#include "engine_eevee_shared_defines.h)
+#include "engine_eevee_legacy_shared.h)
+#include "goo_common_math_lib.glsl"
+#include "goo_common_math_geom_lib.glsl"
+#include "raytrace_lib.glsl"
+#include "ltc_lib.glsl"
 
 /* ---------------------------------------------------------------------- */
 /** \name Structure

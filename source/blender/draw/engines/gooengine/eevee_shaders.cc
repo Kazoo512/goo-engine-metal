@@ -250,13 +250,13 @@ static void eevee_shader_library_ensure()
     DRW_SHADER_LIB_ADD(e_data.lib, surface_vert);
 
     e_data.surface_lit_frag = DRW_shader_library_create_shader_string(e_data.lib,
-                                                                      datatoc_surface_frag_glsl);
-
+      datatoc_surface_frag_glsl);
+    
     e_data.surface_prepass_frag = DRW_shader_library_create_shader_string(
-        e_data.lib, datatoc_prepass_frag_glsl);
-
+      e_data.lib, datatoc_prepass_frag_glsl);
+      
     e_data.surface_geom_barycentric = DRW_shader_library_create_shader_string(
-        e_data.lib, datatoc_surface_geom_glsl);
+      e_data.lib, datatoc_surface_geom_glsl);
   }
 }
 
@@ -1197,14 +1197,17 @@ static const char *eevee_get_vert_info(int options, char **r_src)
   const bool is_point_cloud = (options & (VAR_MAT_POINTCLOUD)) != 0;
 
   if ((options & VAR_MAT_VOLUME) != 0) {
+    printf("\n AAAA \n");
     *r_src = DRW_shader_library_create_shader_string(e_data.lib, datatoc_volumetric_vert_glsl);
     info_name = "eevee_legacy_material_volumetric_vert";
   }
   else if ((options & (VAR_WORLD_PROBE | VAR_WORLD_BACKGROUND)) != 0) {
+    printf("\n BBBB \n");
     *r_src = DRW_shader_library_create_shader_string(e_data.lib, datatoc_world_vert_glsl);
     info_name = "eevee_legacy_material_world_vert";
   }
   else {
+    printf("\n CCCCC \n");
     *r_src = DRW_shader_library_create_shader_string(e_data.lib, datatoc_surface_vert_glsl);
     if (is_hair) {
       info_name = "eevee_legacy_mateiral_surface_vert_hair";
@@ -1233,6 +1236,7 @@ static const char *eevee_get_geom_info(int options, char **r_src)
   }
 
   if ((options & VAR_MAT_VOLUME) != 0) {
+    printf("\n AAadadadaAA \n");
     *r_src = DRW_shader_library_create_shader_string(e_data.lib, datatoc_volumetric_geom_glsl);
     info_name = "eevee_legacy_material_volumetric_geom";
   }
@@ -1253,6 +1257,7 @@ static const char *eevee_get_frag_info(int options, char **r_src)
     /* -- VOLUME FRAG -
      * Select create info permutation for `volume_frag`. */
     info_name = "eevee_legacy_material_volumetric_frag";
+    printf("\n AAdvdvsAA \n");
     *r_src = DRW_shader_library_create_shader_string(e_data.lib, datatoc_volumetric_frag_glsl);
   }
   else if ((options & VAR_MAT_DEPTH) != 0) {

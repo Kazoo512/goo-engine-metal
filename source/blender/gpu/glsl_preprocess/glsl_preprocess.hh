@@ -76,12 +76,14 @@ class Preprocessor {
       parse_library_functions(str);
     }
     if (do_include_parsing) {
-      if (str.find("BLENDER_REQUIRE") == std::string::npos) {
-        include_parse(str);
-      } else {
-        goo_require_parse(str);
-      }
+      include_parse(str);
+      // if (str.find("BLENDER_REQUIRE") == std::string::npos) {
+      //   include_parse(str);
+      // } else {
+      //   goo_require_parse(str);
+      // }
     }
+    
     str = preprocessor_directive_mutation(str);
     if (do_string_mutation) {
       str = assert_processing(str, filename);
