@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
 #include "random_lib.glsl"
-#include "goo_common_math_geom_lib.glsl"
+#include "common_math_geom_lib.glsl"
 #include "bsdf_sampling_lib.glsl"
 #include "irradiance_lib.glsl"
 

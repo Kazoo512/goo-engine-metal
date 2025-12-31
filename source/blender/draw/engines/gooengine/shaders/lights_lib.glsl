@@ -2,10 +2,10 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include "engine_eevee_shared_defines.h)
-#include "engine_eevee_legacy_shared.h)
-#include "goo_common_math_lib.glsl"
-#include "goo_common_math_geom_lib.glsl"
+#include "engine_eevee_shared_defines.h"
+#include "engine_eevee_legacy_shared.h"
+#include "common_math_lib.glsl"
+#include "common_math_geom_lib.glsl"
 #include "raytrace_lib.glsl"
 #include "ltc_lib.glsl"
 
@@ -194,6 +194,15 @@ float sample_ID_texture(usampler2DArray TEX_ID, vec3 coord, bool match) {
 }
 #endif
 
+float buffer_depth(bool is_persp, float z, float zf, float zn)
+{
+  if (is_persp) {
+    return (zf * (zn - z)) / (z * (zn - zf));
+  }
+  else {
+    return (z / (zf * 2.0)) + 0.5;
+  }
+}
 
 float sample_cube_shadow(int shadow_id, vec3 P, bool match_shadow_id)
 {
@@ -220,7 +229,7 @@ float sample_cascade_shadow(int shadow_id, vec3 P, bool match_shadow_id)
 {
   int data_id = int(sd(shadow_id).sh_data_index);
   float tex_id = scascade(data_id).sh_tex_index;
-  vec4 view_z = vec4(dot(P - cameraPos, cameraForward));
+  vec4 view_z = vec4(dot(P - drw_view_position(), drw_view_forward()));
   vec4 weights = 1.0 - smoothstep(scascade(data_id).split_end_distances,
                                   scascade(data_id).split_start_distances.yzwx,
                                   view_z);

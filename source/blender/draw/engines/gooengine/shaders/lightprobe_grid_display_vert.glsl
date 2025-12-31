@@ -2,7 +2,7 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include "goo_common_view_lib.glsl"
+#include "draw_model_lib.glsl"
 
 void main()
 {

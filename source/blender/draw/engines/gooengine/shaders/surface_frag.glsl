@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
 /* Required by some nodes. */
-#include "goo_common_hair_lib.glsl"
+#include "common_hair_lib.glsl"
 #include "common_utiltex_lib.glsl"
-#include "goo_common_math_lib.glsl"
-#include "goo_common_math_geom_lib.glsl"
+#include "common_math_lib.glsl"
+#include "common_math_geom_lib.glsl"
 
 #include "closure_eval_surface_lib.glsl"
 
@@ -170,7 +170,7 @@ void main()
 vec3 attr_load_orco(vec4 orco)
 {
   /* Retain precision better than g_data.P (see #99128). */
-  return -normal_view_to_world(viewCameraVec(viewPosition));
+  return -drw_normal_view_to_world(drw_view_incident_vector(viewPosition));
 }
 /* Unsupported. */
 vec4 attr_load_tangent(vec4 tangent)

@@ -477,14 +477,14 @@ void calc_shader_info(vec3 position,
 
 void screenspace_info(vec3 viewPos, out vec4 scene_col, out float scene_depth)
 {
-  vec2 uvs = get_uvs_from_view(viewPos * vec3(1.0, 1.0, -1.0));
+  vec2 uvs = drw_point_world_to_screen(viewPos * vec3(1.0, 1.0, -1.0)).xy;
 
 #ifdef USE_REFRACTION
   scene_col = texture(refractColorBuffer, uvs * hizUvScale.xy);
 #endif
 
   float depth = textureLod(maxzBuffer, uvs * hizUvScale.xy, 0.0).r;
-  scene_depth = -get_view_z_from_depth(depth);
+  scene_depth = -drw_depth_screen_to_view(depth);
 }
 
 vec2 rotate(vec2 v, float a)
@@ -510,7 +510,7 @@ void screenspace_curvature(float iiterations,
                            out float scene_curvature,
                            out float scene_rim)
 {
-  vec2 uvs = get_uvs_from_view(viewPosition) * hizUvScale.xy;
+  vec2 uvs = drw_point_world_to_screen(viewPosition).xy * hizUvScale.xy;
 
   // Use a fixed texel size rather than adjusting to pixel space. Less accurate, wastes some
   // samples, but gives more intuitive results.
@@ -519,7 +519,7 @@ void screenspace_curvature(float iiterations,
 
   // Using the "real" depth here makes the precision issues even worse... something's not right
   // here.
-  float mid_depth = get_view_z_from_depth(textureLod(maxzBuffer, uvs, 0.0).r);
+  float mid_depth = drw_depth_screen_to_view(textureLod(maxzBuffer, uvs, 0.0).r);
   // float mid_depth = viewPos.z;
 
   // Eyeballed value to clamp curvature sample separation to.
@@ -538,9 +538,9 @@ void screenspace_curvature(float iiterations,
 
     // Accumulate curvature in the line window
     for (int i = 1; i <= n_samples; i++) {
-      float left = get_view_z_from_depth(
+      float left = drw_depth_screen_to_view(
           textureLod(maxzBuffer, uvs + offset * i * i_samples, 0.0).r);
-      float right = get_view_z_from_depth(
+      float right = drw_depth_screen_to_view(
           textureLod(maxzBuffer, uvs - offset * i * i_samples, 0.0).r);
 
       float curve = clamp(left - mid_depth, -clamp_range, clamp_range) +

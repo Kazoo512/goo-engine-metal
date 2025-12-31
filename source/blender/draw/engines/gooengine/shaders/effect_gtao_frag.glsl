@@ -7,9 +7,9 @@
  * The final integration is done at the resolve stage with the shading normal.
  */
 
-#include "goo_common_view_lib.glsl"
-#include "goo_common_math_lib.glsl"
-#include "goo_common_math_geom_lib.glsl"
+#include "draw_model_lib.glsl"
+#include "common_math_lib.glsl"
+#include "common_math_geom_lib.glsl"
 #include "common_utiltex_lib.glsl"
 #include "ambient_occlusion_lib.glsl"
 
@@ -30,15 +30,15 @@ vec3 view_position_derivative_from_depth(vec2 uvs, vec2 ofs, vec3 vP, float dept
   /* Fix issue with depth precision. Take even larger diff. */
   vec4 diff = abs(vec4(depth_center, H.yzw) - H.x);
   if (max_v4(diff) < 2.4e-7 && all(lessThan(diff.xyz, diff.www))) {
-    return 0.25 * (get_view_space_from_depth(uv3, H.w) - get_view_space_from_depth(uv1, H.x));
+    return 0.25 * (drw_point_screen_to_view(vec3(uv3, H.w)) - drw_point_screen_to_view(vec3(uv1, H.x)));
   }
   /* Simplified (H.xw + 2.0 * (H.yz - H.xw)) - depth_center */
   vec2 deltas = abs((2.0 * H.yz - H.xw) - depth_center);
   if (deltas.x < deltas.y) {
-    return vP - get_view_space_from_depth(uv2, H.y);
+    return vP - drw_point_screen_to_view(vec3(uv2, H.y));
   }
   else {
-    return get_view_space_from_depth(uv3, H.z) - vP;
+    return drw_point_screen_to_view(vec3(uv3, H.z)) - vP;
   }
 }
 
@@ -48,7 +48,7 @@ bool reconstruct_view_position_and_normal_from_depth(vec2 uvs, out vec3 vP, out 
   vec2 texel_size = vec2(abs(dFdx(uvs.x)), abs(dFdy(uvs.y)));
   float depth_center = textureLod(maxzBuffer, uvs, 0.0).r;
 
-  vP = get_view_space_from_depth(uvs, depth_center);
+  vP = drw_point_screen_to_view(vec3(uvs, depth_center));
 
   vec3 dPdx = view_position_derivative_from_depth(uvs, texel_size * vec2(1, 0), vP, depth_center);
   vec3 dPdy = view_position_derivative_from_depth(uvs, texel_size * vec2(0, 1), vP, depth_center);
@@ -76,8 +76,8 @@ void main()
   }
   else {
     vec3 P = transform_point(ViewMatrixInverse, vP);
-    vec3 V = cameraVec(P);
-    vec3 vV = viewCameraVec(vP);
+    vec3 V = drw_world_incident_vector(P);
+    vec3 vV = drw_view_incident_vector(vP);
     vec3 vN = normal_decode(texture(normalBuffer, uvs).rg, vV);
     vec3 N = transform_direction(ViewMatrixInverse, vN);
     vec3 Ng = transform_direction(ViewMatrixInverse, vNg);
@@ -99,7 +99,7 @@ void main()
 {
   vec2 uvs = uvcoordsvar.xy;
   float depth = textureLod(maxzBuffer, uvs * hizUvScale.xy, 0.0).r;
-  vec3 vP = get_view_space_from_depth(uvs, depth);
+  vec3 vP = drw_point_screen_to_view(vec3(uvs, depth));
 
   OcclusionData data = NO_OCCLUSION_DATA;
   /* Do not trace for background */

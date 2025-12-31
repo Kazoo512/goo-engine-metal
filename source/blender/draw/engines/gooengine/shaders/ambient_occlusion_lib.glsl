@@ -2,8 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include "goo_common_math_lib.glsl"
-#include "goo_common_math_geom_lib.glsl"
+#include "common_math_lib.glsl"
+#include "common_math_geom_lib.glsl"
 #include "raytrace_lib.glsl"
 #include "surface_lib.glsl"
 
@@ -145,7 +145,7 @@ float search_horizon(vec3 vI,
     const float bias = 2.0 * 2.4e-7;
     depth += (inverted != 0.0) ? -bias : bias;
 
-    vec3 s = get_view_space_from_depth(uv, depth);
+    vec3 s = drw_point_screen_to_view(vec3(uv, depth));
     vec3 omega_s = s - vP;
     float len = length(omega_s);
     /* Sample's horizon angle cosine. */
@@ -176,7 +176,7 @@ OcclusionData occlusion_search(
 
   vec2 noise = get_ao_noise();
   vec2 dir = get_ao_dir(noise.x);
-  vec2 uv = get_uvs_from_view(vP);
+  vec2 uv = drw_point_world_to_screen(vP).xy;
   vec3 vI = ((ProjectionMatrix[3][3] == 0.0) ? normalize(-vP) : vec3(0.0, 0.0, 1.0));
   vec3 avg_dir = vec3(0.0);
   float avg_apperture = 0.0;
@@ -469,7 +469,7 @@ float ambient_occlusion_eval(vec3 normal,
   OcclusionData data = occlusion_search(
       viewPosition, maxzBuffer, max_distance, inverted, sample_count);
 
-  vec3 V = cameraVec(worldPosition);
+  vec3 V = drw_world_incident_vector(worldPosition);
   vec3 N = normalize(normal);
   vec3 Ng = safe_normalize(cross(dFdx(worldPosition), dFdy(worldPosition)));
 

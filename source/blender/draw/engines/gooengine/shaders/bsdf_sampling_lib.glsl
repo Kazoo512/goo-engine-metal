@@ -6,7 +6,7 @@
  * Sampling distribution routines for Monte-carlo integration.
  */
 
-#include "goo_common_math_geom_lib.glsl"
+#include "common_math_geom_lib.glsl"
 #include "bsdf_common_lib.glsl"
 
 /* -------------------------------------------------------------------- */

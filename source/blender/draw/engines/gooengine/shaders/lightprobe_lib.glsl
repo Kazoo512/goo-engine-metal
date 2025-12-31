@@ -2,9 +2,9 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include "engine_eevee_legacy_shared.h)
-#include "goo_common_math_geom_lib.glsl"
-#include "goo_common_view_lib.glsl"
+#include "engine_eevee_legacy_shared.h"
+#include "common_math_geom_lib.glsl"
+#include "draw_model_lib.glsl"
 #include "common_utiltex_lib.glsl"
 #include "common_uniforms_lib.glsl"
 #include "ambient_occlusion_lib.glsl"

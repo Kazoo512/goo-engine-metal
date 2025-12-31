@@ -2,7 +2,7 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include "goo_common_math_lib.glsl"
+#include "common_math_lib.glsl"
 #include "common_uniforms_lib.glsl"
 #include "octahedron_lib.glsl"
 

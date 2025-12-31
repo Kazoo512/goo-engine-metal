@@ -2,7 +2,7 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include "goo_common_math_lib.glsl"
+#include "common_math_lib.glsl"
 
 vec3 diffuse_dominant_dir(vec3 bent_normal)
 {

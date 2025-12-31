@@ -2,8 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include "goo_common_math_lib.glsl"
-#include "goo_common_math_geom_lib.glsl"
+#include "common_math_lib.glsl"
+#include "common_math_geom_lib.glsl"
 #include "closure_eval_glossy_lib.glsl"
 #include "closure_eval_lib.glsl"
 #include "lightprobe_lib.glsl"
@@ -25,7 +25,7 @@ vec4 ssr_get_scene_color_and_mask(vec3 hit_vP, int planar_index, float mip)
 {
   vec2 uv;
   if (planar_index != -1) {
-    uv = get_uvs_from_view(hit_vP);
+    uv = drw_point_world_to_screen(hit_vP).xy;
     /* Planar X axis is flipped. */
     uv.x = 1.0 - uv.x;
   }
@@ -285,11 +285,11 @@ void main()
 
   FragDepth = depth;
 
-  viewPosition = get_view_space_from_depth(uvcoordsvar.xy, depth);
+  viewPosition = drw_point_screen_to_view(vec3(uvcoordsvar.xy, depth));
   worldPosition = transform_point(ViewMatrixInverse, viewPosition);
 
   vec2 normal_encoded = texelFetch(normalBuffer, texel, 0).rg;
-  viewNormal = normal_decode(normal_encoded, viewCameraVec(viewPosition));
+  viewNormal = normal_decode(normal_encoded, drw_view_incident_vector(viewPosition));
   worldNormal = transform_direction(ViewMatrixInverse, viewNormal);
 
   CLOSURE_VARS_DECLARE_1(Glossy);

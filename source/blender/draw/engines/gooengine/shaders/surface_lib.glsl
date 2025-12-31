@@ -4,7 +4,7 @@
 
 /** This describe the entire interface of the shader. */
 
-#include "goo_common_math_lib.glsl"
+#include "common_math_lib.glsl"
 
 /* Global interface for SSR.
  * SSR will set these global variables itself.
@@ -142,7 +142,7 @@ GlobalData init_globals(void)
   GlobalData surf;
 
 #  if defined(WORLD_BACKGROUND) || defined(PROBE_CAPTURE)
-  surf.P = transform_direction(ViewMatrixInverse, -viewCameraVec(viewPosition));
+  surf.P = transform_direction(ViewMatrixInverse, -drw_view_incident_vector(viewPosition));
   surf.N = surf.Ng = surf.Ni = -surf.P;
   surf.ray_length = 0.0;
 #  else
@@ -150,14 +150,14 @@ GlobalData init_globals(void)
   surf.Ni = worldNormal;
   surf.N = safe_normalize(worldNormal);
   surf.Ng = safe_normalize(cross(dFdx(surf.P), dFdy(surf.P)));
-  surf.ray_length = distance(surf.P, cameraPos);
+  surf.ray_length = distance(surf.P, drw_view_position());
 #  endif
   surf.barycentric_coords = vec2(0.0);
   surf.barycentric_dists = vec3(0.0);
   surf.N = (FrontFacing) ? surf.N : -surf.N;
   surf.Ni = (FrontFacing) ? surf.Ni : -surf.Ni;
 #  ifdef HAIR_SHADER
-  vec3 V = cameraVec(surf.P);
+  vec3 V = drw_world_incident_vector(surf.P);
   /* Shade as a cylinder. */
   vec3 B = normalize(cross(worldNormal, hairTangent));
   float cos_theta;
@@ -237,7 +237,7 @@ vec3 coordinate_reflect(vec3 P, vec3 N)
 #if defined(WORLD_BACKGROUND) || defined(PROBE_CAPTURE)
   return N;
 #else
-  return -reflect(cameraVec(P), N);
+  return -reflect(drw_world_incident_vector(P), N);
 #endif
 }
 
@@ -246,7 +246,7 @@ vec3 coordinate_incoming(vec3 P)
 #if defined(WORLD_BACKGROUND) || defined(PROBE_CAPTURE)
   return -P;
 #else
-  return cameraVec(P);
+  return drw_world_incident_vector(P);
 #endif
 }
 

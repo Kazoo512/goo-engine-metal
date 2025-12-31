@@ -2,9 +2,9 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include "goo_common_hair_lib.glsl"
-#include "goo_common_view_lib.glsl"
-#include "goo_common_math_lib.glsl"
+#include "common_hair_lib.glsl"
+#include "draw_model_lib.glsl"
+#include "common_math_lib.glsl"
 #include "common_utiltex_lib.glsl"
 #include "closure_eval_surface_lib.glsl"
 #include "surface_lib.glsl"
@@ -37,24 +37,24 @@ void main()
   pointcloud_get_pos_and_radius(pointPosition, pointRadius);
   pointID = pointcloud_get_point_id();
 #else
-  vec3 world_pos = point_object_to_world(pos);
+  vec3 world_pos = drw_point_object_to_world(pos);
 #endif
 
-  gl_Position = point_world_to_ndc(world_pos);
+  gl_Position = drw_point_world_to_homogenous(world_pos);
 
   /* Used for planar reflections */
   gl_ClipDistance[0] = dot(vec4(world_pos, 1.0), planarClipPlane);
 
 #ifdef MESH_SHADER
   worldPosition = world_pos;
-  viewPosition = point_world_to_view(worldPosition);
+  viewPosition = drw_point_world_to_view(worldPosition);
 
 #  ifndef HAIR_SHADER
-  worldNormal = normalize(normal_object_to_world(nor));
+  worldNormal = normalize(drw_normal_object_to_world(nor));
 #  endif
 
   /* No need to normalize since this is just a rotation. */
-  viewNormal = normal_world_to_view(worldNormal);
+  viewNormal = drw_normal_world_to_view(worldNormal);
 
 #  ifndef NO_ATTRIB_LOAD
   attrib_load();
@@ -133,7 +133,7 @@ vec3 attr_load_orco(vec4 orco)
 
 vec4 attr_load_tangent(vec4 tangent)
 {
-  tangent.xyz = safe_normalize(normal_object_to_world(tangent.xyz));
+  tangent.xyz = safe_normalize(drw_normal_object_to_world(tangent.xyz));
   return tangent;
 }
 

@@ -2,8 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include "goo_common_math_lib.glsl"
-#include "goo_common_view_lib.glsl"
+#include "common_math_lib.glsl"
+#include "draw_model_lib.glsl"
 
 #if 0
 uniform sampler2D colorBuffer;
@@ -49,7 +49,7 @@ void main()
 
   /* Compute pixel position in previous frame. */
   float depth = textureLod(depthBuffer, uv, 0.0).r;
-  vec3 pos = get_world_space_from_depth(uv, depth);
+  vec3 pos = drw_point_screen_to_world(vec3(uv, depth));
   vec2 uv_history = project_point(prevViewProjectionMatrix, pos).xy * 0.5 + 0.5;
 
   /* HACK: Reject lookdev spheres from TAA reprojection. */

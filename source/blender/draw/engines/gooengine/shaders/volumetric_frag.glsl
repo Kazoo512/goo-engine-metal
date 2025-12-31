@@ -33,7 +33,7 @@ GlobalData init_globals(void)
   surf.barycentric_dists = vec3(0.0);
   surf.ray_type = RAY_TYPE_CAMERA;
   surf.ray_depth = 0.0;
-  surf.ray_length = distance(surf.P, cameraPos);
+  surf.ray_length = distance(surf.P, drw_view_position());
   return surf;
 }
 
@@ -60,7 +60,7 @@ vec3 coordinate_reflect(vec3 P, vec3 N)
 
 vec3 coordinate_incoming(vec3 P)
 {
-  return cameraVec(P);
+  return drw_world_incident_vector(P);
 }
 
 float texture_lod_bias_get()
@@ -74,10 +74,10 @@ void main()
   ivec3 volume_cell = ivec3(ivec2(gl_FragCoord.xy), volumetric_geom_iface.slice);
   vec3 ndc_cell = volume_to_ndc((vec3(volume_cell) + volJitter.xyz) * volInvTexSize.xyz);
 
-  viewPosition = get_view_space_from_depth(ndc_cell.xy, ndc_cell.z);
-  worldPosition = point_view_to_world(viewPosition);
+  viewPosition = drw_point_screen_to_view(vec3(ndc_cell.xy, ndc_cell.z));
+  worldPosition = drw_point_view_to_world(viewPosition);
 #ifdef MESH_SHADER
-  objectPosition = point_world_to_object(worldPosition);
+  objectPosition = drw_point_world_to_object(worldPosition);
   volumeOrco = OrcoTexCoFactors[0].xyz + objectPosition * OrcoTexCoFactors[1].xyz;
 
   if (any(lessThan(volumeOrco, vec3(0.0))) || any(greaterThan(volumeOrco, vec3(1.0)))) {

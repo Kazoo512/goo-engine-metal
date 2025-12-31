@@ -2,8 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include "goo_common_view_lib.glsl"
-#include "goo_common_math_geom_lib.glsl"
+#include "draw_model_lib.glsl"
+#include "common_math_geom_lib.glsl"
 
 #define PASS_POST_UNDEFINED 0
 #define PASS_POST_ACCUMULATED_COLOR 1
@@ -59,7 +59,7 @@ void main()
       depth = 1e10;
     }
     else {
-      depth = -get_view_z_from_depth(depth);
+      depth = -drw_depth_screen_to_view(depth);
     }
     color.rgb = vec3(depth);
   }

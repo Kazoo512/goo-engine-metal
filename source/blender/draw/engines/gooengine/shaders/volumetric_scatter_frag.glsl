@@ -19,8 +19,8 @@ void main()
   outTransmittance = texelFetch(volumeExtinction, volume_cell, 0);
   vec3 s_scattering = texelFetch(volumeScattering, volume_cell, 0).rgb;
   vec3 volume_ndc = volume_to_ndc((vec3(volume_cell) + volJitter.xyz) * volInvTexSize.xyz);
-  vec3 P = get_world_space_from_depth(volume_ndc.xy, volume_ndc.z);
-  vec3 V = cameraVec(P);
+  vec3 P = drw_point_screen_to_world(vec3(volume_ndc.xy, volume_ndc.z));
+  vec3 V = drw_world_incident_vector(P);
 
   vec2 phase = texelFetch(volumePhase, volume_cell, 0).rg;
   float s_anisotropy = phase.x / max(1.0, phase.y);
@@ -57,7 +57,7 @@ void main()
   /* NOTE: this uses the cell non-jittered position (texel center). */
   vec3 curr_ndc = volume_to_ndc(vec3(gl_FragCoord.xy, float(volumetric_geom_iface.slice) + 0.5) *
                                 volInvTexSize.xyz);
-  vec3 wpos = get_world_space_from_depth(curr_ndc.xy, curr_ndc.z);
+  vec3 wpos = drw_point_screen_to_world(vec3(curr_ndc.xy, curr_ndc.z));
   vec3 prev_ndc = project_point(pastViewProjectionMatrix, wpos);
   vec3 prev_volume = ndc_to_volume(prev_ndc * 0.5 + 0.5);
 

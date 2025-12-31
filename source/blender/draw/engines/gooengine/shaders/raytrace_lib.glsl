@@ -2,8 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include "goo_common_view_lib.glsl"
-#include "goo_common_math_lib.glsl"
+#include "draw_model_lib.glsl"
+#include "common_math_lib.glsl"
 #include "common_uniforms_lib.glsl"
 
 /* Fix for #104266 wherein AMD GPUs running Metal erroneously discard a successful hit. */
@@ -24,7 +24,7 @@ struct Ray {
 /* Inputs expected to be in view-space. */
 void raytrace_clip_ray_to_near_plane(inout Ray ray)
 {
-  float near_dist = get_view_z_from_depth(0.0);
+  float near_dist = drw_depth_screen_to_view(0.0);
   if ((ray.origin.z + ray.direction.z) > near_dist) {
     ray.direction *= abs((near_dist - ray.origin.z) / ray.direction.z);
   }
@@ -87,8 +87,8 @@ ScreenSpaceRay raytrace_screenspace_ray_create(Ray ray, float thickness)
   ssray.direction.xyz = project_point(ProjectionMatrix, ray.origin + ray.direction);
   /* Interpolate thickness in screen space.
    * Calculate thickness further away to avoid near plane clipping issues. */
-  ssray.origin.w = get_depth_from_view_z(ray.origin.z - thickness) * 2.0 - 1.0;
-  ssray.direction.w = get_depth_from_view_z(ray.origin.z + ray.direction.z - thickness) * 2.0 -
+  ssray.origin.w = drw_depth_view_to_screen(ray.origin.z - thickness) * 2.0 - 1.0;
+  ssray.direction.w = drw_depth_view_to_screen(ray.origin.z + ray.direction.z - thickness) * 2.0 -
                       1.0;
 
   raytrace_screenspace_ray_finalize(ssray);
@@ -132,7 +132,7 @@ bool raytrace(Ray ray,
   ssray.max_time = max(1.1, ssray.max_time);
 
   float prev_delta = 0.0, prev_time = 0.0;
-  float depth_sample = get_depth_from_view_z(ray.origin.z);
+  float depth_sample = drw_depth_view_to_screen(ray.origin.z);
   float delta = depth_sample - ssray.origin.z;
 
   float lod_fac = saturate(fast_sqrt(params.roughness) * 2.0 - 0.4);

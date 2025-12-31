@@ -4,6 +4,9 @@
 
 #pragma once
 
+#ifndef DRAW_MODEL_LIB_GLSL
+#define DRAW_MODEL_LIB_GLSL
+
 #include "draw_view_info.hh"
 
 #include "draw_view_lib.glsl"
@@ -126,4 +129,4 @@ vec3 drw_point_object_to_ndc(vec3 lP)
   return drw_perspective_divide(drw_point_object_to_homogenous(lP));
 }
 
-/** \} */
+#endif /* DRAW_MODEL_LIB_GLSL */

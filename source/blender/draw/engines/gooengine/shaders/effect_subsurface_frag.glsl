@@ -2,8 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include "goo_common_view_lib.glsl"
-#include "goo_common_math_lib.glsl"
+#include "draw_model_lib.glsl"
+#include "common_math_lib.glsl"
 #include "common_utiltex_lib.glsl"
 #include "common_uniforms_lib.glsl"
 
@@ -16,7 +16,7 @@ void main(void)
   vec3 sss_irradiance = texture(sssIrradiance, uvs).rgb;
   float sss_radius = texture(sssRadius, uvs).r * radii_max_radius.w * avg_inv_radius;
   float depth = texture(depthBuffer, uvs).r;
-  float depth_view = get_view_z_from_depth(depth);
+  float depth_view = drw_depth_screen_to_view(depth);
 
   float rand = texelfetch_noise_tex(gl_FragCoord.xy).r;
 #ifdef FIRST_PASS
@@ -43,7 +43,7 @@ void main(void)
                                ((abs(sss_kernel[i].a) > sssJitterThreshold) ? dir : dir_rand);
     vec3 color = texture(sssIrradiance, sample_uv).rgb;
     float sample_depth = texture(depthBuffer, sample_uv).r;
-    sample_depth = get_view_z_from_depth(sample_depth);
+    sample_depth = drw_depth_screen_to_view(sample_depth);
     /* Depth correction factor. See Real Time Realistic Skin Translucency 2010
      * by Jimenez, eqs. 2 and 9, and D9740.
      * Coefficient -2 follows from gaussian_profile() from gpu_material.c and

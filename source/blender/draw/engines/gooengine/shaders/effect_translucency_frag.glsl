@@ -2,8 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include "goo_common_view_lib.glsl"
-#include "goo_common_math_geom_lib.glsl"
+#include "draw_model_lib.glsl"
+#include "common_math_geom_lib.glsl"
 #include "common_utiltex_lib.glsl"
 #include "lights_lib.glsl"
 
@@ -50,6 +50,16 @@ float light_translucent_power_with_falloff(LightData ld, vec3 N, vec4 l_vector)
 #define scube(x) shadows_cube_data[x]
 #define scascade(x) shadows_cascade_data[x]
 
+float linear_depth(bool is_persp, float z, float zf, float zn)
+{
+  if (is_persp) {
+    return (zn * zf) / (z * (zn - zf) + zf);
+  }
+  else {
+    return (z * 2.0 - 1.0) * zf;
+  }
+}
+
 float shadow_cube_radial_depth(vec3 cubevec, float tex_id, int shadow_id)
 {
   float depth = sample_cube(sssShadowCubes, cubevec, tex_id).r;
@@ -79,7 +89,7 @@ vec3 light_translucent(LightData ld, vec3 P, vec3 N, vec4 l_vector, vec2 rand, f
   float d, dist;
   int data_id = int(sd(shadow_id).sh_data_index);
   if (ld.l_type == SUN) {
-    vec4 view_z = vec4(dot(P - cameraPos, cameraForward));
+    vec4 view_z = vec4(dot(P - drw_view_position(), drw_view_forward()));
 
     vec4 weights = step(scascade(data_id).split_end_distances, view_z);
     float id = abs(4.0 - dot(weights, weights));
@@ -181,15 +191,15 @@ vec3 view_position_derivative_from_depth(vec2 uvs, vec2 ofs, vec3 vP, float dept
   /* Fix issue with depth precision. Take even larger diff. */
   vec4 diff = abs(vec4(depth_center, H.yzw) - H.x);
   if (max_v4(diff) < 2.4e-7 && all(lessThan(diff.xyz, diff.www))) {
-    return 0.25 * (get_view_space_from_depth(uv3, H.w) - get_view_space_from_depth(uv1, H.x));
+    return 0.25 * (drw_point_screen_to_view(vec3(uv3, H.w)) - drw_point_screen_to_view(vec3(uv1, H.x)));
   }
   /* Simplified (H.xw + 2.0 * (H.yz - H.xw)) - depth_center */
   vec2 deltas = abs((2.0 * H.yz - H.xw) - depth_center);
   if (deltas.x < deltas.y) {
-    return vP - get_view_space_from_depth(uv2, H.y);
+    return vP - drw_point_screen_to_view(vec3(uv2, H.y));
   }
   else {
-    return get_view_space_from_depth(uv3, H.z) - vP;
+    return drw_point_screen_to_view(vec3(uv3, H.z)) - vP;
   }
 }
 
@@ -198,8 +208,8 @@ bool reconstruct_view_position_and_normal_from_depth(vec2 uvs, out vec3 vP, out 
 {
   vec2 texel_size = vec2(abs(dFdx(uvs.x)), abs(dFdy(uvs.y)));
   float depth_center = textureLod(depthBuffer, uvs, 0.0).r;
-
-  vP = get_view_space_from_depth(uvs, depth_center);
+)
+  vP = drw_point_screen_to_view(vec3(uvs, depth_center);
 
   vec3 dPdx = view_position_derivative_from_depth(uvs, texel_size * vec2(1, 0), vP, depth_center);
   vec3 dPdy = view_position_derivative_from_depth(uvs, texel_size * vec2(0, 1), vP, depth_center);
@@ -225,8 +235,8 @@ void main(void)
   vec3 vP, vNg;
   reconstruct_view_position_and_normal_from_depth(uvs, vP, vNg);
 
-  vec3 P = point_view_to_world(vP);
-  vec3 Ng = normal_view_to_world(vNg);
+  vec3 P = drw_point_view_to_world(vP);
+  vec3 Ng = drw_normal_view_to_world(vNg);
 
   vec3 accum = vec3(0.0);
   for (int i = 0; i < MAX_LIGHT && i < laNumLight; i++) {

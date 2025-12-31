@@ -2,7 +2,7 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include "goo_common_math_lib.glsl"
+#include "common_math_lib.glsl"
 #include "common_utiltex_lib.glsl"
 #include "lights_lib.glsl"
 
@@ -28,7 +28,7 @@ void main()
 
   float accum_light = 0.0;
 
-  vec3 vP = get_view_space_from_depth(uvs, depth);
+  vec3 vP = drw_point_screen_to_view(vec3(uvs, depth));
   vec3 P = transform_point(ViewMatrixInverse, vP);
 
   vec3 vNg = safe_normalize(cross(dFdx(vP), dFdy(vP)));

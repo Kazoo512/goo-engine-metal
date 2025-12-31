@@ -2,8 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include "goo_common_math_lib.glsl"
-#include "goo_common_view_lib.glsl"
+#include "common_math_lib.glsl"
+#include "draw_model_lib.glsl"
 
 #define mistStart mistSettings.x
 #define mistInvDistance mistSettings.y
@@ -15,7 +15,7 @@ void main()
   vec2 uvs = gl_FragCoord.xy * texel_size;
 
   float depth = textureLod(depthBuffer, uvs, 0.0).r;
-  vec3 co = get_view_space_from_depth(uvs, depth);
+  vec3 co = drw_point_screen_to_view(vec3(uvs, depth));
 
   float zcor = (ProjectionMatrix[3][3] == 0.0) ? length(co) : -co.z;
 

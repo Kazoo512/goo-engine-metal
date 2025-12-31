@@ -167,10 +167,11 @@ static struct {
 } e_data = {nullptr}; /* Engine data */
 
 extern "C" char datatoc_engine_eevee_legacy_shared_h[];
-extern "C" char datatoc_goo_common_hair_lib_glsl[];
-extern "C" char datatoc_goo_common_math_lib_glsl[];
-extern "C" char datatoc_goo_common_math_geom_lib_glsl[];
-extern "C" char datatoc_goo_common_view_lib_glsl[];
+extern "C" char datatoc_common_hair_lib_glsl[];
+extern "C" char datatoc_common_attribute_lib_glsl[];
+extern "C" char datatoc_common_math_lib_glsl[];
+extern "C" char datatoc_common_math_geom_lib_glsl[];
+extern "C" char datatoc_draw_model_lib_glsl[];
 extern "C" char datatoc_goo_gpu_shader_codegen_lib_glsl[];
 
 extern "C" char datatoc_ambient_occlusion_lib_glsl[];
@@ -216,10 +217,11 @@ static void eevee_shader_library_ensure()
     e_data.lib = DRW_shader_library_create();
     /* NOTE: These need to be ordered by dependencies. */
     DRW_SHADER_LIB_ADD_SHARED(e_data.lib, engine_eevee_legacy_shared);
-    DRW_SHADER_LIB_ADD(e_data.lib, goo_common_math_lib);
-    DRW_SHADER_LIB_ADD(e_data.lib, goo_common_math_geom_lib);
-    DRW_SHADER_LIB_ADD(e_data.lib, goo_common_hair_lib);
-    DRW_SHADER_LIB_ADD(e_data.lib, goo_common_view_lib);
+    DRW_SHADER_LIB_ADD(e_data.lib, common_math_lib);
+    DRW_SHADER_LIB_ADD(e_data.lib, common_attribute_lib);
+    DRW_SHADER_LIB_ADD(e_data.lib, common_math_geom_lib);
+    DRW_SHADER_LIB_ADD(e_data.lib, common_hair_lib);
+    DRW_SHADER_LIB_ADD(e_data.lib, draw_model_lib);
     DRW_SHADER_LIB_ADD(e_data.lib, common_uniforms_lib);
     DRW_SHADER_LIB_ADD(e_data.lib, goo_gpu_shader_codegen_lib);
     DRW_SHADER_LIB_ADD(e_data.lib, random_lib);
@@ -1197,17 +1199,14 @@ static const char *eevee_get_vert_info(int options, char **r_src)
   const bool is_point_cloud = (options & (VAR_MAT_POINTCLOUD)) != 0;
 
   if ((options & VAR_MAT_VOLUME) != 0) {
-    printf("\n AAAA \n");
     *r_src = DRW_shader_library_create_shader_string(e_data.lib, datatoc_volumetric_vert_glsl);
     info_name = "eevee_legacy_material_volumetric_vert";
   }
   else if ((options & (VAR_WORLD_PROBE | VAR_WORLD_BACKGROUND)) != 0) {
-    printf("\n BBBB \n");
     *r_src = DRW_shader_library_create_shader_string(e_data.lib, datatoc_world_vert_glsl);
     info_name = "eevee_legacy_material_world_vert";
   }
   else {
-    printf("\n CCCCC \n");
     *r_src = DRW_shader_library_create_shader_string(e_data.lib, datatoc_surface_vert_glsl);
     if (is_hair) {
       info_name = "eevee_legacy_mateiral_surface_vert_hair";
@@ -1236,7 +1235,6 @@ static const char *eevee_get_geom_info(int options, char **r_src)
   }
 
   if ((options & VAR_MAT_VOLUME) != 0) {
-    printf("\n AAadadadaAA \n");
     *r_src = DRW_shader_library_create_shader_string(e_data.lib, datatoc_volumetric_geom_glsl);
     info_name = "eevee_legacy_material_volumetric_geom";
   }
@@ -1257,7 +1255,6 @@ static const char *eevee_get_frag_info(int options, char **r_src)
     /* -- VOLUME FRAG -
      * Select create info permutation for `volume_frag`. */
     info_name = "eevee_legacy_material_volumetric_frag";
-    printf("\n AAdvdvsAA \n");
     *r_src = DRW_shader_library_create_shader_string(e_data.lib, datatoc_volumetric_frag_glsl);
   }
   else if ((options & VAR_MAT_DEPTH) != 0) {

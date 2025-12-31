@@ -2,7 +2,7 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include "goo_common_math_geom_lib.glsl"
+#include "common_math_geom_lib.glsl"
 #include "bsdf_common_lib.glsl"
 #include "bsdf_sampling_lib.glsl"
 #include "raytrace_lib.glsl"
@@ -30,7 +30,7 @@ vec4 screen_space_refraction(vec3 vP, vec3 N, vec3 V, float ior, float roughness
     H = sample_ggx(rand.xzw * vec3(1.0, -1.0, -1.0), alpha, V, N, T, B, pdf);
   }
 
-  vec3 vV = viewCameraVec(vP);
+  vec3 vV = drw_view_incident_vector(vP);
   float eta = 1.0 / ior;
   if (dot(H, V) < 0.0) {
     H = -H;
@@ -55,7 +55,7 @@ vec4 screen_space_refraction(vec3 vP, vec3 N, vec3 V, float ior, float roughness
   bool hit = raytrace(ray, params, false, true, hit_pos);
 
   if (hit && (F_eta(ior, dot(H, V)) < 1.0)) {
-    hit_pos = get_view_space_from_depth(hit_pos.xy, hit_pos.z);
+    hit_pos = drw_point_screen_to_view(vec3(hit_pos.xy, hit_pos.z));
     float hit_dist = distance(hit_pos, vP);
 
     float cone_cos = cone_cosine(roughnessSquared);

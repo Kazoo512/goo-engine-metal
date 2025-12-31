@@ -27,7 +27,7 @@ void main()
   /* Compute view ray. */
   vec2 uvs = gl_FragCoord.xy / tex_size.xy;
   vec3 ndc_cell = volume_to_ndc(vec3(uvs, 1e-5));
-  vec3 view_cell = get_view_space_from_depth(ndc_cell.xy, ndc_cell.z);
+  vec3 view_cell = drw_point_screen_to_view(vec3(ndc_cell.xy, ndc_cell.z));
 
   /* Ortho */
   float prev_ray_len = view_cell.z;

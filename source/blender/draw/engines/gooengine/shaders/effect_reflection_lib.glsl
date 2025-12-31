@@ -12,7 +12,7 @@
  * https://media.contentapi.ea.com/content/dam/ea/seed/presentations/dd18-seed-raytracing-in-hybrid-real-time-rendering.pdf
  */
 
-#include "goo_common_view_lib.glsl"
+#include "draw_model_lib.glsl"
 
 struct HitData {
   /** Hit direction scaled by intersection time. */
@@ -29,7 +29,7 @@ struct HitData {
 
 void encode_hit_data(HitData data, vec3 hit_sP, vec3 vP, out vec4 hit_data, out float hit_depth)
 {
-  vec3 hit_vP = get_view_space_from_depth(hit_sP.xy, hit_sP.z);
+  vec3 hit_vP = drw_point_screen_to_view(vec3(hit_sP.xy, hit_sP.z));
   hit_data.xyz = hit_vP - vP;
   hit_depth = data.is_planar ? -1.0 : hit_sP.z;
   /* Record 1.0 / pdf to reduce the computation in the resolve phase. */
