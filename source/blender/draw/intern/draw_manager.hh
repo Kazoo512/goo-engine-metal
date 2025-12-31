@@ -47,11 +47,6 @@ class Manager {
   using ObjectInfosBuf = StorageArrayBuffer<ObjectInfos, 128>;
   using ObjectAttributeBuf = StorageArrayBuffer<ObjectAttribute, 128>;
   using LayerAttributeBuf = UniformArrayBuffer<LayerAttribute, 512>;
-  /**
-   * TODO(@fclem): Remove once we get rid of old EEVEE code-base.
-   * `DRW_RESOURCE_CHUNK_LEN = 512`.
-   */
-  using ObjectAttributeLegacyBuf = UniformArrayBuffer<float4, 8 * 512>;
 
  public:
   struct SubmitDebugOutput {
@@ -83,11 +78,6 @@ class Manager {
    * This is because attribute list is arbitrary.
    */
   ObjectAttributeBuf attributes_buf;
-  /**
-   * TODO(@fclem): Remove once we get rid of old EEVEE code-base.
-   * Only here to satisfy bindings.
-   */
-  ObjectAttributeLegacyBuf attributes_buf_legacy;
 
   /**
    * Table of all View Layer attributes required by shaders, used to populate the buffer below.
