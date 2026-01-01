@@ -16,8 +16,6 @@ GPU_SHADER_CREATE_INFO(eevee_legacy_common_lib)
 TYPEDEF_SOURCE("engine_eevee_shared_defines.h")
 TYPEDEF_SOURCE("engine_eevee_legacy_shared.h")
 UNIFORM_BUF(1, CommonUniformBlock, common_block)
-ADDITIONAL_INFO(draw_modelmat_new)
-ADDITIONAL_INFO(draw_resource_id_varying)
 GPU_SHADER_CREATE_END()
 
 /* Only specifies bindings for irradiance_lib.glsl. */

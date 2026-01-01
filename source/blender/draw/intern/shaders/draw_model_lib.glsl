@@ -16,6 +16,110 @@
 #endif
 
 
+
+
+
+#ifdef GPU_SHADER_EEVEE_LEGACY_DEFINES
+
+/* Temporary until we fully make the switch. */
+#  ifndef USE_GPU_SHADER_CREATE_INFO
+uniform int drw_resourceChunk;
+#  endif /* !USE_GPU_SHADER_CREATE_INFO */
+
+#  ifdef GPU_VERTEX_SHADER
+
+/* Temporary until we fully make the switch. */
+#    ifndef USE_GPU_SHADER_CREATE_INFO
+
+/* clang-format off */
+#      if defined(IN_PLACE_INSTANCES) || defined(INSTANCED_ATTR) || defined(DRW_LEGACY_MODEL_MATRIX) || defined(GPU_DEPRECATED_AMD_DRIVER)
+/* clang-format on */
+/* When drawing instances of an object at the same position. */
+#        define instanceId 0
+#      else
+#        define instanceId gl_InstanceID
+#      endif
+
+#      if defined(UNIFORM_RESOURCE_ID)
+/* This is in the case we want to do a special instance drawcall for one object but still want to
+ * have the right resourceId and all the correct UBO datas. */
+uniform int drw_ResourceID;
+#        define resource_id drw_ResourceID
+#      else
+#        define resource_id (gpu_BaseInstance + instanceId)
+#      endif
+
+/* Use this to declare and pass the value if
+ * the fragment shader uses the resource_id. */
+#      if defined(EEVEE_GENERATED_INTERFACE)
+#        define RESOURCE_ID_VARYING
+#        define PASS_RESOURCE_ID resourceIDFrag = resource_id;
+#      elif defined(USE_GEOMETRY_SHADER)
+#        define RESOURCE_ID_VARYING flat out int resourceIDGeom;
+#        define PASS_RESOURCE_ID resourceIDGeom = resource_id;
+#      else
+#        define RESOURCE_ID_VARYING flat out int resourceIDFrag;
+#        define PASS_RESOURCE_ID resourceIDFrag = resource_id;
+#      endif
+
+#    endif /* USE_GPU_SHADER_CREATE_INFO */
+
+#  endif /* GPU_VERTEX_SHADER */
+
+/* Temporary until we fully make the switch. */
+#  ifdef USE_GPU_SHADER_CREATE_INFO
+/* TODO(fclem): Rename PASS_RESOURCE_ID to DRW_RESOURCE_ID_VARYING_SET */
+#    if defined(UNIFORM_RESOURCE_ID)
+#      define resource_id drw_ResourceID
+#      define PASS_RESOURCE_ID
+
+#    elif defined(GPU_VERTEX_SHADER)
+#      if defined(UNIFORM_RESOURCE_ID_NEW)
+#        define resource_id (drw_ResourceID >> DRW_VIEW_SHIFT)
+#      else
+#        define resource_id gpu_InstanceIndex
+#      endif
+#      define PASS_RESOURCE_ID drw_ResourceID_iface.resource_index = resource_id;
+
+#    elif defined(GPU_GEOMETRY_SHADER)
+#      define resource_id drw_ResourceID_iface_in[0].resource_index
+#      define PASS_RESOURCE_ID drw_ResourceID_iface_out.resource_index = resource_id;
+
+#    elif defined(GPU_FRAGMENT_SHADER)
+#      define resource_id drw_ResourceID_iface.resource_index
+#    endif
+
+/* TODO(fclem): Remove. */
+#    define RESOURCE_ID_VARYING
+
+#  else
+/* If used in a fragment / geometry shader, we pass
+ * resource_id as varying. */
+#    ifdef GPU_GEOMETRY_SHADER
+/* TODO(fclem): Remove. This is getting ridiculous. */
+#      if !defined(EEVEE_GENERATED_INTERFACE)
+#        define RESOURCE_ID_VARYING \
+        flat out int resourceIDFrag; \
+        flat in int resourceIDGeom[];
+#      else
+#        define RESOURCE_ID_VARYING
+#      endif
+
+#      define resource_id resourceIDGeom
+#      define PASS_RESOURCE_ID resourceIDFrag = resource_id[0];
+#    endif
+
+#    if defined(GPU_FRAGMENT_SHADER)
+#      if !defined(EEVEE_GENERATED_INTERFACE)
+flat in int resourceIDFrag;
+#      endif
+#      define resource_id resourceIDFrag
+#    endif
+#  endif
+
+
+#else
+
 #  if defined(UNIFORM_RESOURCE_ID)
 /* TODO(fclem): Legacy API. To remove. */
 #    define resource_id drw_ResourceID
@@ -40,6 +144,8 @@ FRAGMENT_SHADER_CREATE_INFO(draw_resource_id_varying)
 SHADER_LIBRARY_CREATE_INFO(draw_resource_id_varying)
 #    define resource_id drw_ResourceID_iface.resource_index
 #  endif
+
+#endif
 
 
 /* Due to some shader compiler bug, we somewhat need to access gl_VertexID
