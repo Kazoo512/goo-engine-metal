@@ -15,30 +15,46 @@
 #  error Missing draw_modelmat additional create info on shader create info
 #endif
 
-#if defined(UNIFORM_RESOURCE_ID)
+
+#  if defined(UNIFORM_RESOURCE_ID)
 /* TODO(fclem): Legacy API. To remove. */
-#  define resource_id drw_ResourceID
-#  define DRW_RESOURCE_ID_VARYING_SET
+#    define resource_id drw_ResourceID
+#    define DRW_RESOURCE_ID_VARYING_SET
 
-#elif defined(GPU_VERTEX_SHADER)
+#  elif defined(GPU_VERTEX_SHADER)
 VERTEX_SHADER_CREATE_INFO(draw_resource_id_varying)
-#  if defined(UNIFORM_RESOURCE_ID_NEW)
-#    define resource_id (drw_ResourceID >> DRW_VIEW_SHIFT)
-#  else
-#    define resource_id gpu_InstanceIndex
-#  endif
-#  define DRW_RESOURCE_ID_VARYING_SET drw_ResourceID_iface.resource_index = resource_id;
+#    if defined(UNIFORM_RESOURCE_ID_NEW)
+#      define resource_id (drw_ResourceID >> DRW_VIEW_SHIFT)
+#    else
+#      define resource_id gpu_InstanceIndex
+#    endif
+#    define DRW_RESOURCE_ID_VARYING_SET drw_ResourceID_iface.resource_index = resource_id;
 
-#elif defined(GPU_GEOMETRY_SHADER)
-#  define resource_id drw_ResourceID_iface_in[0].resource_index
+#  elif defined(GPU_GEOMETRY_SHADER)
+#    define resource_id drw_ResourceID_iface_in[0].resource_index
 
-#elif defined(GPU_FRAGMENT_SHADER)
+#  elif defined(GPU_FRAGMENT_SHADER)
 FRAGMENT_SHADER_CREATE_INFO(draw_resource_id_varying)
-#  define resource_id drw_ResourceID_iface.resource_index
-#elif defined(GPU_LIBRARY_SHADER)
+#    define resource_id drw_ResourceID_iface.resource_index
+#  elif defined(GPU_LIBRARY_SHADER)
 SHADER_LIBRARY_CREATE_INFO(draw_resource_id_varying)
-#  define resource_id drw_ResourceID_iface.resource_index
+#    define resource_id drw_ResourceID_iface.resource_index
+#  endif
+
+
+/* Due to some shader compiler bug, we somewhat need to access gl_VertexID
+ * to make vertex shaders work. even if it's actually dead code. */
+#if defined(GPU_INTEL) && defined(GPU_OPENGL)
+#  define GPU_INTEL_VERTEX_SHADER_WORKAROUND gl_Position.x = float(gl_VertexID);
+#else
+#  define GPU_INTEL_VERTEX_SHADER_WORKAROUND
 #endif
+
+#define DRW_BASE_SELECTED (1 << 1)
+#define DRW_BASE_FROM_DUPLI (1 << 2)
+#define DRW_BASE_FROM_SET (1 << 3)
+#define DRW_BASE_ACTIVE (1 << 4)
+#define DRW_BASE_HOLDOUT (1 << 5)
 
 mat4x4 drw_modelmat()
 {

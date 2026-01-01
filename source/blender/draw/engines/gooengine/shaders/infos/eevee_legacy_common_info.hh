@@ -16,6 +16,8 @@ GPU_SHADER_CREATE_INFO(eevee_legacy_common_lib)
 TYPEDEF_SOURCE("engine_eevee_shared_defines.h")
 TYPEDEF_SOURCE("engine_eevee_legacy_shared.h")
 UNIFORM_BUF(1, CommonUniformBlock, common_block)
+ADDITIONAL_INFO(draw_modelmat_new)
+ADDITIONAL_INFO(draw_resource_id_varying)
 GPU_SHADER_CREATE_END()
 
 /* Only specifies bindings for irradiance_lib.glsl. */
@@ -78,7 +80,7 @@ GPU_SHADER_CREATE_END()
 
 /* Hair lib. */
 GPU_SHADER_CREATE_INFO(eevee_legacy_hair_lib)
-ADDITIONAL_INFO(draw_hair)
+ADDITIONAL_INFO(draw_hair_new)
 SAMPLER(10, UINT_BUFFER, hairStrandBuffer)
 SAMPLER(11, UINT_BUFFER, hairStrandSegBuffer)
 GPU_SHADER_CREATE_END()

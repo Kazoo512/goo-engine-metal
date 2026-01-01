@@ -4,6 +4,9 @@
 
 #pragma once
 
+#ifndef DRAW_VIEW_LIB_GLSL
+#define DRAW_VIEW_LIB_GLSL
+
 #include "draw_view_info.hh"
 
 SHADER_LIBRARY_CREATE_INFO(draw_view)
@@ -197,4 +200,4 @@ float drw_depth_screen_to_view(float ss_depth)
   return drw_point_screen_to_view(vec3(0.0, 0.0, ss_depth)).z;
 }
 
-/** \} */
+#endif /* DRAW_VIEW_LIB_GLSL */
