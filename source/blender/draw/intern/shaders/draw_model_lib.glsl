@@ -19,6 +19,8 @@
 
 
 
+
+
 #ifdef GPU_SHADER_EEVEE_LEGACY_DEFINES
 
 /* Temporary until we fully make the switch. */
@@ -117,8 +119,88 @@ flat in int resourceIDFrag;
 #    endif
 #  endif
 
+/* Breaking this across multiple lines causes issues for some older GLSL compilers. */
+/* clang-format off */
+#  if !defined(GPU_INTEL) && !defined(GPU_DEPRECATED_AMD_DRIVER) && (!defined(OS_MAC) || defined(GPU_METAL)) && !defined(INSTANCED_ATTR) && !defined(DRW_LEGACY_MODEL_MATRIX)
+/* clang-format on */
+
+/* Temporary until we fully make the switch. */
+#    ifndef DRW_SHADER_SHARED_H
+
+struct ObjectMatrices {
+  mat4 model;
+  mat4 model_inverse;
+};
+#    endif /* !DRW_SHADER_SHARED_H */
+
+#    ifndef USE_GPU_SHADER_CREATE_INFO
+layout(std140) uniform modelBlock
+{
+  ObjectMatrices drw_matrices[DRW_RESOURCE_CHUNK_LEN];
+};
+
+#      define ModelMatrix (drw_matrices[resource_id].model)
+#      define ModelMatrixInverse (drw_matrices[resource_id].model_inverse)
+#    endif /* USE_GPU_SHADER_CREATE_INFO */
+
+#  else /* GPU_INTEL */
+
+/* Temporary until we fully make the switch. */
+#    ifndef USE_GPU_SHADER_CREATE_INFO
+/* Intel GPU seems to suffer performance impact when the model matrix is in UBO storage.
+ * So for now we just force using the legacy path. */
+/* Note that this is also a workaround of a problem on OSX (AMD or NVIDIA)
+ * and older AMD driver on windows. */
+uniform mat4 ModelMatrix;
+uniform mat4 ModelMatrixInverse;
+#    endif /* !USE_GPU_SHADER_CREATE_INFO */
+
+#  endif
+
+/* Temporary until we fully make the switch. */
+#  ifndef USE_GPU_SHADER_CREATE_INFO
+#    define resource_handle (drw_resourceChunk * DRW_RESOURCE_CHUNK_LEN + resource_id)
+#  endif
+
+
+/* Due to some shader compiler bug, we somewhat need to access gl_VertexID
+ * to make vertex shaders work. even if it's actually dead code. */
+#  if defined(GPU_INTEL) && defined(GPU_OPENGL)
+#    define GPU_INTEL_VERTEX_SHADER_WORKAROUND gl_Position.x = float(gl_VertexID);
+#  else
+#    define GPU_INTEL_VERTEX_SHADER_WORKAROUND
+#  endif
+
+
+/** Transform shortcuts. */
+/* Rule of thumb: Try to reuse world positions and normals because converting through view-space
+ * will always be decomposed in at least 2 matrix operation. */
+
+/**
+ * Some clarification:
+ * Usually Normal matrix is transpose(inverse(ViewMatrix * ModelMatrix))
+ *
+ * But since it is slow to multiply matrices we decompose it. Decomposing
+ * inversion and transposition both invert the product order leaving us with
+ * the same original order:
+ * transpose(ViewMatrixInverse) * transpose(ModelMatrixInverse)
+ *
+ * Knowing that the view matrix is orthogonal, the transpose is also the inverse.
+ * NOTE: This is only valid because we are only using the mat3 of the ViewMatrixInverse.
+ * ViewMatrix * transpose(ModelMatrixInverse)
+ */
+#  define NormalMatrix transpose(mat3(ModelMatrixInverse))
+#  define NormalMatrixInverse transpose(mat3(ModelMatrix))
+
+
+
 
 #else
+
+
+
+
+
 
 #  if defined(UNIFORM_RESOURCE_ID)
 /* TODO(fclem): Legacy API. To remove. */
@@ -148,13 +230,13 @@ SHADER_LIBRARY_CREATE_INFO(draw_resource_id_varying)
 #endif
 
 
-/* Due to some shader compiler bug, we somewhat need to access gl_VertexID
- * to make vertex shaders work. even if it's actually dead code. */
-#if defined(GPU_INTEL) && defined(GPU_OPENGL)
-#  define GPU_INTEL_VERTEX_SHADER_WORKAROUND gl_Position.x = float(gl_VertexID);
-#else
-#  define GPU_INTEL_VERTEX_SHADER_WORKAROUND
-#endif
+
+
+
+
+
+
+
 
 #define DRW_BASE_SELECTED (1 << 1)
 #define DRW_BASE_FROM_DUPLI (1 << 2)
