@@ -8,8 +8,6 @@
 layout(triangles) in;
 layout(triangle_strip, max_vertices = 3) out;
 
-RESOURCE_ID_VARYING
-
 /* Only used to compute barycentric coordinates. */
 
 void main()

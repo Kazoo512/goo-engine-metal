@@ -2,8 +2,6 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include "draw_model_lib.glsl"
-
 void main()
 {
   worldPosition = (probe_mat * vec4(-pos.x, pos.y, 0.0, 1.0)).xyz;

@@ -9,8 +9,6 @@
 #include "closure_eval_surface_lib.glsl"
 #include "surface_lib.glsl"
 
-RESOURCE_ID_VARYING
-
 void main()
 {
   GPU_INTEL_VERTEX_SHADER_WORKAROUND

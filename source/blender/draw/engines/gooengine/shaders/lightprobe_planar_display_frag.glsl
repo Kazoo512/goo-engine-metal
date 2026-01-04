@@ -2,8 +2,6 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include "draw_model_lib.glsl"
-
 void main()
 {
   vec4 refco = ProjectionMatrix * (ViewMatrix * vec4(worldPosition, 1.0));

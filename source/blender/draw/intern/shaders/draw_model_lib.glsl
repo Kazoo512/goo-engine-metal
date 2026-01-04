@@ -23,144 +23,28 @@
 
 #ifdef GPU_SHADER_EEVEE_LEGACY_DEFINES
 
-/* Temporary until we fully make the switch. */
-#  ifndef USE_GPU_SHADER_CREATE_INFO
-uniform int drw_resourceChunk;
-#  endif /* !USE_GPU_SHADER_CREATE_INFO */
-
-#  ifdef GPU_VERTEX_SHADER
-
-/* Temporary until we fully make the switch. */
-#    ifndef USE_GPU_SHADER_CREATE_INFO
-
-/* clang-format off */
-#      if defined(IN_PLACE_INSTANCES) || defined(INSTANCED_ATTR) || defined(DRW_LEGACY_MODEL_MATRIX) || defined(GPU_DEPRECATED_AMD_DRIVER)
-/* clang-format on */
-/* When drawing instances of an object at the same position. */
-#        define instanceId 0
-#      else
-#        define instanceId gl_InstanceID
-#      endif
-
-#      if defined(UNIFORM_RESOURCE_ID)
-/* This is in the case we want to do a special instance drawcall for one object but still want to
- * have the right resourceId and all the correct UBO datas. */
-uniform int drw_ResourceID;
-#        define resource_id drw_ResourceID
-#      else
-#        define resource_id (gpu_BaseInstance + instanceId)
-#      endif
-
-/* Use this to declare and pass the value if
- * the fragment shader uses the resource_id. */
-#      if defined(EEVEE_GENERATED_INTERFACE)
-#        define RESOURCE_ID_VARYING
-#        define PASS_RESOURCE_ID resourceIDFrag = resource_id;
-#      elif defined(USE_GEOMETRY_SHADER)
-#        define RESOURCE_ID_VARYING flat out int resourceIDGeom;
-#        define PASS_RESOURCE_ID resourceIDGeom = resource_id;
-#      else
-#        define RESOURCE_ID_VARYING flat out int resourceIDFrag;
-#        define PASS_RESOURCE_ID resourceIDFrag = resource_id;
-#      endif
-
-#    endif /* USE_GPU_SHADER_CREATE_INFO */
-
-#  endif /* GPU_VERTEX_SHADER */
-
-/* Temporary until we fully make the switch. */
-#  ifdef USE_GPU_SHADER_CREATE_INFO
 /* TODO(fclem): Rename PASS_RESOURCE_ID to DRW_RESOURCE_ID_VARYING_SET */
-#    if defined(UNIFORM_RESOURCE_ID)
-#      define resource_id drw_ResourceID
-#      define PASS_RESOURCE_ID
+#  if defined(UNIFORM_RESOURCE_ID)
+#    define resource_id drw_ResourceID
+#    define PASS_RESOURCE_ID
 
-#    elif defined(GPU_VERTEX_SHADER)
-#      if defined(UNIFORM_RESOURCE_ID_NEW)
-#        define resource_id (drw_ResourceID >> DRW_VIEW_SHIFT)
-#      else
-#        define resource_id gpu_InstanceIndex
-#      endif
-#      define PASS_RESOURCE_ID drw_ResourceID_iface.resource_index = resource_id;
-
-#    elif defined(GPU_GEOMETRY_SHADER)
-#      define resource_id drw_ResourceID_iface_in[0].resource_index
-#      define PASS_RESOURCE_ID drw_ResourceID_iface_out.resource_index = resource_id;
-
-#    elif defined(GPU_FRAGMENT_SHADER)
-#      define resource_id drw_ResourceID_iface.resource_index
+#  elif defined(GPU_VERTEX_SHADER)
+#    if defined(UNIFORM_RESOURCE_ID_NEW)
+#      define resource_id (drw_ResourceID >> DRW_VIEW_SHIFT)
+#    else
+#      define resource_id gpu_InstanceIndex
 #    endif
+#    define PASS_RESOURCE_ID drw_ResourceID_iface.resource_index = resource_id;
 
-/* TODO(fclem): Remove. */
-#    define RESOURCE_ID_VARYING
+#  elif defined(GPU_GEOMETRY_SHADER)
+#    define resource_id drw_ResourceID_iface_in[0].resource_index
+#    define PASS_RESOURCE_ID drw_ResourceID_iface_out.resource_index = resource_id;
 
-#  else
-/* If used in a fragment / geometry shader, we pass
- * resource_id as varying. */
-#    ifdef GPU_GEOMETRY_SHADER
-/* TODO(fclem): Remove. This is getting ridiculous. */
-#      if !defined(EEVEE_GENERATED_INTERFACE)
-#        define RESOURCE_ID_VARYING \
-        flat out int resourceIDFrag; \
-        flat in int resourceIDGeom[];
-#      else
-#        define RESOURCE_ID_VARYING
-#      endif
-
-#      define resource_id resourceIDGeom
-#      define PASS_RESOURCE_ID resourceIDFrag = resource_id[0];
-#    endif
-
-#    if defined(GPU_FRAGMENT_SHADER)
-#      if !defined(EEVEE_GENERATED_INTERFACE)
-flat in int resourceIDFrag;
-#      endif
-#      define resource_id resourceIDFrag
-#    endif
+#  elif defined(GPU_FRAGMENT_SHADER)
+#    define resource_id drw_ResourceID_iface.resource_index
 #  endif
 
-/* Breaking this across multiple lines causes issues for some older GLSL compilers. */
-/* clang-format off */
-#  if !defined(GPU_INTEL) && !defined(GPU_DEPRECATED_AMD_DRIVER) && (!defined(OS_MAC) || defined(GPU_METAL)) && !defined(INSTANCED_ATTR) && !defined(DRW_LEGACY_MODEL_MATRIX)
-/* clang-format on */
 
-/* Temporary until we fully make the switch. */
-#    ifndef DRW_SHADER_SHARED_H
-
-struct ObjectMatrices {
-  mat4 model;
-  mat4 model_inverse;
-};
-#    endif /* !DRW_SHADER_SHARED_H */
-
-#    ifndef USE_GPU_SHADER_CREATE_INFO
-layout(std140) uniform modelBlock
-{
-  ObjectMatrices drw_matrices[DRW_RESOURCE_CHUNK_LEN];
-};
-
-#      define ModelMatrix (drw_matrices[resource_id].model)
-#      define ModelMatrixInverse (drw_matrices[resource_id].model_inverse)
-#    endif /* USE_GPU_SHADER_CREATE_INFO */
-
-#  else /* GPU_INTEL */
-
-/* Temporary until we fully make the switch. */
-#    ifndef USE_GPU_SHADER_CREATE_INFO
-/* Intel GPU seems to suffer performance impact when the model matrix is in UBO storage.
- * So for now we just force using the legacy path. */
-/* Note that this is also a workaround of a problem on OSX (AMD or NVIDIA)
- * and older AMD driver on windows. */
-uniform mat4 ModelMatrix;
-uniform mat4 ModelMatrixInverse;
-#    endif /* !USE_GPU_SHADER_CREATE_INFO */
-
-#  endif
-
-/* Temporary until we fully make the switch. */
-#  ifndef USE_GPU_SHADER_CREATE_INFO
-#    define resource_handle (drw_resourceChunk * DRW_RESOURCE_CHUNK_LEN + resource_id)
-#  endif
 
 
 /* Due to some shader compiler bug, we somewhat need to access gl_VertexID
@@ -172,28 +56,6 @@ uniform mat4 ModelMatrixInverse;
 #  endif
 
 
-/** Transform shortcuts. */
-/* Rule of thumb: Try to reuse world positions and normals because converting through view-space
- * will always be decomposed in at least 2 matrix operation. */
-
-/**
- * Some clarification:
- * Usually Normal matrix is transpose(inverse(ViewMatrix * ModelMatrix))
- *
- * But since it is slow to multiply matrices we decompose it. Decomposing
- * inversion and transposition both invert the product order leaving us with
- * the same original order:
- * transpose(ViewMatrixInverse) * transpose(ModelMatrixInverse)
- *
- * Knowing that the view matrix is orthogonal, the transpose is also the inverse.
- * NOTE: This is only valid because we are only using the mat3 of the ViewMatrixInverse.
- * ViewMatrix * transpose(ModelMatrixInverse)
- */
-#  define NormalMatrix transpose(mat3(ModelMatrixInverse))
-#  define NormalMatrixInverse transpose(mat3(ModelMatrix))
-
-
-
 
 #else
 
@@ -201,6 +63,7 @@ uniform mat4 ModelMatrixInverse;
 
 
 
+#  define GPU_INTEL_VERTEX_SHADER_WORKAROUND
 
 #  if defined(UNIFORM_RESOURCE_ID)
 /* TODO(fclem): Legacy API. To remove. */
