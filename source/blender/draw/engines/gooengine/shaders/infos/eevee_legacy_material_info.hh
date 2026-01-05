@@ -22,14 +22,12 @@
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_empty_base)
 ADDITIONAL_INFO(eevee_legacy_closure_type_lib)
 ADDITIONAL_INFO(eevee_legacy_common_lib)
-ADDITIONAL_INFO(draw_modelmat_new)
 ADDITIONAL_INFO(draw_view)
 GPU_SHADER_CREATE_END()
 
 /* Volumetrics skips uniform bindings in `closure_type_lib`. */
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_empty_base_volume)
 ADDITIONAL_INFO(eevee_legacy_common_lib)
-ADDITIONAL_INFO(draw_modelmat_new)
 ADDITIONAL_INFO(draw_view)
 GPU_SHADER_CREATE_END()
 
@@ -118,7 +116,6 @@ ADDITIONAL_INFO(eevee_legacy_common_lib)
 ADDITIONAL_INFO(draw_view)
 GEOMETRY_OUT(legacy_volume_geom_frag_iface)
 GEOMETRY_LAYOUT(PrimitiveIn::TRIANGLES, PrimitiveOut::TRIANGLE_STRIP, 3)
-ADDITIONAL_INFO(draw_resource_id_varying)
 GPU_SHADER_CREATE_END()
 
 /** \} */
@@ -132,7 +129,6 @@ GPU_SHADER_CREATE_END()
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_volumetric_frag)
 ADDITIONAL_INFO(eevee_legacy_common_lib)
 ADDITIONAL_INFO(draw_view)
-ADDITIONAL_INFO(draw_resource_id_varying)
 ADDITIONAL_INFO(eevee_legacy_volumetric_lib)
 FRAGMENT_OUT(0, VEC4, volumeScattering)
 FRAGMENT_OUT(1, VEC4, volumeExtinction)

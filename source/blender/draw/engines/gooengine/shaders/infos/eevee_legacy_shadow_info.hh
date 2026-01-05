@@ -8,6 +8,7 @@
 GPU_SHADER_CREATE_INFO(eevee_legacy_shader_shadow)
 ADDITIONAL_INFO(draw_view)
 ADDITIONAL_INFO(draw_modelmat_new)
+ADDITIONAL_INFO(draw_resource_id_varying)
 ADDITIONAL_INFO(draw_curves_infos)
 ADDITIONAL_INFO(eevee_legacy_hair_lib)
 ADDITIONAL_INFO(eevee_legacy_surface_lib_common)
