@@ -2,6 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
+#pragma once
+
 #include "common_math_geom_lib.glsl"
 #include "bsdf_common_lib.glsl"
 #include "bsdf_sampling_lib.glsl"

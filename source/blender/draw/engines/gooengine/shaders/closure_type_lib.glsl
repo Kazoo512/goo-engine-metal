@@ -2,7 +2,9 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
-#include "goo_gpu_shader_codegen_lib.glsl"
+#pragma once
+
+#include "gpu_shader_codegen_lib.glsl"
 
 struct Closure {
 #ifdef VOLUMETRICS

@@ -2,6 +2,10 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
+#pragma once
+
+#include "gpu_glsl_cpp_stubs.hh"
+
 #define EEVEE_AOV_HASH_COLOR_TYPE_MASK 1u
 
 /* ---------------------------------------------------------------------- */

@@ -12,6 +12,8 @@
  * https://media.contentapi.ea.com/content/dam/ea/seed/presentations/dd18-seed-raytracing-in-hybrid-real-time-rendering.pdf
  */
 
+#pragma once
+
 #include "draw_model_lib.glsl"
 
 struct HitData {

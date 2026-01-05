@@ -173,7 +173,7 @@ extern "C" char datatoc_common_math_lib_glsl[];
 extern "C" char datatoc_common_math_geom_lib_glsl[];
 extern "C" char datatoc_draw_view_lib_glsl[];
 extern "C" char datatoc_draw_model_lib_glsl[];
-extern "C" char datatoc_goo_gpu_shader_codegen_lib_glsl[];
+extern "C" char datatoc_gpu_shader_codegen_lib_glsl[];
 
 extern "C" char datatoc_ambient_occlusion_lib_glsl[];
 extern "C" char datatoc_bsdf_common_lib_glsl[];
@@ -225,7 +225,7 @@ static void eevee_shader_library_ensure()
     DRW_SHADER_LIB_ADD(e_data.lib, draw_view_lib);
     DRW_SHADER_LIB_ADD(e_data.lib, draw_model_lib);
     DRW_SHADER_LIB_ADD(e_data.lib, common_uniforms_lib);
-    DRW_SHADER_LIB_ADD(e_data.lib, goo_gpu_shader_codegen_lib);
+    DRW_SHADER_LIB_ADD(e_data.lib, gpu_shader_codegen_lib);
     DRW_SHADER_LIB_ADD(e_data.lib, random_lib);
     DRW_SHADER_LIB_ADD(e_data.lib, renderpass_lib);
     DRW_SHADER_LIB_ADD(e_data.lib, bsdf_common_lib);

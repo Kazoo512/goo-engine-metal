@@ -2,6 +2,10 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
+#pragma once
+
+#include "gpu_glsl_cpp_stubs.hh"
+
 vec2 mapping_octahedron(vec3 cubevec, vec2 texel_size)
 {
   /* projection onto octahedron */

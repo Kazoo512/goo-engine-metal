@@ -2,6 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
+#pragma once
+
 #include "engine_eevee_shared_defines.h"
 #include "engine_eevee_legacy_shared.h"
 #include "common_math_lib.glsl"

@@ -2,6 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
+#pragma once
+
 #include "closure_eval_diffuse_lib.glsl"
 #include "closure_eval_glossy_lib.glsl"
 #include "closure_eval_refraction_lib.glsl"

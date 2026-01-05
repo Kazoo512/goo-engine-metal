@@ -2,6 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
+#pragma once
+
 #include "lights_lib.glsl"
 #include "lightprobe_lib.glsl"
 #include "irradiance_lib.glsl"

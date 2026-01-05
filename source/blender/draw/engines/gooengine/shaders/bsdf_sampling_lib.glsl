@@ -6,6 +6,8 @@
  * Sampling distribution routines for Monte-carlo integration.
  */
 
+#pragma once
+
 #include "common_math_geom_lib.glsl"
 #include "bsdf_common_lib.glsl"
 

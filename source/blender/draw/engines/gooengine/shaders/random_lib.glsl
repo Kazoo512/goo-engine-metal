@@ -6,6 +6,8 @@
  * Random numbers and low discrepancy sequences utilities.
  */
 
+#pragma once
+
 #include "common_math_lib.glsl"
 
 /* From: http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html */

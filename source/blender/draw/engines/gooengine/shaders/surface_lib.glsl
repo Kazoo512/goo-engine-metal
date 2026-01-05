@@ -4,6 +4,8 @@
 
 /** This describe the entire interface of the shader. */
 
+#pragma once
+
 #include "common_math_lib.glsl"
 
 /* Global interface for SSR.
