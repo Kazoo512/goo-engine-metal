@@ -449,7 +449,6 @@ class OBJECT_PT_shading(ObjectButtonsPanel, Panel):
 
     COMPAT_ENGINES = {
         'BLENDER_RENDER',
-        'BLENDER_EEVEE',
         'BLENDER_EEVEE_NEXT',
     }
 
