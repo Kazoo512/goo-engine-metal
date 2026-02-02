@@ -89,9 +89,8 @@ void EEVEE_shadows_init(EEVEE_ViewLayerData *sldata)
 
 void EEVEE_shadows_cache_init(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)
 {
+  GOOENGINE_Instance *inst = vedata->instance;
   EEVEE_LightsInfo *linfo = sldata->lights;
-  EEVEE_StorageList *stl = vedata->stl;
-  EEVEE_PassList *psl = vedata->psl;
 
   EEVEE_ShadowCasterBuffer *backbuffer = linfo->shcaster_backbuffer;
   EEVEE_ShadowCasterBuffer *frontbuffer = linfo->shcaster_frontbuffer;
@@ -110,10 +109,10 @@ void EEVEE_shadows_cache_init(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)
 
   {
     DRWState state = DRW_STATE_WRITE_DEPTH | DRW_STATE_DEPTH_LESS_EQUAL | DRW_STATE_SHADOW_OFFSET | DRW_STATE_WRITE_COLOR;
-    DRW_PASS_CREATE(psl->shadow_pass, state);
+    DRW_PASS_CREATE(inst->shadow_pass, state);
 
-    stl->g_data->shadow_shgrp = DRW_shgroup_create(EEVEE_shaders_shadow_sh_get(),
-                                                   psl->shadow_pass);
+    inst->g_data->shadow_shgrp = DRW_shgroup_create(EEVEE_shaders_shadow_sh_get(),
+                                                   inst->shadow_pass);
   }
 }
 
@@ -203,8 +202,8 @@ static bool sphere_bbox_intersect(const BoundSphere *bs, const EEVEE_BoundBox *b
 
 void EEVEE_shadows_update(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)
 {
-  EEVEE_StorageList *stl = vedata->stl;
-  EEVEE_EffectsInfo *effects = stl->effects;
+  GOOENGINE_Instance *inst = vedata->instance;
+  EEVEE_EffectsInfo *effects = inst->effects;
   EEVEE_LightsInfo *linfo = sldata->lights;
   EEVEE_ShadowCasterBuffer *backbuffer = linfo->shcaster_backbuffer;
   EEVEE_ShadowCasterBuffer *frontbuffer = linfo->shcaster_frontbuffer;
@@ -374,23 +373,21 @@ void EEVEE_shadow_output_init(EEVEE_ViewLayerData *sldata,
                               EEVEE_Data *vedata,
                               uint /*tot_samples*/)
 {
-  EEVEE_FramebufferList *fbl = vedata->fbl;
-  EEVEE_TextureList *txl = vedata->txl;
-  EEVEE_PassList *psl = vedata->psl;
+  GOOENGINE_Instance *inst = vedata->instance;
   DefaultTextureList *dtxl = DRW_viewport_texture_list_get();
 
   /* Create FrameBuffer. */
   const eGPUTextureFormat texture_format = GPU_R32F;
-  DRW_texture_ensure_fullscreen_2d(&txl->shadow_accum, texture_format, DRWTextureFlag(0));
+  DRW_texture_ensure_fullscreen_2d(&inst->shadow_accum, texture_format, DRWTextureFlag(0));
 
-  GPU_framebuffer_ensure_config(&fbl->shadow_accum_fb,
-                                {GPU_ATTACHMENT_NONE, GPU_ATTACHMENT_TEXTURE(txl->shadow_accum)});
+  GPU_framebuffer_ensure_config(&inst->shadow_accum_fb,
+                                {GPU_ATTACHMENT_NONE, GPU_ATTACHMENT_TEXTURE(inst->shadow_accum)});
 
   /* Create Pass and shgroup. */
-  DRW_PASS_CREATE(psl->shadow_accum_pass,
+  DRW_PASS_CREATE(inst->shadow_accum_pass,
                   DRW_STATE_WRITE_COLOR | DRW_STATE_DEPTH_ALWAYS | DRW_STATE_BLEND_ADD_FULL);
   DRWShadingGroup *grp = DRW_shgroup_create(EEVEE_shaders_shadow_accum_sh_get(),
-                                            psl->shadow_accum_pass);
+                                            inst->shadow_accum_pass);
   DRW_shgroup_uniform_texture_ref(grp, "depthBuffer", &dtxl->depth);
   DRW_shgroup_uniform_texture(grp, "utilTex", EEVEE_materials_get_util_tex());
   DRW_shgroup_uniform_block(grp, "probe_block", sldata->probe_ubo);
@@ -410,23 +407,22 @@ void EEVEE_shadow_output_init(EEVEE_ViewLayerData *sldata,
 
 void EEVEE_shadow_output_accumulate(EEVEE_ViewLayerData * /*sldata*/, EEVEE_Data *vedata)
 {
-  EEVEE_FramebufferList *fbl = vedata->fbl;
-  EEVEE_PassList *psl = vedata->psl;
-  EEVEE_EffectsInfo *effects = vedata->stl->effects;
+  GOOENGINE_Instance *inst = vedata->instance;
+  EEVEE_EffectsInfo *effects = inst->effects;
 
-  if (fbl->shadow_accum_fb != nullptr) {
-    GPU_framebuffer_bind(fbl->shadow_accum_fb);
+  if (inst->shadow_accum_fb != nullptr) {
+    GPU_framebuffer_bind(inst->shadow_accum_fb);
 
     /* Clear texture. */
     if (effects->taa_current_sample == 1) {
       const float clear[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-      GPU_framebuffer_clear_color(fbl->shadow_accum_fb, clear);
+      GPU_framebuffer_clear_color(inst->shadow_accum_fb, clear);
     }
 
-    DRW_draw_pass(psl->shadow_accum_pass);
+    DRW_draw_pass(inst->shadow_accum_pass);
 
     /* Restore */
-    GPU_framebuffer_bind(fbl->main_fb);
+    GPU_framebuffer_bind(inst->main_fb);
   }
 }
 
