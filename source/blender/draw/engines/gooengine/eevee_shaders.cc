@@ -167,11 +167,12 @@ static struct {
 } e_data = {nullptr}; /* Engine data */
 
 extern "C" char datatoc_engine_eevee_legacy_shared_h[];
-extern "C" char datatoc_goo_common_hair_lib_glsl[];
-extern "C" char datatoc_goo_common_math_lib_glsl[];
-extern "C" char datatoc_goo_common_math_geom_lib_glsl[];
+extern "C" char datatoc_common_hair_lib_glsl[];
+extern "C" char datatoc_common_attribute_lib_glsl[];
+extern "C" char datatoc_common_math_lib_glsl[];
+extern "C" char datatoc_common_math_geom_lib_glsl[];
 extern "C" char datatoc_goo_common_view_lib_glsl[];
-extern "C" char datatoc_goo_gpu_shader_codegen_lib_glsl[];
+extern "C" char datatoc_gpu_shader_codegen_lib_glsl[];
 
 extern "C" char datatoc_ambient_occlusion_lib_glsl[];
 extern "C" char datatoc_bsdf_common_lib_glsl[];
@@ -216,12 +217,13 @@ static void eevee_shader_library_ensure()
     e_data.lib = DRW_shader_library_create();
     /* NOTE: These need to be ordered by dependencies. */
     DRW_SHADER_LIB_ADD_SHARED(e_data.lib, engine_eevee_legacy_shared);
-    DRW_SHADER_LIB_ADD(e_data.lib, goo_common_math_lib);
-    DRW_SHADER_LIB_ADD(e_data.lib, goo_common_math_geom_lib);
-    DRW_SHADER_LIB_ADD(e_data.lib, goo_common_hair_lib);
+    DRW_SHADER_LIB_ADD(e_data.lib, common_math_lib);
+    DRW_SHADER_LIB_ADD(e_data.lib, common_attribute_lib);
+    DRW_SHADER_LIB_ADD(e_data.lib, common_math_geom_lib);
+    DRW_SHADER_LIB_ADD(e_data.lib, common_hair_lib);
     DRW_SHADER_LIB_ADD(e_data.lib, goo_common_view_lib);
     DRW_SHADER_LIB_ADD(e_data.lib, common_uniforms_lib);
-    DRW_SHADER_LIB_ADD(e_data.lib, goo_gpu_shader_codegen_lib);
+    DRW_SHADER_LIB_ADD(e_data.lib, gpu_shader_codegen_lib);
     DRW_SHADER_LIB_ADD(e_data.lib, random_lib);
     DRW_SHADER_LIB_ADD(e_data.lib, renderpass_lib);
     DRW_SHADER_LIB_ADD(e_data.lib, bsdf_common_lib);
