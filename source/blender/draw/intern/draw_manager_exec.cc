@@ -349,11 +349,6 @@ void DRW_view_set_active(const DRWView *view)
   DST.view_active = (view != nullptr) ? ((DRWView *)view) : DST.view_default;
 }
 
-const DRWView *DRW_view_get_active()
-{
-  return DST.view_active;
-}
-
 /* Return True if the given BoundSphere intersect the current view frustum */
 static bool draw_culling_sphere_test(const BoundSphere *frustum_bsphere,
                                      const float (*frustum_planes)[4],
