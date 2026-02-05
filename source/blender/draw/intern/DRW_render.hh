@@ -589,10 +589,6 @@ void DRW_view_viewmat_get(const DRWView *view, float mat[4][4], bool inverse);
 void DRW_view_persmat_get(const DRWView *view, float mat[4][4], bool inverse);
 
 /**
- * \return world space frustum corners.
- */
-void DRW_view_frustum_corners_get(const DRWView *view, BoundBox *corners);
-/**
  * \return world space frustum sides as planes.
  * See #draw_frustum_culling_planes_calc() for the plane order.
  */
@@ -730,13 +726,6 @@ void DRW_draw_callbacks_post_scene();
  */
 void DRW_state_reset_ex(DRWState state);
 void DRW_state_reset();
-/**
- * Use with care, intended so selection code can override passes depth settings,
- * which is important for selection to work properly.
- *
- * Should be set in main draw loop, cleared afterwards
- */
-void DRW_state_lock(DRWState state);
 
 /* Selection. */
 

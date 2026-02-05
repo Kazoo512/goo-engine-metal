@@ -2050,11 +2050,6 @@ void DRW_view_clip_planes_set(DRWView *view, float (*planes)[4], int plane_len)
   }
 }
 
-void DRW_view_frustum_corners_get(const DRWView *view, BoundBox *corners)
-{
-  memcpy(corners, &view->frustum_corners, sizeof(view->frustum_corners));
-}
-
 std::array<float4, 6> DRW_view_frustum_planes_get(const DRWView *view)
 {
   std::array<float4, 6> planes;
