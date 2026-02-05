@@ -168,7 +168,6 @@ static struct {
 
 extern "C" char datatoc_engine_eevee_legacy_shared_h[];
 extern "C" char datatoc_common_hair_lib_glsl[];
-extern "C" char datatoc_common_attribute_lib_glsl[];
 extern "C" char datatoc_common_math_lib_glsl[];
 extern "C" char datatoc_common_math_geom_lib_glsl[];
 extern "C" char datatoc_goo_common_view_lib_glsl[];
@@ -218,7 +217,6 @@ static void eevee_shader_library_ensure()
     /* NOTE: These need to be ordered by dependencies. */
     DRW_SHADER_LIB_ADD_SHARED(e_data.lib, engine_eevee_legacy_shared);
     DRW_SHADER_LIB_ADD(e_data.lib, common_math_lib);
-    DRW_SHADER_LIB_ADD(e_data.lib, common_attribute_lib);
     DRW_SHADER_LIB_ADD(e_data.lib, common_math_geom_lib);
     DRW_SHADER_LIB_ADD(e_data.lib, common_hair_lib);
     DRW_SHADER_LIB_ADD(e_data.lib, goo_common_view_lib);
