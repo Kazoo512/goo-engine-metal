@@ -1262,28 +1262,36 @@ static const char *eevee_get_frag_info(int options, char **r_src)
     /* -- PREPASS FRAG -
      * Select create info permutation for `prepass_frag`. */
 
+    const bool is_shadow = (options & VAR_MAT_SHADOW) != 0;
+
     if (is_alpha_hash) {
       /* Alpha hash material variants. */
       if (is_hair) {
-        info_name = "eevee_legacy_material_prepass_frag_alpha_hash_hair";
+        info_name = is_shadow ? "eevee_legacy_material_shadow_frag_alpha_hash_hair" :
+                                "eevee_legacy_material_prepass_frag_alpha_hash_hair";
       }
       else if (is_point_cloud) {
-        info_name = "eevee_legacy_material_prepass_frag_alpha_hash_pointcloud";
+        info_name = is_shadow ? "eevee_legacy_material_shadow_frag_alpha_hash_pointcloud" :
+                                "eevee_legacy_material_prepass_frag_alpha_hash_pointcloud";
       }
       else {
-        info_name = "eevee_legacy_material_prepass_frag_alpha_hash";
+        info_name = is_shadow ? "eevee_legacy_material_shadow_frag_alpha_hash" :
+                                "eevee_legacy_material_prepass_frag_alpha_hash";
       }
     }
     else {
       /* Opaque material variants. */
       if (is_hair) {
-        info_name = "eevee_legacy_material_prepass_frag_opaque_hair";
+        info_name = is_shadow ? "eevee_legacy_material_shadow_frag_opaque_hair" :
+                                "eevee_legacy_material_prepass_frag_opaque_hair";
       }
       else if (is_point_cloud) {
-        info_name = "eevee_legacy_material_prepass_frag_opaque_pointcloud";
+        info_name = is_shadow ? "eevee_legacy_material_shadow_frag_opaque_pointcloud" :
+                                "eevee_legacy_material_prepass_frag_opaque_pointcloud";
       }
       else {
-        info_name = "eevee_legacy_material_prepass_frag_opaque";
+        info_name = is_shadow ? "eevee_legacy_material_shadow_frag_opaque" :
+                                "eevee_legacy_material_prepass_frag_opaque";
       }
     }
     *r_src = BLI_strdup(e_data.surface_prepass_frag);
@@ -1345,6 +1353,9 @@ static char *eevee_get_defines(int options)
   }
   if ((options & VAR_MAT_SHADOW_ID) != 0) {
     BLI_dynstr_append(ds, "#define USE_SHADOW_ID\n");
+  }
+  if ((options & VAR_MAT_SHADOW) != 0) {
+    BLI_dynstr_append(ds, "#define SHADOW_PASS\n");
   }
 
   str = BLI_dynstr_get_cstring(ds);

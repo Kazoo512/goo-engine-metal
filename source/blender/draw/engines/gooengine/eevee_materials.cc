@@ -40,6 +40,17 @@ static struct {
   GPUTexture *util_tex;
   GPUTexture *noise_tex;
 
+#ifdef __APPLE__
+  /* Dummy textures for Metal. Metal requires textures to be bound and to match expected types.
+   * These are used as fallbacks when actual textures are not yet initialized. */
+  GPUTexture *dummy_cube_array; /* For probeCubes (cube array texture) */
+  GPUTexture *dummy_2d_array;   /* For probePlanars, irradianceGrid, horizonBuffer (2D array) */
+  GPUTexture
+      *dummy_uint_2d_array; /* For shadowCubeIDTexture, shadowCascadeIDTexture (UInt 2D array) */
+  GPUTexture *dummy_2d;     /* For refractColorBuffer (2D texture) */
+  GPUTexture *dummy_3d;     /* For inScattering, inTransmittance (3D textures) */
+#endif
+
   float noise_offsets[3];
 } e_data = {nullptr}; /* Engine data */
 
@@ -63,6 +74,28 @@ GPUTexture *EEVEE_materials_get_util_tex()
   return e_data.util_tex;
 }
 
+#ifdef __APPLE__
+GPUTexture *EEVEE_materials_get_dummy_2d_array()
+{
+  return e_data.dummy_2d_array;
+}
+
+GPUTexture *EEVEE_materials_get_dummy_cube_array()
+{
+  return e_data.dummy_cube_array;
+}
+
+GPUTexture *EEVEE_materials_get_dummy_2d()
+{
+  return e_data.dummy_2d;
+}
+
+GPUTexture *EEVEE_materials_get_dummy_3d()
+{
+  return e_data.dummy_3d;
+}
+#endif
+
 void EEVEE_material_bind_resources(DRWShadingGroup *shgrp,
                                    GPUMaterial *gpumat,
                                    EEVEE_ViewLayerData *sldata,
@@ -79,8 +112,11 @@ void EEVEE_material_bind_resources(DRWShadingGroup *shgrp,
   bool use_ao = GPU_material_flag_get(gpumat, GPU_MATFLAG_AO);
 
 #ifdef __APPLE__
-  /* NOTE: Some implementation do not optimize out the unused samplers. */
+  /* NOTE: Metal does not optimize out unused samplers, so all textures must be bound.
+   * Force all conditions to true to ensure complete texture binding. */
   use_diffuse = use_glossy = use_refract = use_ao = true;
+  use_ssrefraction = true;
+  use_alpha_blend = true;
 #endif
   LightCache *lcache = vedata->stl->g_data->light_cache;
   EEVEE_EffectsInfo *effects = vedata->stl->effects;
@@ -99,42 +135,186 @@ void EEVEE_material_bind_resources(DRWShadingGroup *shgrp,
   DRW_shgroup_uniform_int_copy(shgrp, "outputSssId", 1);
   DRW_shgroup_uniform_texture(shgrp, "utilTex", e_data.util_tex);
   if (use_diffuse || use_glossy || use_refract) {
+#ifdef __APPLE__
+    /* On Metal, shadow pools may be NULL during lightbake. Use fallback textures. */
+    if (sldata->shadow_cube_pool != nullptr) {
+      DRW_shgroup_uniform_texture_ref(shgrp, "shadowCubeTexture", &sldata->shadow_cube_pool);
+    }
+    else {
+      DRW_shgroup_uniform_texture(shgrp, "shadowCubeTexture", e_data.util_tex);
+    }
+    if (sldata->shadow_cascade_pool != nullptr) {
+      DRW_shgroup_uniform_texture_ref(shgrp, "shadowCascadeTexture", &sldata->shadow_cascade_pool);
+    }
+    else {
+      DRW_shgroup_uniform_texture(shgrp, "shadowCascadeTexture", e_data.util_tex);
+    }
+    if (sldata->shadow_cube_id_pool != nullptr) {
+      DRW_shgroup_uniform_texture_ref(shgrp, "shadowCubeIDTexture", &sldata->shadow_cube_id_pool);
+    }
+    else {
+      DRW_shgroup_uniform_texture(shgrp, "shadowCubeIDTexture", e_data.dummy_uint_2d_array);
+    }
+    if (sldata->shadow_cascade_id_pool != nullptr) {
+      DRW_shgroup_uniform_texture_ref(
+          shgrp, "shadowCascadeIDTexture", &sldata->shadow_cascade_id_pool);
+    }
+    else {
+      DRW_shgroup_uniform_texture(shgrp, "shadowCascadeIDTexture", e_data.dummy_uint_2d_array);
+    }
+#else
     DRW_shgroup_uniform_texture_ref(shgrp, "shadowCubeTexture", &sldata->shadow_cube_pool);
     DRW_shgroup_uniform_texture_ref(shgrp, "shadowCascadeTexture", &sldata->shadow_cascade_pool);
     DRW_shgroup_uniform_texture_ref(shgrp, "shadowCubeIDTexture", &sldata->shadow_cube_id_pool);
     DRW_shgroup_uniform_texture_ref(shgrp, "shadowCascadeIDTexture", &sldata->shadow_cascade_id_pool);
+#endif
   }
+
   if (use_diffuse || use_glossy || use_refract || use_ao) {
+#ifdef __APPLE__
+    if (vedata->txl->maxzbuffer != nullptr) {
+      DRW_shgroup_uniform_texture_ref(shgrp, "maxzBuffer", &vedata->txl->maxzbuffer);
+    }
+    else {
+      DRW_shgroup_uniform_texture(shgrp, "maxzBuffer", e_data.util_tex);
+    }
+#else
     DRW_shgroup_uniform_texture_ref(shgrp, "maxzBuffer", &vedata->txl->maxzbuffer);
+#endif
   }
-  if ((use_diffuse || use_glossy) && !use_ssrefraction) {
+
+  if ((use_diffuse || use_glossy)
+#ifndef __APPLE__
+      && !use_ssrefraction
+#endif
+  )
+  {
+#ifdef __APPLE__
+    if (effects->gtao_horizons != nullptr) {
+      DRW_shgroup_uniform_texture_ref(shgrp, "horizonBuffer", &effects->gtao_horizons);
+    }
+    else {
+      DRW_shgroup_uniform_texture(shgrp, "horizonBuffer", e_data.util_tex);
+    }
+#else
     DRW_shgroup_uniform_texture_ref(shgrp, "horizonBuffer", &effects->gtao_horizons);
+#endif
   }
+
   if (use_diffuse) {
+#ifdef __APPLE__
+    if (lcache->grid_tx.tex != nullptr) {
+      DRW_shgroup_uniform_texture_ref(shgrp, "irradianceGrid", &lcache->grid_tx.tex);
+    }
+    else {
+      DRW_shgroup_uniform_texture(shgrp, "irradianceGrid", e_data.dummy_2d_array);
+    }
+#else
     DRW_shgroup_uniform_texture_ref(shgrp, "irradianceGrid", &lcache->grid_tx.tex);
+#endif
   }
+
   if (use_glossy || use_refract) {
+#ifdef __APPLE__
+    if (lcache->cube_tx.tex != nullptr) {
+      DRW_shgroup_uniform_texture_ref(shgrp, "probeCubes", &lcache->cube_tx.tex);
+    }
+    else {
+      DRW_shgroup_uniform_texture(shgrp, "probeCubes", e_data.dummy_cube_array);
+    }
+#else
     DRW_shgroup_uniform_texture_ref(shgrp, "probeCubes", &lcache->cube_tx.tex);
+#endif
   }
+
   if (use_glossy) {
+#ifdef __APPLE__
+    if (vedata->txl->planar_pool != nullptr) {
+      DRW_shgroup_uniform_texture_ref(shgrp, "probePlanars", &vedata->txl->planar_pool);
+    }
+    else {
+      DRW_shgroup_uniform_texture(shgrp, "probePlanars", e_data.dummy_2d_array);
+    }
+    if (vedata->txl->planar_depth != nullptr) {
+      DRW_shgroup_uniform_texture_ref(shgrp, "planarDepth", &vedata->txl->planar_depth);
+    }
+    else {
+      DRW_shgroup_uniform_texture(shgrp, "planarDepth", e_data.dummy_2d_array);
+    }
+#else
     DRW_shgroup_uniform_texture_ref(shgrp, "probePlanars", &vedata->txl->planar_pool);
+    DRW_shgroup_uniform_texture_ref(shgrp, "planarDepth", &vedata->txl->planar_depth);
+#endif
     DRW_shgroup_uniform_int_copy(shgrp, "outputSsrId", ssr_id ? *ssr_id : 0);
   }
+
   else {
     DRW_shgroup_uniform_int_copy(shgrp, "outputSsrId", 1);
   }
+
   if (use_refract) {
     DRW_shgroup_uniform_float_copy(
         shgrp, "refractionDepth", (refract_depth) ? *refract_depth : 0.0);
     if (use_ssrefraction) {
+#ifdef __APPLE__
+      if (vedata->txl->filtered_radiance != nullptr) {
+        DRW_shgroup_uniform_texture_ref(
+            shgrp, "refractColorBuffer", &vedata->txl->filtered_radiance);
+      }
+      else {
+        DRW_shgroup_uniform_texture(shgrp, "refractColorBuffer", e_data.dummy_2d);
+      }
+#else
       DRW_shgroup_uniform_texture_ref(
           shgrp, "refractColorBuffer", &vedata->txl->filtered_radiance);
+#endif
     }
   }
-  if (use_alpha_blend) {
-    DRW_shgroup_uniform_texture_ref(shgrp, "inScattering", &effects->volume_scatter);
-    DRW_shgroup_uniform_texture_ref(shgrp, "inTransmittance", &effects->volume_transmit);
+
+#ifdef __APPLE__
+  /* Metal: ALL surface shaders include volumetric_lib and require inScattering/inTransmittance.
+   * Always bind actual texture or fallback dummy - never NULL pointer reference. */
+  {
+    /* Ensure dummy_3d exists for fallback. */
+    if (!e_data.dummy_3d) {
+      eGPUTextureUsage usage = GPU_TEXTURE_USAGE_SHADER_READ;
+      e_data.dummy_3d = DRW_texture_create_3d_ex(1, 1, 1, GPU_RGBA8, usage, DRW_TEX_WRAP, nullptr);
+    }
+
+    GPUTexture *scatter_tex = effects->volume_scatter;
+    GPUTexture *transmit_tex = effects->volume_transmit;
+
+    /* Use dummy if actual is NULL. */
+    if (!scatter_tex) {
+      GPUTexture *vol_dummy = EEVEE_volumes_get_dummy_scatter();
+      scatter_tex = vol_dummy ? vol_dummy : e_data.dummy_3d;
+    }
+    if (!transmit_tex) {
+      GPUTexture *vol_dummy = EEVEE_volumes_get_dummy_transmit();
+      transmit_tex = vol_dummy ? vol_dummy : e_data.dummy_3d;
+    }
+
+    DRW_shgroup_uniform_texture(shgrp, "inScattering", scatter_tex);
+    DRW_shgroup_uniform_texture(shgrp, "inTransmittance", transmit_tex);
   }
+#else
+  if (use_alpha_blend) {
+    if (effects->volume_scatter != nullptr) {
+      DRW_shgroup_uniform_texture_ref(shgrp, "inScattering", &effects->volume_scatter);
+    }
+    else {
+      GPUTexture *dummy = EEVEE_volumes_get_dummy_scatter();
+      DRW_shgroup_uniform_texture(shgrp, "inScattering", dummy ? dummy : e_data.util_tex);
+    }
+    if (effects->volume_transmit != nullptr) {
+      DRW_shgroup_uniform_texture_ref(shgrp, "inTransmittance", &effects->volume_transmit);
+    }
+    else {
+      GPUTexture *dummy = EEVEE_volumes_get_dummy_transmit();
+      DRW_shgroup_uniform_texture(shgrp, "inTransmittance", dummy ? dummy : e_data.util_tex);
+    }
+  }
+#endif
 }
 
 static void eevee_init_noise_texture()
@@ -245,6 +425,30 @@ void EEVEE_materials_init(EEVEE_ViewLayerData *sldata,
 
     eevee_init_util_texture();
     eevee_init_noise_texture();
+
+#ifdef __APPLE__
+    /* Create dummy textures with correct types for Metal fallbacks.
+     * Metal requires all textures to be bound and to match the expected type. */
+    eGPUTextureUsage usage = GPU_TEXTURE_USAGE_SHADER_READ;
+    if (!e_data.dummy_2d_array) {
+      e_data.dummy_2d_array = DRW_texture_create_2d_array_ex(
+          1, 1, 1, GPU_RGBA8, usage, DRW_TEX_FILTER, nullptr);
+    }
+    if (!e_data.dummy_uint_2d_array) {
+      e_data.dummy_uint_2d_array = DRW_texture_create_2d_array_ex(
+          1, 1, 1, GPU_RGBA8UI, usage, DRW_TEX_FILTER, nullptr);
+    }
+    if (!e_data.dummy_cube_array) {
+      e_data.dummy_cube_array = DRW_texture_create_cube_array_ex(
+          1, 1, GPU_RGBA8, usage, DRW_TEX_FILTER, nullptr);
+    }
+    if (!e_data.dummy_2d) {
+      e_data.dummy_2d = DRW_texture_create_2d_ex(1, 1, GPU_RGBA8, usage, DRW_TEX_FILTER, nullptr);
+    }
+    if (!e_data.dummy_3d) {
+      e_data.dummy_3d = DRW_texture_create_3d_ex(1, 1, 1, GPU_RGBA8, usage, DRW_TEX_WRAP, nullptr);
+    }
+#endif
   }
 
   if (draw_ctx->rv3d) {
@@ -426,6 +630,25 @@ void EEVEE_materials_cache_init(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)
     DRW_shgroup_uniform_texture(grp, "utilTex", e_data.util_tex);
     DRW_shgroup_uniform_texture_ref(grp, "shadowCubeTexture", &sldata->shadow_cube_pool);
     DRW_shgroup_uniform_texture_ref(grp, "shadowCascadeTexture", &sldata->shadow_cascade_pool);
+#ifdef __APPLE__
+    /* Metal requires all textures to be bound. */
+    DRW_shgroup_uniform_texture_ref(grp, "shadowCubeIDTexture", &sldata->shadow_cube_id_pool);
+    DRW_shgroup_uniform_texture_ref(
+        grp, "shadowCascadeIDTexture", &sldata->shadow_cascade_id_pool);
+
+    GPUTexture *scatter_tex = stl->effects->volume_scatter;
+    GPUTexture *transmit_tex = stl->effects->volume_transmit;
+    if (!scatter_tex) {
+      GPUTexture *dummy = EEVEE_volumes_get_dummy_scatter();
+      scatter_tex = dummy ? dummy : e_data.dummy_3d;
+    }
+    if (!transmit_tex) {
+      GPUTexture *dummy = EEVEE_volumes_get_dummy_transmit();
+      transmit_tex = dummy ? dummy : e_data.dummy_3d;
+    }
+    DRW_shgroup_uniform_texture(grp, "inScattering", scatter_tex);
+    DRW_shgroup_uniform_texture(grp, "inTransmittance", transmit_tex);
+#endif
     DRW_shgroup_uniform_texture_ref(grp, "probePlanars", &vedata->txl->planar_pool);
     DRW_shgroup_uniform_texture_ref(grp, "probeCubes", &stl->g_data->light_cache->cube_tx.tex);
     DRW_shgroup_uniform_texture_ref(grp, "irradianceGrid", &stl->g_data->light_cache->grid_tx.tex);
@@ -521,7 +744,7 @@ BLI_INLINE void material_shadow(EEVEE_Data *vedata,
                                    ELEM(ma->blend_shadow, MA_BS_CLIP, MA_BS_HASHED);
     float alpha_clip_threshold = (ma->blend_shadow == MA_BS_CLIP) ? ma->alpha_threshold : -1.0f;
 
-    int mat_options = VAR_MAT_MESH | VAR_MAT_DEPTH;
+    int mat_options = VAR_MAT_MESH | VAR_MAT_DEPTH | VAR_MAT_SHADOW;
     SET_FLAG_FROM_TEST(mat_options, use_shadow_shader, VAR_MAT_HASH);
     SET_FLAG_FROM_TEST(mat_options, is_hair, VAR_MAT_HAIR);
     GPUMaterial *gpumat = (use_shadow_shader) ?

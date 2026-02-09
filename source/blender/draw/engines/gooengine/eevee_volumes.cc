@@ -372,7 +372,8 @@ void EEVEE_volumes_cache_finish(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)
     DRW_shgroup_uniform_texture_ref(grp, "shadowCubeTexture", &sldata->shadow_cube_pool);
     DRW_shgroup_uniform_texture_ref(grp, "shadowCascadeTexture", &sldata->shadow_cascade_pool);
     DRW_shgroup_uniform_texture_ref(grp, "shadowCubeIDTexture", &sldata->shadow_cube_id_pool);
-    DRW_shgroup_uniform_texture_ref(grp, "shadowCascadeIDTexture", &sldata->shadow_cascade_id_pool);
+    DRW_shgroup_uniform_texture_ref(
+        grp, "shadowCascadeIDTexture", &sldata->shadow_cascade_id_pool);
     DRW_shgroup_uniform_texture_ref(grp, "volumeScattering", &txl->volume_prop_scattering);
     DRW_shgroup_uniform_texture_ref(grp, "volumeExtinction", &txl->volume_prop_extinction);
     DRW_shgroup_uniform_texture_ref(grp, "volumeEmission", &txl->volume_prop_emission);
@@ -608,6 +609,16 @@ void EEVEE_volumes_free()
   DRW_TEXTURE_FREE_SAFE(e_data.dummy_zero);
   DRW_TEXTURE_FREE_SAFE(e_data.dummy_one);
   DRW_TEXTURE_FREE_SAFE(e_data.dummy_flame);
+}
+
+GPUTexture *EEVEE_volumes_get_dummy_scatter()
+{
+  return e_data.dummy_scatter;
+}
+
+GPUTexture *EEVEE_volumes_get_dummy_transmit()
+{
+  return e_data.dummy_transmit;
 }
 
 /* -------------------------------------------------------------------- */
