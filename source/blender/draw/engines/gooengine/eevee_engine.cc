@@ -291,7 +291,7 @@ static void eevee_cache_finish(void *vedata)
   uint tot_samples = scene_eval->eevee.taa_render_samples;
   uint vl_samples = draw_ctx->view_layer->samples;
 
-  if (vl_samples > 0){
+  if (vl_samples > 0) {
     tot_samples = vl_samples;
   }
 

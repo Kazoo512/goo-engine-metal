@@ -150,7 +150,7 @@ GPU_SHADER_CREATE_END()
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_prepass_frag_common)
 ADDITIONAL_INFO(eevee_legacy_common_lib)
 ADDITIONAL_INFO(eevee_legacy_common_utiltex_lib)
-FRAGMENT_OUT(1, UINT, resource_id_out)
+/* FRAGMENT_OUT(1, UINT, resource_id_out) */
 ADDITIONAL_INFO(draw_view)
 ADDITIONAL_INFO(eevee_legacy_closure_eval_surface_lib)
 GPU_SHADER_CREATE_END()
@@ -163,17 +163,20 @@ GPU_SHADER_CREATE_END()
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_prepass_frag_opaque)
 ADDITIONAL_INFO(eevee_legacy_surface_lib_common)
 ADDITIONAL_INFO(eevee_legacy_material_prepass_frag_opaque_common)
+FRAGMENT_OUT(1, VEC2, out_normal);
 GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_prepass_frag_opaque_hair)
 ADDITIONAL_INFO(eevee_legacy_surface_lib_hair)
 ADDITIONAL_INFO(eevee_legacy_material_prepass_frag_opaque_common)
 ADDITIONAL_INFO(draw_hair)
+FRAGMENT_OUT(1, VEC2, out_normal);
 GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_prepass_frag_opaque_pointcloud)
 ADDITIONAL_INFO(eevee_legacy_material_prepass_frag_opaque_common)
 ADDITIONAL_INFO(draw_pointcloud)
+FRAGMENT_OUT(1, VEC2, out_normal);
 GPU_SHADER_CREATE_END()
 
 /* Common info for all `prepass_frag_alpha_hash` variants. */
@@ -186,18 +189,58 @@ GPU_SHADER_CREATE_END()
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_prepass_frag_alpha_hash)
 ADDITIONAL_INFO(eevee_legacy_surface_lib_common)
 ADDITIONAL_INFO(eevee_legacy_material_prepass_frag_alpha_hash_common)
+FRAGMENT_OUT(1, VEC2, out_normal);
 GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_prepass_frag_alpha_hash_hair)
 ADDITIONAL_INFO(eevee_legacy_surface_lib_hair)
 ADDITIONAL_INFO(eevee_legacy_material_prepass_frag_alpha_hash_common)
 ADDITIONAL_INFO(draw_hair)
+FRAGMENT_OUT(1, VEC2, out_normal);
 GPU_SHADER_CREATE_END()
 
 GPU_SHADER_CREATE_INFO(eevee_legacy_material_prepass_frag_alpha_hash_pointcloud)
 ADDITIONAL_INFO(eevee_legacy_surface_lib_pointcloud)
 ADDITIONAL_INFO(eevee_legacy_material_prepass_frag_alpha_hash_common)
 ADDITIONAL_INFO(draw_pointcloud)
+FRAGMENT_OUT(1, VEC2, out_normal);
+GPU_SHADER_CREATE_END()
+
+/* Shadow Variants (Same as prepass but NO Normal Output) */
+
+GPU_SHADER_CREATE_INFO(eevee_legacy_material_shadow_frag_opaque)
+ADDITIONAL_INFO(eevee_legacy_surface_lib_common)
+ADDITIONAL_INFO(eevee_legacy_material_prepass_frag_opaque_common)
+GPU_SHADER_CREATE_END()
+
+GPU_SHADER_CREATE_INFO(eevee_legacy_material_shadow_frag_opaque_hair)
+ADDITIONAL_INFO(eevee_legacy_surface_lib_hair)
+ADDITIONAL_INFO(eevee_legacy_material_prepass_frag_opaque_common)
+ADDITIONAL_INFO(draw_hair)
+GPU_SHADER_CREATE_END()
+
+GPU_SHADER_CREATE_INFO(eevee_legacy_material_shadow_frag_opaque_pointcloud)
+ADDITIONAL_INFO(eevee_legacy_material_prepass_frag_opaque_common)
+ADDITIONAL_INFO(draw_pointcloud)
+GPU_SHADER_CREATE_END()
+
+GPU_SHADER_CREATE_INFO(eevee_legacy_material_shadow_frag_alpha_hash)
+ADDITIONAL_INFO(eevee_legacy_surface_lib_common)
+ADDITIONAL_INFO(eevee_legacy_material_prepass_frag_alpha_hash_common)
+GPU_SHADER_CREATE_END()
+
+GPU_SHADER_CREATE_INFO(eevee_legacy_material_shadow_frag_alpha_hash_hair)
+ADDITIONAL_INFO(eevee_legacy_surface_lib_hair)
+ADDITIONAL_INFO(eevee_legacy_material_prepass_frag_alpha_hash_common)
+ADDITIONAL_INFO(draw_hair)
+GPU_SHADER_CREATE_END()
+
+
+GPU_SHADER_CREATE_INFO(eevee_legacy_material_shadow_frag_alpha_hash_pointcloud)
+ADDITIONAL_INFO(eevee_legacy_surface_lib_pointcloud)
+ADDITIONAL_INFO(eevee_legacy_material_prepass_frag_alpha_hash_common)
+ADDITIONAL_INFO(draw_pointcloud)
+FRAGMENT_OUT(1, VEC2, out_normal);
 GPU_SHADER_CREATE_END()
 
 /** \} */

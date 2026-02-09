@@ -140,6 +140,15 @@ static void eevee_ensure_cube_views(
 
   perspective_m4(winmat, -side, side, -side, side, near, far);
 
+#ifdef __APPLE__
+  /* Metal: Adjust projection matrix for depth range [0, 1] instead of [-1, 1].
+   * z_metal = (z_opengl + 1) / 2 = z_opengl * 0.5 + 0.5
+   * For perspective matrix: z_clip = winmat[2][2] * z + winmat[3][2]
+   * After Metal adjustment: z_clip_metal = z_clip * 0.5 + 0.5 */
+  winmat[2][2] *= 0.5f;
+  winmat[3][2] = winmat[3][2] * 0.5f + 0.5f;
+#endif
+
   for (int i = 0; i < 6; i++) {
     float tmp[4][4];
     mul_m4_m4m4(tmp, cubefacemat[i], viewmat);
@@ -205,7 +214,8 @@ void EEVEE_shadows_draw_cubemap(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata,
     DRW_view_set_active(g_data->cube_views[j]);
     int layer = cube_index * 6 + j;
     GPU_framebuffer_texture_layer_attach(sldata->shadow_fb, sldata->shadow_cube_pool, 0, layer, 0);
-    GPU_framebuffer_texture_layer_attach(sldata->shadow_fb, sldata->shadow_cube_id_pool, 1, layer, 0);
+    GPU_framebuffer_texture_layer_attach(
+        sldata->shadow_fb, sldata->shadow_cube_id_pool, 1, layer, 0);
     GPU_framebuffer_bind(sldata->shadow_fb);
     GPU_framebuffer_clear_depth(sldata->shadow_fb, 1.0f);
     DRW_draw_pass(inst->shadow_pass);

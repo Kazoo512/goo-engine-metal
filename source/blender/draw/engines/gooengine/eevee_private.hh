@@ -149,6 +149,7 @@ enum {
   VAR_WORLD_VOLUME = (1 << 12),
   VAR_MAT_SHADOW_ID = (1 << 13),
   VAR_DEFAULT = (1 << 14),
+  VAR_MAT_SHADOW = (1 << 15),
 };
 
 /* Material shader cache keys */
@@ -1092,6 +1093,12 @@ void eevee_id_update(void *vedata, ID *id);
 /* `eevee_materials.cc` */
 
 GPUTexture *EEVEE_materials_get_util_tex(); /* XXX */
+#ifdef __APPLE__
+GPUTexture *EEVEE_materials_get_dummy_2d_array();
+GPUTexture *EEVEE_materials_get_dummy_cube_array();
+GPUTexture *EEVEE_materials_get_dummy_3d();
+#endif
+
 void EEVEE_materials_init(EEVEE_ViewLayerData *sldata,
                           EEVEE_Data *vedata);
 void EEVEE_materials_cache_init(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata);
@@ -1544,6 +1551,8 @@ void EEVEE_volumes_resolve(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata);
 void EEVEE_volumes_output_init(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata, uint tot_samples);
 void EEVEE_volumes_output_accumulate(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata);
 void EEVEE_volumes_free();
+GPUTexture *EEVEE_volumes_get_dummy_scatter();
+GPUTexture *EEVEE_volumes_get_dummy_transmit();
 
 /* `eevee_effects.cc` */
 
@@ -1606,12 +1615,23 @@ float *EEVEE_lut_update_ggx_btdf(int lut_size, int lut_depth);
 
 /* Shadow Matrix */
 static const float texcomat[4][4] = {
-    /* From NDC to TexCo */
+    /* From NDC to TexCo (OpenGL: NDC Z is [-1,1]) */
     {0.5f, 0.0f, 0.0f, 0.0f},
     {0.0f, 0.5f, 0.0f, 0.0f},
     {0.0f, 0.0f, 0.5f, 0.0f},
     {0.5f, 0.5f, 0.5f, 1.0f},
 };
+
+#ifdef __APPLE__
+/* Metal: When using Metal-adjusted projmat (Z already in [0,1]), texcomat should NOT
+ * apply Z scale/offset, otherwise it's double-converted. */
+static const float texcomat_metal[4][4] = {
+    {0.5f, 0.0f, 0.0f, 0.0f},
+    {0.0f, 0.5f, 0.0f, 0.0f},
+    {0.0f, 0.0f, 1.0f, 0.0f}, /* Z: identity */
+    {0.5f, 0.5f, 0.0f, 1.0f}, /* Z offset: 0 */
+};
+#endif
 
 /* Cube-map Matrices */
 static const float cubefacemat[6][4][4] = {

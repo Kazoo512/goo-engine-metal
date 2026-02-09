@@ -92,7 +92,15 @@ void main()
   }
 #endif
 
-  resource_id_out = resource_id;
+  /* resource_id_out = resource_id; */
+  /* GooEngine Fix: Output Normal to RG16 buffer (Loc 1).
+   * Use viewNormal from vertex shader interface, which is always initialized.
+   * g_data.N is only initialized when USE_ALPHA_HASH is defined. */
+#ifndef SHADOW_PASS
+  /* viewNormal comes from surface_lib interface, already in view space. */
+  vec3 N = normalize(viewNormal);
+  out_normal = normal_encode(N, vec3(0.0));
+#endif
 }
 
 /* Passthrough. */

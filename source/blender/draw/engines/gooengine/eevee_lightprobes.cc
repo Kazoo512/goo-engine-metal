@@ -321,6 +321,10 @@ void EEVEE_lightprobes_cache_init(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedat
 
       grp = DRW_shgroup_material_create(gpumat, inst->probe_background);
       DRW_shgroup_uniform_float_copy(grp, "backgroundAlpha", 1.0f);
+
+      /* Bind all textures required by Material shaders on Metal */
+      EEVEE_material_bind_resources(
+          grp, gpumat, sldata, vedata, nullptr, nullptr, -1.0f, false, false);
     }
 
     DRW_shgroup_uniform_block(grp, "common_block", sldata->common_ubo);
