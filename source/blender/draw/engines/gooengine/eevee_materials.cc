@@ -628,8 +628,8 @@ void EEVEE_materials_cache_init(EEVEE_ViewLayerData *sldata, EEVEE_Data *vedata)
     DRW_shgroup_uniform_texture_ref(
         grp, "shadowCascadeIDTexture", &sldata->shadow_cascade_id_pool);
 
-    GPUTexture *scatter_tex = stl->effects->volume_scatter;
-    GPUTexture *transmit_tex = stl->effects->volume_transmit;
+    GPUTexture *scatter_tex = inst->effects->volume_scatter;
+    GPUTexture *transmit_tex = inst->effects->volume_transmit;
     if (!scatter_tex) {
       GPUTexture *dummy = EEVEE_volumes_get_dummy_scatter();
       scatter_tex = dummy ? dummy : e_data.dummy_3d;
