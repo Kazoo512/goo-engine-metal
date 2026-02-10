@@ -445,7 +445,7 @@ void EEVEE_shadow_output_accumulate(EEVEE_ViewLayerData * /*sldata*/, EEVEE_Data
      * when switching between viewports/workspaces. This fixes issue where
      * shadow intensity changes unexpectedly due to TAA not resetting properly. */
     const float clear[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-    GPU_framebuffer_clear_color(fbl->shadow_accum_fb, clear);
+    GPU_framebuffer_clear_color(inst->shadow_accum_fb, clear);
 #else
     EEVEE_EffectsInfo *effects = inst->effects;
     if (effects->taa_current_sample == 1) {
